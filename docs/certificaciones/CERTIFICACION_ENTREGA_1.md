@@ -27,5 +27,5 @@ los siguientes puntos:
 | Nombre completo |  Carné   | Firma |
 |-----------------|----------|-------|
 |__CRISTOPHER PAZ_|2690245972| __X__ |
-|__EDUARDO ESCOBAR|2690245346| __X__ |
+|__||  |
 
