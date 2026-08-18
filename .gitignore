@@ -1,0 +1,31 @@
+# Credenciales y entorno
+.env
+.env.local
+*.local
+
+# Dependencias
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+
+# Temporales y binarios innecesarios
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Respaldos de base de datos con datos reales
+database/respaldos/*.sql
+database/respaldos/*.dump
+
+# Compilados / distribución
+dist/
+build/
+*.class
