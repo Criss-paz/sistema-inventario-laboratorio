@@ -72,6 +72,7 @@ _(A definir por el equipo: MySQL, PostgreSQL o SQL Server.)_
 |     Nombre    |   Carné  |
 |---------------|----------|
 |CRISTOPHER PAZ_|2690245972|
+|JOSE EDUARDO ESCOBAR JA_|2690245346|
 |||
 
 ### Control de versiones
