@@ -6,18 +6,69 @@ Sistema Web de Gestión y Control de Inventario para el Laboratorio Privado Quet
 ## Entrega
 Entrega 1 — Análisis, propuesta y diseño conceptual
 
+## PROMT INICIAL
+
+Quiero que me ayudes a realizar la primera entrega de un proyecto para la universidad.
+
+El proyecto consiste en desarrollar un **sistema web para controlar el inventario de un laboratorio**, en este caso para el Laboratorio Privado Quetzaltenango.
+
+La idea principal es dejar de llevar el control del inventario de forma manual y crear un sistema donde podamos registrar y consultar los productos que tiene el laboratorio.
+
+Necesito que me ayudes a desarrollar la propuesta del proyecto paso a paso, tratando de que todo tenga relación entre sí y que no se agreguen cosas que no sean necesarias para el sistema.
+
+Para esta primera entrega necesito trabajar principalmente:
+
+* Descripción del problema.
+* Planteamiento del problema.
+* Justificación.
+* Objetivo general.
+* Objetivos específicos.
+* Alcance del sistema.
+* Usuarios que utilizarán el sistema.
+* Requerimientos funcionales.
+* Requerimientos no funcionales.
+* Reglas de negocio.
+* Entidades y atributos.
+* Relaciones entre las entidades.
+* Modelo entidad-relación.
+* Una propuesta inicial de la base de datos.
+* Flujo de las principales operaciones del sistema.
+* Una idea general de cómo estaría estructurado el sistema.
+
+El sistema debe permitir controlar principalmente:
+
+* Productos.
+* Categorías.
+* Proveedores.
+* Lotes.
+* Fechas de vencimiento.
+* Existencias.
+* Entradas de inventario.
+* Salidas de inventario.
+* Usuarios.
+* Roles y permisos.
+* Historial de movimientos.
+* Stock mínimo.
+* Reportes.
+
+Por ejemplo, cuando ingrese un producto al inventario se debería poder registrar su producto, lote, proveedor, cantidad, fecha de ingreso y fecha de vencimiento.
+
+Cuando se realice una salida, el sistema debe verificar que exista suficiente cantidad disponible y después actualizar el inventario.
+
+También necesito que cada movimiento quede registrado para poder saber qué usuario realizó la operación y cuándo se realizó.
+
+Para la base de datos quiero que primero se analice el modelo entidad-relación y después se pueda llevar a un modelo relacional que posteriormente pueda implementarse en **Oracle**.
+
+Es importante que las entidades, atributos y relaciones tengan sentido con los requerimientos y que exista integridad entre los datos.
+
+No quiero desarrollar todavía todo el sistema completo. En esta primera etapa necesito dejar bien definida la idea del proyecto, los requerimientos y el diseño inicial para posteriormente continuar con la base de datos y la programación.
+
+Quiero que me vayas ayudando **sección por sección**, explicando de manera sencilla qué se está haciendo y por qué, para que como estudiante pueda entender y defender el proyecto si el ingeniero hace preguntas.
+
+Al finalizar, revisar que todo lo realizado sea coherente entre el problema, objetivos, requerimientos, reglas de negocio y modelo de base de datos.
+
 ## Propósito
 La inteligencia artificial se utilizó como herramienta de apoyo durante el análisis y la documentación del proyecto. La IA no sustituye las decisiones del equipo; toda propuesta fue revisada y validada antes de incorporarse.
-
-## Registro
-
-| Fecha | Herramienta | Objetivo | Resultado obtenido | Validación del grupo | Estándares aplicados | Responsable |
-|-------|-------------|----------|--------------------|----------------------|----------------------|-------------|
-| _(fecha)_ | _(Cursor/ChatGPT/Copilot)_ | Estructurar el análisis del problema y la propuesta de solución | Borrador de situación actual, consecuencias y necesidad tecnológica | El equipo contrastó el contenido con la realidad del laboratorio | Redacción clara (D1) | _(integrante)_ |
-| _(fecha)_ | _(herramienta)_ | Redactar requerimientos funcionales, no funcionales y de datos | Propuesta inicial organizada por categorías | Cada requerimiento se revisó y se mantuvo solo si responde a una necesidad real | Trazabilidad (D4) | _(integrante)_ |
-| _(fecha)_ | _(herramienta)_ | Estructurar el modelo conceptual Chen | Entidades, atributos, relaciones y cardinalidades | Revisión de coherencia con reglas de negocio | Diagrama ER Chen (D3) | _(integrante)_ |
-| _(fecha)_ | _(herramienta)_ | Construir la matriz de trazabilidad | Correspondencia requerimiento → modelo | El equipo revisó que cada entidad y relación tenga justificación | Trazabilidad (D4) | _(integrante)_ |
-| _(fecha)_ | _(herramienta)_ | Revisión de estilo, claridad y ortografía | Correcciones de redacción y estructura | El equipo es responsable del contenido final | Ortografía (D1) | _(integrante)_ |
 
 ## Registro detallado por actividad
 
