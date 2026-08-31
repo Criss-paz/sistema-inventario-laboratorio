@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Inventario Laboratorio{% endblock %}</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧪</text></svg>">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% if session.get('id_usuario') %}
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo-badge">🧪</span>
+      Inventario — Lab. Privado Quetzaltenango
+    </div>
+    <nav>
+      <a href="{{ url_for('categorias.listar') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('categorias.') else '' }}">Categorías</a>
+      <a href="{{ url_for('productos.listar') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('productos.') else '' }}">Productos</a>
+    </nav>
+    <div class="user-box">
+      <span>{{ session.get('nombre_usuario') }}</span>
+      <span class="role-pill">{{ session.get('nombre_rol') }}</span>
+      <form action="{{ url_for('auth.logout') }}" method="post" style="margin:0;">
+        <button type="submit" class="logout">Cerrar sesión</button>
+      </form>
+    </div>
+  </header>
+  {% endif %}
+
+  <main>
+    <div id="flash-stack">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    // Pequeño polish de interfaz: los mensajes flash se atenúan solos después
+    // de unos segundos (sin librerías externas, nada crítico depende de esto).
+    document.querySelectorAll('#flash-stack .flash').forEach(function (el, i) {
+      setTimeout(function () {
+        el.style.transition = 'opacity .4s ease';
+        el.style.opacity = '0';
+        setTimeout(function () { el.remove(); }, 400);
+      }, 4000 + i * 300);
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

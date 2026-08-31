@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }} — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="error-page">
+  <span class="error-code">{{ code }}</span>
+  <h1>{{ title }}</h1>
+  <p>{{ message }}</p>
+  <a class="btn btn-primary" href="{{ url_for('index') if session.get('id_usuario') else url_for('auth.login') }}">
+    Volver al inicio
+  </a>
+</div>
+{% endblock %}

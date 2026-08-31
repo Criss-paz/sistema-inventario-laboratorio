@@ -26,7 +26,7 @@ los siguientes puntos:
 
 | Nombre completo |  Carné   | Firma |
 |-----------------|----------|-------|
-|__CRISTOPHER PAZ_|2690245972| __X__ |
-|_JOSE E. ESCOBAR_|2690245346| __X__ |
+| Cristopher Alexis Castellanos Paz | 2690245972 | X |
+| José Eduardo Escobar | 2690245346 | X |
 
 

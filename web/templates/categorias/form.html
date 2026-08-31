@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if categoria and categoria.id_categoria else 'Nueva' }} categoría{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>{{ 'Editar categoría' if categoria and categoria.id_categoria else 'Nueva categoría' }}</h1>
+</div>
+
+<form class="card" method="post">
+  <label for="nombre">Nombre <span class="hint">(obligatorio, único)</span></label>
+  <input type="text" id="nombre" name="nombre" required maxlength="100" autofocus
+         value="{{ categoria.nombre if categoria else '' }}">
+
+  <label for="descripcion">Descripción</label>
+  <textarea id="descripcion" name="descripcion" rows="3" maxlength="255">{{ categoria.descripcion if categoria else '' }}</textarea>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a class="btn" href="{{ url_for('categorias.listar') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

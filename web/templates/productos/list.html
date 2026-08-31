@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Productos — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Productos<span class="subtitle">Catálogo de productos e insumos</span></h1>
+  <a class="btn btn-primary" href="{{ url_for('productos.nuevo') }}">+ Nuevo producto</a>
+</div>
+
+<div class="stat-row">
+  <div class="stat-card">
+    <span class="stat-value">{{ productos|length }}</span>
+    <span class="stat-label">Total</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-ok">{{ productos|selectattr('estado')|list|length }}</span>
+    <span class="stat-label">Activos</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-muted">{{ productos|rejectattr('estado')|list|length }}</span>
+    <span class="stat-label">Inactivos</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-info">{{ productos|selectattr('requiere_vencimiento')|list|length }}</span>
+    <span class="stat-label">Con vencimiento</span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Código</th><th>Nombre</th><th>Categoría</th><th>Unidad</th>
+        <th>Stock mínimo</th><th>Vencimiento</th><th>Estado</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in productos %}
+      <tr class="{{ '' if p.estado else 'inactivo' }}">
+        <td><code>{{ p.codigo }}</code></td>
+        <td><strong>{{ p.nombre }}</strong></td>
+        <td>{{ p.nombre_categoria }}</td>
+        <td>{{ p.unidad_medida }}</td>
+        <td>{{ p.stock_minimo }}</td>
+        <td>{{ 'Sí' if p.requiere_vencimiento else 'No' }}</td>
+        <td>
+          {% if p.estado %}
+            <span class="badge badge-on">Activo</span>
+          {% else %}
+            <span class="badge badge-off">Inactivo</span>
+          {% endif %}
+        </td>
+        <td class="actions">
+          <a class="btn btn-sm" href="{{ url_for('productos.editar', id_producto=p.id_producto) }}">Editar</a>
+          <form method="post" action="{{ url_for('productos.alternar_estado', id_producto=p.id_producto) }}" style="margin:0;"
+                onsubmit="return confirm({{ ('¿Desactivar el producto ' if p.estado else '¿Activar el producto ')|tojson }} + {{ p.nombre|tojson }} + '?');">
+            <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if p.estado else 'Activar' }}</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr class="empty-row">
+        <td colspan="8">
+          <div class="empty-state">
+            <span class="empty-icon">🧴</span>
+            <p>No hay productos registrados todavía.</p>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('productos.nuevo') }}">+ Crear el primer producto</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

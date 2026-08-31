@@ -42,6 +42,9 @@ sistema-inventario-laboratorio/
 ├── INSTALL.md
 ├── docs/
 │   ├── entrega-1/
+│   ├── entrega-2/
+│   ├── entrega-3/
+│   ├── entrega-4/
 │   ├── diagramas/
 │   ├── certificaciones/
 │   ├── bitacora-ia/
@@ -65,18 +68,31 @@ sistema-inventario-laboratorio/
 - `docs/bitacora-ia/Bitacora-IA.md`
 - `docs/certificaciones/CERTIFICACION_ENTREGA_1.md`
 
+### Documentacion de Entrega 2
+- `docs/entrega-2/modelo-relacional.md` — modelo relacional (11 tablas)
+- `docs/entrega-2/normalizacion-3fn.md` — normalización 3FN con ejemplo completo
+- `docs/entrega-2/diccionario-datos.md` — diccionario de datos + matriz de 38 restricciones
+- `docs/entrega-2/matriz-trazabilidad.md` — trazabilidad RF → tabla/módulo
+- `sql/ddl/001_schema.sql` — DDL ejecutable
+- `sql/dml/001_seed.sql` + `web/seed_usuarios.py` — datos de prueba
+- `web/` — aplicación Flask: login, layout, CRUD de Categorías y Productos
+- `AVANCE_WEB.md` — estado de la app web
+- `docs/casos-prueba/casos-prueba-entrega-2.md` — 15 casos de prueba (escritos, pendientes de ejecución)
+- `docs/certificaciones/CERTIFICACION_ENTREGA_2.md` — **borrador sin firmar**
+- `docs/entrega-2/Bitacora-IA.md` — bitácora de IA de esta entrega
+
 ### SGBD
-_(A definir por el equipo: MySQL, PostgreSQL o SQL Server.)_
+**PostgreSQL** — decidido en la Entrega 2. La Entrega 1 dejó este punto abierto ("a definir") y la bitácora de IA de la Entrega 1 mencionaba Oracle como intención inicial; el equipo confirmó PostgreSQL por su soporte completo de CHECK/FK/triggers/funciones, instalación simple y facilidad de defensa académica. Justificación completa en `docs/entrega-2/Bitacora-IA.md`.
 
 ### Integrantes
 |     Nombre    |   Carné  |
 |---------------|----------|
-|CRISTOPHER PAZ_|2690245972|
-|JOSE EDUARDO ESCOBAR JA_|2690245346|
-|||
+|CRISTOPHER ALEXIS CASTELLANOS PAZ|2690245972|
+|JOSE EDUARDO ESCOBAR|2690245346|
 
 ### Control de versiones
 La entrega finaliza con un commit de cierre y el tag `entrega-1`.
 
 ### Estado
-Entrega 1 — Analisis, propuesta y diseño conceptual.
+- Entrega 1 — Análisis, propuesta y diseño conceptual: **cerrada**.
+- Entrega 2 — Diseño lógico, diccionario e implementación base: **contenido completo y verificado por ejecución real** (PostgreSQL 18 + Python 3.14, 30/08/2026 — 15/15 casos de prueba pasaron). Hecho: SGBD (PostgreSQL), stack web (Flask + psycopg 3), modelo relacional, normalización 3FN, diccionario de datos, DDL, datos de prueba, login + 2 CRUD (Categorías, Productos) probados en vivo, `AVANCE_WEB.md`, matriz de trazabilidad, casos de prueba ejecutados. Pendiente — **acciones del equipo, no de la IA**: interacción manual en navegador, re-exportar el diagrama ER a PNG/PDF, firmar la certificación, y llevar todo al repositorio Git real con el tag `entrega-2`.

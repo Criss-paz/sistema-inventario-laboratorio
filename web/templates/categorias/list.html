@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Categorías — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Categorías<span class="subtitle">Clasificación de los productos del inventario</span></h1>
+  <a class="btn btn-primary" href="{{ url_for('categorias.nueva') }}">+ Nueva categoría</a>
+</div>
+
+<div class="stat-row">
+  <div class="stat-card">
+    <span class="stat-value">{{ categorias|length }}</span>
+    <span class="stat-label">Total</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-ok">{{ categorias|selectattr('estado')|list|length }}</span>
+    <span class="stat-label">Activas</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-muted">{{ categorias|rejectattr('estado')|list|length }}</span>
+    <span class="stat-label">Inactivas</span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Nombre</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      {% for c in categorias %}
+      <tr class="{{ '' if c.estado else 'inactivo' }}">
+        <td><strong>{{ c.nombre }}</strong></td>
+        <td>{{ c.descripcion or '—' }}</td>
+        <td>
+          {% if c.estado %}
+            <span class="badge badge-on">Activa</span>
+          {% else %}
+            <span class="badge badge-off">Inactiva</span>
+          {% endif %}
+        </td>
+        <td class="actions">
+          <a class="btn btn-sm" href="{{ url_for('categorias.editar', id_categoria=c.id_categoria) }}">Editar</a>
+          <form method="post" action="{{ url_for('categorias.alternar_estado', id_categoria=c.id_categoria) }}" style="margin:0;"
+                onsubmit="return confirm({{ ('¿Desactivar la categoría ' if c.estado else '¿Activar la categoría ')|tojson }} + {{ c.nombre|tojson }} + '?');">
+            <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if c.estado else 'Activar' }}</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr class="empty-row">
+        <td colspan="4">
+          <div class="empty-state">
+            <span class="empty-icon">🗂️</span>
+            <p>No hay categorías registradas todavía.</p>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('categorias.nueva') }}">+ Crear la primera categoría</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

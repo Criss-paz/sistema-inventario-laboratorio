@@ -8,6 +8,8 @@ node_modules/
 vendor/
 __pycache__/
 *.pyc
+.venv/
+venv/
 
 # Temporales y binarios innecesarios
 *.log
