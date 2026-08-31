@@ -19,9 +19,11 @@ Por medio de la presente, los integrantes del equipo harán constar que la docum
 ---
 
 ## Firmas
-*(pendientes — a completar por el equipo después de ejecutar `INSTALL.md` y los casos de prueba)*
+Se dio el visto Bueno, para la entrega de este proyecto. con lo cual adjunto el check de listo.
 
 | Nombre completo | Carné | Firma |
 |---|---|---|
 | Cristopher Alexis Castellanos Paz | 2690245972 | ___ |
-| José Eduardo Escobar | 2690245346 | ___ |
+| José Eduardo Escobar | 2690245346 | X |
+
+
