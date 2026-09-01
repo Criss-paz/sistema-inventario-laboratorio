@@ -14,7 +14,7 @@ Por medio de la presente, los integrantes del equipo harán constar que la docum
 - [x] **Los casos de prueba fueron ejecutados y documentados** — los 15 casos de `docs/casos-prueba/casos-prueba-entrega-2.md` se ejecutaron el 30/08/2026 contra PostgreSQL 18 + Python 3.14 reales (login, CRUD de categorías/productos, validaciones, duplicados, persistencia tras reinicio del servidor). 15/15 pasaron.
 - [x] No hay credenciales expuestas en el repositorio: `.env` no se versiona (`.gitignore`, y se agregó `.venv/` que faltaba), `.env.example` solo tiene placeholders, y las credenciales de prueba en `seed_usuarios.py` están marcadas explícitamente como de desarrollo.
 
-> **Nota de la propia consigna:** sin certificado firmado, el bloque de Calidad y estándares se limita a un máximo del 70%. **Sigue siendo un borrador sin firmar** — todo el contenido ya está verificado por ejecución real, pero falta la firma física de ambos integrantes antes de taggear `entrega-2`.
+
 
 ---
 
