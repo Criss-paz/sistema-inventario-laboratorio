@@ -243,5 +243,20 @@ El usuario autorizó dar la contraseña del superusuario `postgres` para que la 
 
 
 
+### Registro de Bitácora IA — Auditoría de cierre
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 01/09/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Auditar el repositorio completo contra la consigna oficial del proyecto (Secciones 5, 6 y 7, y la rúbrica de la Entrega 2) antes de crear el tag `entrega-2`, e identificar todo lo que costara puntos. |
+| **Prompt utilizado** | "Quiero que seas un analizador" + el PDF de la consigna, con alcance acotado por el equipo a *cerrar la Entrega 2 hoy* y entregar análisis + plan de corrección. |
+| **Resultado obtenido** | Verificó el cumplimiento de los requisitos mínimos (9 entidades principales + 2 tablas puente, 3 relaciones N:M resueltas, **38 restricciones explícitas** contra las 15 exigidas, 3FN documentada, consultas parametrizadas en toda la app) y reportó 11 hallazgos. Bloqueantes: (1) faltaba el tag `entrega-2`; (2) el diagrama ER conectaba la relación `Registra` entre USUARIO y PRODUCTO, cuando la FK real del DDL es `movimiento.id_usuario`; (3) faltaba el atributo `requiere_vencimiento` en PRODUCTO; (4) PNG/PDF del ER desactualizados respecto al `.drawio`; (5) certificación firmada por un solo integrante; (6) `README.md` enlazaba nombres de archivo del diagrama que no existen; (7) el encabezado de `sql/dml/001_seed.sql` citaba una ruta inexistente de casos de prueba. No bloqueantes: seed por debajo de 50 registros/tabla, grupo de 2 integrantes, y despliegue en internet (S5) pendiente para la Entrega 4. |
+| **Validación del grupo** | El equipo revisó los 11 hallazgos uno por uno y aprobó el plan de corrección. **La corrección del diagrama ER (hallazgos 2 y 3) la hizo el equipo a mano en draw.io**, no la IA: la IA solo señaló la incoherencia contra el DDL y el equipo reconectó el rombo `Registra` a MOVIMIENTO, agregó `requiere_vencimiento` y re-exportó PNG y PDF. Se rechazó ampliar el seed a 50 registros dentro de esta entrega: el criterio del equipo es que el catálogo real del laboratorio vale más que relleno sintético para los 2 CRUD que se ponderan aquí, y el volumen se completa con el DML de la Entrega 3 — quedó documentado como diferido, no como omitido. La IA **no** ejecutó la base de datos en esta sesión, así que el resultado 15/15 de las pruebas del 30/08 se mantuvo como evidencia previa del equipo y no se re-verificó ni se presentó como re-verificado. |
+| **Estándares aplicados** | R3 (commits descriptivos en formato convencional), R4 (participación visible: los commits de cierre quedan a nombre de Cristopher, frente al commit único de José Eduardo del 31/08), R5 (tag `entrega-2`), R8 (acceso del catedrático), D1/D4 (rutas y referencias de la documentación verificadas una por una), D3 (diagrama ER en editable + PNG + PDF coherentes entre sí y con el DDL), S3 (encabezados SQL con dependencias correctas). |
+| **Responsable** | Cristopher Alexis Castellanos Paz |
+
+---
+
 ## Declaración
 La IA se utilizó como apoyo de análisis, corrección de inconsistencias documentales y organización de carpetas — no como sustituto de las decisiones del equipo. Toda propuesta fue presentada con su justificación antes de aplicarse, y las decisiones de fondo (SGBD) fueron tomadas por el equipo.
