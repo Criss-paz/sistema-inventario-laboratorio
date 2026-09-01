@@ -4,7 +4,7 @@
 -- Autor:        Equipo (Cristopher Alexis Castellanos Paz, José Eduardo Escobar)
 -- Descripción:  Roles, catálogo real de categorías y productos (curado a mano
 --               por el equipo desde la interfaz web — ver
---               docs/entrega-2/casos-prueba/casos-prueba-entrega-2.md, CP-18),
+--               docs/casos-prueba/casos-prueba-entrega-2.md, CP-18),
 --               proveedores, exámenes, relaciones N:M y lotes de ejemplo.
 --               NO incluye la tabla `usuario`: esos registros se crean con
 --               web/seed_usuarios.py porque las contraseñas deben hashearse
