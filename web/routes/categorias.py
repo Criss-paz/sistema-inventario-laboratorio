@@ -105,6 +105,12 @@ def alternar_estado(id_categoria):
         return redirect(url_for("categorias.listar"))
 
     nuevo_estado = not categoria["estado"]
-    execute("UPDATE categoria SET estado = %s WHERE id_categoria = %s", (nuevo_estado, id_categoria))
+    try:
+        execute("UPDATE categoria SET estado = %s WHERE id_categoria = %s", (nuevo_estado, id_categoria))
+    except Exception:
+        # A2: mismo criterio que el resto de rutas — mensaje claro, nunca el error SQL crudo.
+        flash("No se pudo cambiar el estado de la categoría. Intente más tarde.", "danger")
+        return redirect(url_for("categorias.listar"))
+
     flash("Categoría activada." if nuevo_estado else "Categoría desactivada.", "success")
     return redirect(url_for("categorias.listar"))

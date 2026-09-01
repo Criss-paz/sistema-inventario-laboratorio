@@ -162,6 +162,12 @@ def alternar_estado(id_producto):
         return redirect(url_for("productos.listar"))
 
     nuevo_estado = not producto["estado"]
-    execute("UPDATE producto SET estado = %s WHERE id_producto = %s", (nuevo_estado, id_producto))
+    try:
+        execute("UPDATE producto SET estado = %s WHERE id_producto = %s", (nuevo_estado, id_producto))
+    except Exception:
+        # A2: mismo criterio que el resto de rutas — mensaje claro, nunca el error SQL crudo.
+        flash("No se pudo cambiar el estado del producto. Intente más tarde.", "danger")
+        return redirect(url_for("productos.listar"))
+
     flash("Producto activado." if nuevo_estado else "Producto desactivado.", "success")
     return redirect(url_for("productos.listar"))
