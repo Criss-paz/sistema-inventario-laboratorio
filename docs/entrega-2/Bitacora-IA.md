@@ -258,5 +258,20 @@ El usuario autorizó dar la contraseña del superusuario `postgres` para que la 
 
 ---
 
+### Registro de Bitácora IA — Diagrama relacional y normalización en Excel
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 01/09/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | El equipo planteó que el catedrático enseñó la normalización en hoja de cálculo (tabla original → identificar en qué forma normal está → aplicar 1FN, 2FN y 3FN mostrando las tablas de cada paso) y preguntó si el entregable debía tener ese formato. |
+| **Prompt utilizado** | "Para la normalización el ingeniero quería que la hiciéramos en Excel... ahí estaba la tabla original y se identificaba si estaba ya en alguna de sus 3 formas normales... y así hasta llegar a su tercera forma normal, pero no sé qué opinas." |
+| **Resultado obtenido** | La IA verificó que la consigna (requisito 5.3) no exige formato para la normalización, y que `normalizacion-3fn.md` ya seguía el mismo procedimiento del ejercicio de clase. Recomendó conservar el `.md` y **añadir** la versión en hoja de cálculo. Al revisar el estándar **D3** ("Diagramas: ER y relacional en editable + PNG/PDF") detectó además un hallazgo nuevo: el modelo relacional solo existía como documento markdown, sin diagrama — `docs/diagramas/` únicamente contenía el ER. Generó `ENTREGA2_NORMALIZACION_3FN.xlsx` (tabla original sin normalizar, análisis de forma normal en cada etapa, tablas resultantes de 1FN/2FN/3FN y verificación final de las 11 tablas) y `DIAGRAMA-RELACIONAL.drawio` (11 tablas con columnas, tipos, PK/FK/UNIQUE/CHECK y las 11 relaciones con su ON DELETE). |
+| **Validación del grupo** | El equipo decidió incorporar ambos archivos y mover el tag `entrega-2` para incluirlos. La exportación a PNG y PDF del diagrama relacional la hizo el equipo a mano en draw.io, igual que con el ER — la IA no puede renderizar `.drawio`. El contenido del Excel se contrastó celda por celda contra `normalizacion-3fn.md` y `sql/ddl/001_schema.sql` para que las tres fuentes digan lo mismo. |
+| **Estándares aplicados** | D3 (diagramas ER **y relacional** en editable + PNG/PDF — el hallazgo que motivó el diagrama), D2 (nombre de archivo con la entrega: `ENTREGA2_...`), requisito 5.3 (normalización hasta 3FN demostrada con ejemplo). |
+| **Responsable** | Cristopher Alexis Castellanos Paz |
+
+---
+
 ## Declaración
 La IA se utilizó como apoyo de análisis, corrección de inconsistencias documentales y organización de carpetas — no como sustituto de las decisiones del equipo. Toda propuesta fue presentada con su justificación antes de aplicarse, y las decisiones de fondo (SGBD) fueron tomadas por el equipo.

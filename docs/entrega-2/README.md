@@ -7,7 +7,9 @@ Documentación de la Entrega 2 — Diseño lógico, diccionario e implementació
 - [x] Decisión de SGBD: PostgreSQL
 - [x] Decisión de stack web: Python + Flask
 - [x] `modelo-relacional.md` — modelo relacional (11 tablas)
-- [x] `normalizacion-3fn.md` — normalización 3FN con ejemplo completo (DF)
+- [x] `../diagramas/DIAGRAMA-RELACIONAL.drawio` (+ PNG/PDF) — diagrama del modelo relacional, exigido por el estándar D3 junto al ER
+- [x] `normalizacion-3fn.md` — normalización 3FN con ejemplo completo (DF), cadena 1FN → 2FN → 3FN
+- [x] `ENTREGA2_NORMALIZACION_3FN.xlsx` — la misma normalización en hoja de cálculo, con el formato de los ejercicios de clase (tabla original → análisis de forma normal → tablas de cada paso)
 - [x] `diccionario-datos.md` — diccionario completo + matriz de 38 restricciones
 - [x] DDL ejecutable (`sql/ddl/001_schema.sql`)
 - [x] Datos de prueba (`sql/dml/001_seed.sql` + `web/seed_usuarios.py`)

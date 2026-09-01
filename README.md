@@ -70,7 +70,9 @@ sistema-inventario-laboratorio/
 
 ### Documentacion de Entrega 2
 - `docs/entrega-2/modelo-relacional.md` — modelo relacional (11 tablas)
+- `docs/diagramas/DIAGRAMA-RELACIONAL.drawio` (+ PNG/PDF) — diagrama del modelo relacional
 - `docs/entrega-2/normalizacion-3fn.md` — normalización 3FN con ejemplo completo
+- `docs/entrega-2/ENTREGA2_NORMALIZACION_3FN.xlsx` — la misma normalización paso a paso en hoja de cálculo
 - `docs/entrega-2/diccionario-datos.md` — diccionario de datos + matriz de 38 restricciones
 - `docs/entrega-2/matriz-trazabilidad.md` — trazabilidad RF → tabla/módulo
 - `sql/ddl/001_schema.sql` — DDL ejecutable
