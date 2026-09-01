@@ -46,10 +46,12 @@ cd web && pip install -r requirements.txt && python seed_usuarios.py && python a
 
 Ambos quedaron corregidos en el código y en `INSTALL.md` antes de que nadie más los sufra. Detalle completo de la sesión de pruebas en `docs/entrega-2/Bitacora-IA.md`.
 
-## Pendiente real
-- Re-exportar PNG/PDF del diagrama ER corregido.
-- Firmar `CERTIFICACION_ENTREGA_2.md`.
-- Llevar el código al repositorio Git real y crear el tag `entrega-2`.
+## Cierre de la entrega (01/09/2026)
+Auditoría final contra la consigna antes de taggear (detalle en `docs/entrega-2/Bitacora-IA.md`):
+- Diagrama ER corregido: la relación `Registra` conectaba USUARIO con PRODUCTO, pero la FK real es `movimiento.id_usuario` — ahora es **USUARIO (1) — Registra — (N) MOVIMIENTO**. Se agregó también el atributo `requiere_vencimiento` a PRODUCTO. PNG y PDF re-exportados.
+- `CERTIFICACION_ENTREGA_2.md` firmada por ambos integrantes.
+- Rutas rotas corregidas en `README.md` (nombres reales de los archivos del diagrama) y en el encabezado de `sql/dml/001_seed.sql`.
+- Tag `entrega-2` creado y publicado.
 
 ## Pruebas manuales del equipo (además de las automatizadas)
 El equipo inició sesión manualmente en el navegador con los 3 usuarios de prueba (`admin.dev`, `encargado.dev`, `consulta.dev`) y usó el CRUD web para curar el catálogo completo con datos reales del laboratorio: las 5 categorías y los 10 productos del seed inicial (genéricos) se editaron uno por uno hasta reflejar el catálogo real (códigos, nombres y unidades tal como los maneja el laboratorio), y se agregó un producto adicional. Todo verificado directamente en PostgreSQL. Detalle en `docs/casos-prueba/casos-prueba-entrega-2.md` (CP-16, CP-17, CP-18). `sql/dml/001_seed.sql` se actualizó para que una instalación desde cero cargue directamente este catálogo real, no datos de ejemplo genéricos.

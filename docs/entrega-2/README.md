@@ -14,15 +14,16 @@ Documentación de la Entrega 2 — Diseño lógico, diccionario e implementació
 - [x] Aplicación web: login + layout + 2 CRUD (Categorías, Productos) en `web/`
 - [x] `AVANCE_WEB.md` (raíz del repo)
 - [x] `matriz-trazabilidad.md` — v1
-- [x] Casos de prueba **escritos** (`docs/casos-prueba/casos-prueba-entrega-2.md`)
-- [x] `CERTIFICACION_ENTREGA_2.md` — **borrador sin firmar**
-
+- [x] Casos de prueba ejecutados (`docs/casos-prueba/casos-prueba-entrega-2.md`) — 15 automatizados + 3 manuales en navegador
+- [x] `CERTIFICACION_ENTREGA_2.md` — firmada por ambos integrantes
 - [x] DDL/DML/app **ejecutados de verdad** contra PostgreSQL 18 + Python 3.14 (30/08/2026) — 15/15 casos de prueba pasaron
+- [x] Auditoría de cierre contra la consigna (01/09/2026) — ver `Bitacora-IA.md`
+- [x] Diagrama ER corregido (relación `Registra`: USUARIO → MOVIMIENTO) y re-exportado a PNG/PDF
+- [x] Tag `entrega-2` creado y publicado
 
-## Pendiente — acciones del equipo, no de la IA
-- [ ] Interacción manual en navegador (las pruebas fueron HTTP automatizadas) — recomendable antes de la defensa oral.
-- [ ] Re-exportar PNG/PDF del diagrama ER corregido (`docs/diagramas/`).
-- [ ] Firmar `CERTIFICACION_ENTREGA_2.md` (contenido ya verificado por ejecución real, solo falta la firma física).
-- [ ] Llevar todos estos archivos al repositorio Git real y crear el tag `entrega-2`.
+## Diferido a la Entrega 3 (con justificación)
+- [ ] Ampliar `sql/dml/001_seed.sql` al mínimo de 50 registros por tabla principal (Sección 5.7 de la consigna). Hoy el seed carga el catálogo **real** del laboratorio (6 categorías, 12 productos, 3 proveedores, 4 lotes), suficiente para los 2 CRUD que pondera esta entrega; el volumen se completa junto con el DML de la Entrega 3.
+- [ ] Vistas, triggers, procedimientos y los 3 roles de PostgreSQL (`sql/views/`, `sql/triggers/`, `sql/procedures/`, `sql/security/`).
+- [ ] Control de acceso por rol dentro de la app (la rúbrica lo pondera en Entrega 3, no aquí).
 
-**Estado:** contenido completo y **verificado por ejecución real** (no solo escrito). Pendiente solo la firma y el traslado al repo Git real.
+**Estado:** cerrada. Contenido completo, verificado por ejecución real y auditado contra la consigna antes del tag.

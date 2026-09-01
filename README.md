@@ -61,9 +61,9 @@ sistema-inventario-laboratorio/
 
 ### Documentacion de Entrega 1
 - `docs/entrega-1/ENTREGA1_PROPUESTA.docx`
-- `docs/diagramas/DIAGRAMA-ER-LAB.png`
-- `docs/diagramas/DIAGRAMA-ER-LAB.drawio`
-- `docs/diagramas/DIAGRAMA-ER-LAB.pdf`
+- `docs/diagramas/DIAGRAMA-ER-LAB.drawio` — diagrama ER editable (fuente)
+- `docs/diagramas/DIAGRAMA-ER-LAB.drawio.png`
+- `docs/diagramas/DIAGRAMA-ER-LAB.drawio.pdf`
 - `docs/entrega-1/Gantt-Proyecto.xlsx`
 - `docs/bitacora-ia/Bitacora-IA.md`
 - `docs/certificaciones/CERTIFICACION_ENTREGA_1.md`
@@ -77,8 +77,8 @@ sistema-inventario-laboratorio/
 - `sql/dml/001_seed.sql` + `web/seed_usuarios.py` — datos de prueba
 - `web/` — aplicación Flask: login, layout, CRUD de Categorías y Productos
 - `AVANCE_WEB.md` — estado de la app web
-- `docs/casos-prueba/casos-prueba-entrega-2.md` — 15 casos de prueba (escritos, pendientes de ejecución)
-- `docs/certificaciones/CERTIFICACION_ENTREGA_2.md` — **borrador sin firmar**
+- `docs/casos-prueba/casos-prueba-entrega-2.md` — 15 casos automatizados + 3 manuales, ejecutados (18/18)
+- `docs/certificaciones/CERTIFICACION_ENTREGA_2.md` — firmada por ambos integrantes
 - `docs/entrega-2/Bitacora-IA.md` — bitácora de IA de esta entrega
 
 ### SGBD
@@ -91,8 +91,11 @@ sistema-inventario-laboratorio/
 |JOSE EDUARDO ESCOBAR|2690245346|
 
 ### Control de versiones
-La entrega finaliza con un commit de cierre y el tag `entrega-1`.
+Cada entrega finaliza con un commit de cierre y su tag: `entrega-1`, `entrega-2`.
 
 ### Estado
-- Entrega 1 — Análisis, propuesta y diseño conceptual: **cerrada**.
-- Entrega 2 — Diseño lógico, diccionario e implementación base: **contenido completo y verificado por ejecución real** (PostgreSQL 18 + Python 3.14, 30/08/2026 — 15/15 casos de prueba pasaron). Hecho: SGBD (PostgreSQL), stack web (Flask + psycopg 3), modelo relacional, normalización 3FN, diccionario de datos, DDL, datos de prueba, login + 2 CRUD (Categorías, Productos) probados en vivo, `AVANCE_WEB.md`, matriz de trazabilidad, casos de prueba ejecutados. Pendiente — **acciones del equipo, no de la IA**: interacción manual en navegador, re-exportar el diagrama ER a PNG/PDF, firmar la certificación, y llevar todo al repositorio Git real con el tag `entrega-2`.
+- Entrega 1 — Análisis, propuesta y diseño conceptual: **cerrada** (tag `entrega-1`).
+- Entrega 2 — Diseño lógico, diccionario e implementación base: **cerrada** (tag `entrega-2`, 01/09/2026). Contenido verificado por ejecución real (PostgreSQL 18 + Python 3.14, 30/08/2026 — 15/15 casos automatizados y 3 manuales en navegador). Incluye: SGBD (PostgreSQL), stack web (Flask + psycopg 3), modelo relacional, normalización 3FN, diccionario de datos, DDL, datos de prueba, login + 2 CRUD (Categorías, Productos), `AVANCE_WEB.md`, matriz de trazabilidad, casos de prueba ejecutados, diagrama ER corregido y re-exportado, y certificación firmada por ambos integrantes.
+- Entrega 3 — Implementación avanzada, seguridad y pruebas: **en curso**. Pendiente: vistas, triggers, procedimientos, 3 roles de PostgreSQL, control de acceso por rol en la app, ampliación del seed a 50+ registros por tabla principal y app web al 70%.
+
+> **Nota sobre la integración:** el proyecto lo desarrollan 2 estudiantes. La consigna indica grupos de 3 "puede variar con autorización del catedrático".
