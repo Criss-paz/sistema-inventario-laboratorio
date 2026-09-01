@@ -14,7 +14,21 @@ Antes del sistema, este es exactamente el tipo de reporte plano que el laborator
 | 1 | 2026-08-20 09:00 | ENTRADA | 3 | José Escobar | 11 | L-2026-02 | 56 | Reactivo B | 7 | Reactivos | 5 | 30.00 |
 | 2 | 2026-08-21 14:10 | SALIDA | 5 | Cristopher Paz | 10 | L-2026-01 | 55 | Reactivo A | 7 | Reactivos | 3 | 15.50 |
 
-**Nota sobre 1FN antes de empezar:** si en vez de esto tuviéramos una sola fila por movimiento con una celda tipo `lotes_afectados = "L-2026-01:20, L-2026-02:5"`, eso ya violaría 1FN (valores no atómicos/multivaluados en una celda). La tabla de arriba ya asume la corrección de eso: una fila por cada par (movimiento, lote) afectado — que es, literalmente, el grano que ya tiene `DETALLE_MOVIMIENTO` en el modelo real.
+## Paso a 1FN — atomicidad
+
+1FN exige que toda celda contenga un valor atómico: ni listas, ni grupos repetidos, ni campos multivaluados.
+
+La forma en que el laboratorio lleva hoy el registro sí viola 1FN. Una hoja de cálculo típica guarda **una fila por movimiento** y mete todos los lotes afectados en una sola celda:
+
+| id_movimiento | fecha_hora | tipo_movimiento | lotes_afectados |
+|---|---|---|---|
+| 1 | 2026-08-20 09:00 | ENTRADA | `L-2026-01:20, L-2026-02:5` |
+
+`lotes_afectados` es multivaluado: no se puede filtrar, sumar ni relacionar sin partir el texto. Con eso es imposible responder "¿cuánto queda del lote L-2026-01?" sin procesar cadenas.
+
+**Corrección a 1FN:** se descompone en una fila por cada par (movimiento, lote) afectado, con la cantidad en su propia columna — que es exactamente el grano de la tabla `registro_inventario_plano` de arriba, y literalmente el grano que hoy tiene `DETALLE_MOVIMIENTO` en el modelo real.
+
+A partir de aquí la tabla ya está en 1FN, y el resto del análisis parte de ella.
 
 ## Dependencias funcionales identificadas
 
@@ -56,10 +70,11 @@ Ya no hay dependencias parciales: en `MOVIMIENTO`, todo depende de `id_movimient
 - En `LOTE`: `nombre_producto` e `id_categoria` no dependen de `id_lote` directamente, dependen de `id_producto` (`id_lote → id_producto → nombre_producto`). Y dentro de eso, `nombre_categoria` depende de `id_categoria`, no de `id_producto` (`id_producto → id_categoria → nombre_categoria`). **Dos niveles de dependencia transitiva.**
   → Se extraen `PRODUCTO(id_producto, nombre_producto, id_categoria)` y `CATEGORIA(id_categoria, nombre_categoria)`, y `LOTE` se queda solo con la FK `id_producto`.
 
-## Resultado final (3FN)
+## Resultado final (3FN) — esquema completo, 11 tablas
+
+Las **6 tablas derivadas** por el ejemplo anterior:
 
 ```
-ROL(id_rol, nombre, descripcion)
 USUARIO(id_usuario, id_rol[FK], nombre, usuario, password_hash, estado, fecha_creacion)
 CATEGORIA(id_categoria, nombre, descripcion, estado)
 PRODUCTO(id_producto, id_categoria[FK], codigo, nombre, descripcion, unidad_medida, stock_minimo, requiere_vencimiento, estado)
@@ -68,9 +83,21 @@ MOVIMIENTO(id_movimiento, id_usuario[FK], tipo_movimiento, fecha_hora, observaci
 DETALLE_MOVIMIENTO(id_detalle, id_movimiento[FK], id_lote[FK], cantidad, precio_unitario)
 ```
 
-Esto es exactamente el modelo relacional que ya se había construido en la Fase 2 a partir del ER — la normalización formal confirma que no hace falta rediseñarlo, solo queda documentada la razón matemática (DF) de por qué está bien dividido.
+Más las **5 tablas que el ejemplo nunca tocó** (se verifican en la sección siguiente):
 
-## Verificación de las 5 tablas restantes (no necesitaban el ejemplo largo porque nunca tuvieron dependencia parcial ni transitiva)
+```
+ROL(id_rol, nombre, descripcion)
+PROVEEDOR(id_proveedor, nombre, nit, telefono, correo, direccion, estado)
+EXAMEN_LABORATORIO(id_examen, nombre_examen, descripcion, codigo_interno)
+PROVEEDOR_PRODUCTO(id_proveedor[FK], id_producto[FK], precio_compra)
+EXAMEN_PRODUCTO(id_examen[FK], id_producto[FK], cantidad_requerida)
+```
+
+**6 derivadas + 5 verificadas = 11 tablas**, que es exactamente el modelo relacional ya construido en la Fase 2 a partir del ER. La normalización formal confirma que no hace falta rediseñarlo: solo queda documentada la razón matemática (las DF) de por qué está bien dividido.
+
+## Verificación de las 5 tablas que el ejemplo no tocó
+
+Ninguna necesitaba la derivación larga porque nunca tuvo dependencia parcial ni transitiva:
 
 | Tabla | Todo atributo no-clave depende de... | ¿Parcial? | ¿Transitiva? |
 |---|---|---|---|
