@@ -75,6 +75,7 @@ sistema-inventario-laboratorio/
 - `docs/entrega-2/ENTREGA2_NORMALIZACION_3FN.xlsx` — la misma normalización paso a paso en hoja de cálculo
 - `docs/entrega-2/diccionario-datos.md` — diccionario de datos + matriz de 38 restricciones
 - `docs/entrega-2/matriz-trazabilidad.md` — trazabilidad RF → tabla/módulo
+- `docs/entrega-2/estandares-cumplimiento.md` — cumplimiento de los estándares SQL (6.2) y web (6.3)
 - `sql/ddl/001_schema.sql` — DDL ejecutable
 - `sql/dml/001_seed.sql` + `web/seed_usuarios.py` — datos de prueba
 - `web/` — aplicación Flask: login, layout, CRUD de Categorías y Productos

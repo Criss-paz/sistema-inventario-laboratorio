@@ -16,6 +16,7 @@ Documentación de la Entrega 2 — Diseño lógico, diccionario e implementació
 - [x] Aplicación web: login + layout + 2 CRUD (Categorías, Productos) en `web/`
 - [x] `AVANCE_WEB.md` (raíz del repo)
 - [x] `matriz-trazabilidad.md` — v1
+- [x] `estandares-cumplimiento.md` — cumplimiento de las Secciones 6.2 (SQL) y 6.3 (aplicación) estándar por estándar, con evidencia
 - [x] Casos de prueba ejecutados (`docs/casos-prueba/casos-prueba-entrega-2.md`) — 15 automatizados + 3 manuales en navegador
 - [x] `CERTIFICACION_ENTREGA_2.md` — firmada por ambos integrantes
 - [x] DDL/DML/app **ejecutados de verdad** contra PostgreSQL 18 + Python 3.14 (30/08/2026) — 15/15 casos de prueba pasaron
