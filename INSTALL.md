@@ -49,6 +49,8 @@ Por qué este orden:
 
 En Windows, si `psql` no está en el PATH, use la ruta completa: `& "C:\Program Files\PostgreSQL\18\bin\psql.exe" ...`
 
+**En Windows, antes de ejecutar los scripts:** `$env:PGCLIENTENCODING = "UTF8"` (PowerShell). Los scripts están en UTF-8 y psql en Windows los lee como WIN1252 por defecto: las tildes y la ñ se guardan corruptas **sin ningún error**, o el script se detiene con `carácter con secuencia de bytes 0x.. en codificación «WIN1252» no tiene equivalente`.
+
 ## 4. Configurar variables de entorno
 ```bash
 cp .env.example .env
@@ -86,6 +88,7 @@ Abrir `http://localhost:8080` (o el valor de `APP_PORT` en `.env`) e iniciar ses
 | `permission denied for schema public` al correr `001_schema.sql` | Falta el `GRANT ALL ON SCHEMA public` del paso 2 (PostgreSQL 15+ ya no lo da por defecto) | Repetir el último comando del paso 2 |
 | Falla instalando `psycopg2-binary` pidiendo "Microsoft Visual C++ 14.0" | No hay wheel precompilado de psycopg2 para tu versión de Python (pasa con Python muy nuevo, p. ej. 3.14) | Ya migrado: el proyecto usa `psycopg[binary]` (psycopg 3), que sí trae wheel — asegúrate de tener la versión actual de `requirements.txt` |
 | `role "rol_consulta" does not exist` o `permiso denegado` al usar la app | No se ejecutó `sql/security/001_roles.sql` como `postgres` | Repetir el último comando del paso 3 con `-U postgres` |
+| `carácter con secuencia de bytes ... «WIN1252»`, o tildes que aparecen como `Ã­` | psql en Windows leyó los scripts como WIN1252 | `$env:PGCLIENTENCODING = "UTF8"` y repetir el paso 3 desde el DDL (los datos ya cargados quedaron corruptos) |
 | `relation "categoria" does not exist` | No se ejecutó `001_schema.sql` | Repetir el paso 3 |
 | Login siempre dice "Usuario o contraseña incorrectos" | No se ejecutó `seed_usuarios.py`, o se insertó un usuario a mano con un hash inválido | Ejecutar `python seed_usuarios.py`; nunca escribir `password_hash` a mano |
 | `ModuleNotFoundError: No module named 'flask'` | No se instalaron dependencias en el entorno activo | `pip install -r web/requirements.txt` dentro del entorno correcto |
