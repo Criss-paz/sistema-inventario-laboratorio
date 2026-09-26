@@ -7,7 +7,7 @@ Procedimientos almacenados que registran una entrada o una salida de inventario 
 | Procedimiento | Qué hace | Reglas |
 |---|---|---|
 | `sp_registrar_entrada` | Registra una entrada de producto. Si el lote (producto + número) ya existe le suma; si no, lo crea en 0 y la entrada lo carga, así ningún lote tiene existencia sin un movimiento que la respalde. | RF-20, RF-22, RN-02, RN-05, RN-06, RN-07, RN-08 |
-| `sp_registrar_salida` | Registra una salida de producto eligiendo los lotes por **FEFO** (vence primero, sale primero), sin tocar lotes vencidos y repartiendo en varios lotes si uno no alcanza. Valida la existencia total antes de mover nada. | RF-21, RF-23, RF-25, RN-03, RN-04, RN-08, RN-18 |
+| `sp_registrar_salida` | Registra una salida de producto eligiendo los lotes por **FEFO** (vence primero, sale primero), sin tocar lotes vencidos y repartiendo en varios lotes si uno no alcanza. Valida la existencia total antes de mover nada. | RF-21, RF-23, RF-24, RN-03, RN-04, RN-08, RN-18 |
 | `fn_validar_usuario_activo` | Función auxiliar de ambos: el responsable del movimiento debe estar activo. | RN-08 |
 
 La existencia del lote **no** la modifican estos procedimientos: la actualiza el trigger `trg_detalle_movimiento_existencia` (ver `sql/triggers/`), para que haya una sola fuente de verdad.

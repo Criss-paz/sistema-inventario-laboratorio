@@ -9,7 +9,7 @@
 --               docs/bitacora-ia/Bitacora-IA.md para el registro de uso.
 -- Descripción:  2 procedimientos:
 --                 1. sp_registrar_entrada → RF-20, RF-22, RF-14, RN-02, RN-05, RN-06, RN-08
---                 2. sp_registrar_salida  → RF-21, RF-23, RF-25, RN-03, RN-04, RN-08
+--                 2. sp_registrar_salida  → RF-21, RF-23, RF-24, RN-03, RN-04, RN-08
 --               Ambos crean el encabezado (movimiento) y su detalle en la misma
 --               llamada; la actualización de lote.cantidad_disponible la hace
 --               el trigger trg_detalle_movimiento_existencia, no estos
@@ -138,7 +138,7 @@ $$;
 --
 -- Regla de negocio:
 --   RF-21/RF-23  Registrar salidas con su detalle.
---   RF-25/RN-04  No sacar más de lo disponible: se valida contra la existencia
+--   RF-24/RN-04  No sacar más de lo disponible: se valida contra la existencia
 --                TOTAL utilizable del producto antes de tocar ningún lote,
 --                para dar un solo mensaje claro en vez de fallar a medias.
 --   FEFO         (First Expired, First Out) — práctica estándar en
