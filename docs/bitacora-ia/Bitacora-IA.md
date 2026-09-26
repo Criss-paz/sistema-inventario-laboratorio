@@ -10,7 +10,7 @@ La bitácora se lleva por entrega. Este archivo corresponde a la Entrega 1; las 
 |---|---|---|
 | Entrega 1 — Análisis, propuesta y diseño conceptual | este archivo | Cerrada |
 | Entrega 2 — Diseño lógico, diccionario e implementación base | [`docs/entrega-2/Bitacora-IA.md`](../entrega-2/Bitacora-IA.md) | Cerrada (13 registros) |
-| Entrega 3 — Implementación avanzada, seguridad y pruebas | `docs/entrega-3/` | Pendiente |
+| Entrega 3 — Implementación avanzada, seguridad y pruebas | [`docs/entrega-3/Bitacora-IA.md`](../entrega-3/Bitacora-IA.md) | En curso |
 | Entrega 4 — Integración, documentación y defensa | `docs/entrega-4/` | Pendiente |
 
 ## Entrega
