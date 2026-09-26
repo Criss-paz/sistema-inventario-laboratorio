@@ -31,3 +31,6 @@ database/respaldos/*.dump
 dist/
 build/
 *.class
+# Datos reales del laboratorio (fuente para la carga; no se publican)
+Nueva carpeta/
+datos-origen/

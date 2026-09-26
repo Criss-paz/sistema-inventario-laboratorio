@@ -31,9 +31,10 @@ psql -U usuario_app -d inventario_laboratorio -f sql/triggers/001_triggers.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/procedures/001_procedures.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/views/001_views.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/dml/001_seed.sql
-psql -U usuario_app -d inventario_laboratorio -f sql/dml/002_seed_catalogos.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/dml/002_carga_catalogo.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/dml/003_seed_examenes.sql
 python web/seed_usuarios.py          # requiere el paso 4 (.env) y las dependencias del paso 5
-psql -U usuario_app -d inventario_laboratorio -f sql/dml/003_seed_movimientos.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/dml/004_carga_movimientos.sql
 psql -U postgres    -d inventario_laboratorio -f sql/security/001_roles.sql
 ```
 Por qué este orden:
@@ -41,9 +42,9 @@ Por qué este orden:
 2. `triggers/` — **antes** del seed, para que las reglas de negocio (RN-07, existencias) se apliquen también a los datos de prueba.
 3. `procedures/` — dependen de las tablas y de los triggers.
 4. `views/` — solo dependen de las tablas.
-5. `dml/001` y `002` — catálogos (57 productos, 50 proveedores, 50 exámenes).
+5. `dml/001` a `003` — catálogos: 806 productos y 26 proveedores reales del laboratorio (+24 de prueba inactivos), 50 exámenes.
 6. `seed_usuarios.py` — usuarios con contraseña hasheada por la app; los movimientos necesitan un responsable (RN-08).
-7. `dml/003` — ~6 meses de historial: 117 lotes y 703 movimientos, con la existencia calculada por los triggers.
+7. `dml/004` — el inventario real de marzo a septiembre de 2026: 1,188 lotes y 5,839 movimientos, con la existencia calculada por los triggers (tarda unos segundos).
 8. `security/` — **como `postgres`**: crear roles requiere superusuario. Va al final porque otorga permisos sobre tablas, vistas y procedimientos que ya deben existir.
 
 En Windows, si `psql` no está en el PATH, use la ruta completa: `& "C:\Program Files\PostgreSQL\18\bin\psql.exe" ...`

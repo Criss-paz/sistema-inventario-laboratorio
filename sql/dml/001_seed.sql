@@ -2,18 +2,17 @@
 -- Archivo:      001_seed.sql
 -- Propósito:    Datos iniciales para demostrar el sistema
 -- Autor:        Equipo (Cristopher Alexis Castellanos Paz, José Eduardo Escobar)
--- Descripción:  Roles, catálogo real de categorías y productos (curado a mano
---               por el equipo desde la interfaz web — ver
---               docs/casos-prueba/casos-prueba-entrega-2.md, CP-18),
---               proveedores, exámenes y relaciones N:M.
+-- Descripción:  Roles, categorías base (curadas por el equipo desde la
+--               interfaz web — ver docs/casos-prueba/casos-prueba-entrega-2.md,
+--               CP-18) y los 4 exámenes de la Entrega 2.
 --               NO incluye la tabla `usuario`: esos registros se crean con
 --               web/seed_usuarios.py porque las contraseñas deben hashearse
 --               con la misma librería (werkzeug.security) que usa la app al
 --               validar el login — nunca se escribe un hash a mano en SQL.
 -- Dependencias: 001_schema.sql (debe ejecutarse primero)
--- Nota:         Catálogo base de la Entrega 2. El volumen de 50 registros
---               por tabla principal se completa en 002_seed_catalogos.sql y
---               003_seed_movimientos.sql (Entrega 3).
+-- Nota:         Base de la Entrega 2. El volumen de 50 registros por tabla
+--               principal lo completan 002_carga_catalogo.sql,
+--               003_seed_examenes.sql y 004_carga_movimientos.sql (Entrega 3).
 -- =============================================================================
 
 -- Roles (coinciden con los 3 actores de la Entrega 1)
@@ -28,26 +27,7 @@ INSERT INTO categoria (nombre, descripcion) VALUES
     ('MATERIAL PARA EL LABORATORIO', 'Tubos, pipetas y material general'),
     ('EQUIPO DE PROTECCION PERSONAL', 'Guantes, mascarillas, batas'),
     ('INSUMOS DE TOMA DE MUESTRA', 'Jeringas, torundas, ligas, tubos de recolección'),
-    ('CALIBRADORES', 'Controles de calidad para equipos de análisis'),
-    ('Anticoagulantes prueba 1', 'Ejemplo prueba 1');
-
--- Productos — catálogo real (códigos y nombres tal como los usa el laboratorio),
--- curado por el equipo vía CRUD web. id_categoria referenciado por posición de
--- inserción de arriba: 1=REACTIVOS, 2=MATERIAL PARA EL LABORATORIO,
--- 3=EQUIPO DE PROTECCION PERSONAL, 4=INSUMOS DE TOMA DE MUESTRA, 5=CALIBRADORES.
-INSERT INTO producto (id_categoria, codigo, nombre, descripcion, unidad_medida, stock_minimo, requiere_vencimiento) VALUES
-    (1, '1707801',    'MF GLUCOSA - GLU',                               'Reactivo para la detección de glucosa en sangre',            'Cartucho', 3,   TRUE),
-    (1, '1669829',    'MF COLESTEROL - CHOL',                           'Reactivo para la detección de colesterol en sangre',         'Cartucho', 3,   TRUE),
-    (1, 'HCFW',       'HbA1c CASSETTE FINECARE, WONDFO',                'Reactivo para la prueba de hemoglobina glicosilada',         'Caja',     3,   TRUE),
-    (2, 'TE5ML1U',    'TUBO DE ENSAYO 5 ML (12X75MM)U',                 'Tubo de vidrio para muestras de diferentes',                 'unidad',   200, FALSE),
-    (2, '370',        'PHOENIX CAJA PETRI 90X15 MM STSARDISH PACK 600', 'Caja petri para el área de bactereologia',                   'Caja',     2,   TRUE),
-    (3, 'GNCTM-A',    'GUANTE NITRILO CELESTE TALLA M - AROSA',         'Caja de 100 unidades',                                       'Caja',     10,  FALSE),
-    (3, 'MQNM-A',     'MASCARILLA QUIRÚRGICA NEGRA - MARCA AROSA',      'Caja de 50 unidades',                                        'Caja',     10,  FALSE),
-    (4, 'NIP040',     'JERINGA DE 5*21*1 1/2',                          'Jeringa estéril con aguja',                                  'Caja',     5,   FALSE),
-    (4, 'TV4MLEPET',  'TUBO AL VACÍO DE 4 ML. EDTA PET - AROSA',        'Tubo al vacío para examen del área de hematología',          'unidad',   200, FALSE),
-    (5, 'AIAPMACMAC', 'AIA-PACK MULTI ANALYTE CONTROL MAC',             'Control MAC para equipo Tosoh',                              'ml',       2,   TRUE),
-    (2, 'REA-999',    'Reactivo de prueba',                             NULL,                                                          'ml',       10,  FALSE),
-    (1, '101010001',  'H13',                                            'TIRA DE ORINA',                                              'Caja',     0,   TRUE);
+    ('CALIBRADORES', 'Controles de calidad para equipos de análisis');
 
 -- Exámenes de laboratorio
 INSERT INTO examen_laboratorio (nombre_examen, descripcion, codigo_interno) VALUES
@@ -56,31 +36,11 @@ INSERT INTO examen_laboratorio (nombre_examen, descripcion, codigo_interno) VALU
     ('Hemoglobina glicosilada (HbA1c)', 'Control de diabetes a largo plazo', 'EX-HBA-01'),
     ('Hematología completa', 'Conteo celular sanguíneo completo', 'EX-HEM-01');
 
--- Proveedores
-INSERT INTO proveedor (nombre, nit, telefono, correo, direccion) VALUES
-    ('Distribuidora Médica Quetzaltenango, S.A.', '1234567-8', '77761234', 'ventas@dmq.com.gt', '5a avenida 10-20 zona 1, Quetzaltenango'),
-    ('Laboratorios Clínicos del Occidente', '2345678-9', '77762345', 'contacto@lco.com.gt', '12 calle 5-30 zona 3, Quetzaltenango'),
-    ('Insumos Médicos Guatemala, S.A.', '3456789-0', '22223456', 'info@insumosmedicosgt.com', '18 calle 24-56 zona 12, Ciudad de Guatemala');
-
--- Relación PROVEEDOR-PRODUCTO ("Suministra") — a qué precio suministra cada proveedor cada producto
--- (id_producto referenciado por posición de inserción arriba: 1=MF GLUCOSA, 2=MF COLESTEROL,
--- 6=GUANTE NITRILO, 7=MASCARILLA, 8=JERINGA, 9=TUBO AL VACÍO, 4=TUBO DE ENSAYO)
-INSERT INTO proveedor_producto (id_proveedor, id_producto, precio_compra) VALUES
-    (1, 1, 85.50), (1, 2, 92.00), (2, 1, 88.00),
-    (2, 6, 45.00), (2, 7, 30.00),
-    (3, 8, 0.75), (3, 9, 3.20), (3, 4, 1.10);
-
--- Relación EXAMEN-PRODUCTO ("Requiere") — insumos necesarios por examen
-INSERT INTO examen_producto (id_examen, id_producto, cantidad_requerida) VALUES
-    (1, 1, 2.0),   -- Glucosa en ayunas requiere MF GLUCOSA
-    (1, 8, 1.0),   -- y una jeringa
-    (2, 2, 3.0),   -- Perfil lipídico requiere MF COLESTEROL
-    (3, 3, 1.5),   -- HbA1c requiere su cassette
-    (4, 9, 1.0);   -- Hematología requiere tubo EDTA
-
--- Lotes: ya NO se insertan aquí con una existencia fija. Desde la Entrega 3
--- cada lote nace en 0 y lo carga una ENTRADA registrada en el historial
--- (ver sql/dml/003_seed_movimientos.sql), para que la existencia siempre esté
--- respaldada por movimientos (RN-02, RN-09).
+-- Productos, proveedores, lotes y movimientos: vienen del inventario real del
+-- laboratorio (002_carga_catalogo.sql y 004_carga_movimientos.sql). Los 12
+-- productos y 3 proveedores de ejemplo de la Entrega 2 se retiraron: los
+-- productos reales ya incluyen esos códigos, con sus datos verdaderos.
+-- Cada lote nace en 0 y lo carga una ENTRADA registrada en el historial,
+-- para que la existencia siempre esté respaldada por movimientos (RN-02, RN-09).
 
 -- Fin de 001_seed.sql
