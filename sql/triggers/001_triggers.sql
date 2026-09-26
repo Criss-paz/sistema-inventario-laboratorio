@@ -12,6 +12,11 @@
 --                 2. trg_movimiento_inmutable /
 --                    trg_detalle_movimiento_inmutable    → RN-09
 --                 3. trg_lote_vencimiento                → RN-07
+-- Errores:      toda violación de regla de negocio se lanza con RAISE EXCEPTION
+--               sin ERRCODE (SQLSTATE P0001) y un mensaje redactado para el
+--               usuario final. La app web muestra el mensaje solo cuando el
+--               SQLSTATE es P0001; cualquier otro error SQL se oculta tras un
+--               mensaje genérico (estándar A2).
 -- Dependencias: sql/ddl/001_schema.sql (las tablas deben existir).
 --               Ejecutar ANTES de sql/dml/ si el seed registra movimientos,
 --               para que la existencia de los lotes se calcule por trigger.
@@ -72,8 +77,7 @@ BEGIN
     END IF;
 
     IF NOT v_estado_lote THEN
-        RAISE EXCEPTION 'El lote % está dado de baja y no admite movimientos.', v_numero_lote
-            USING ERRCODE = 'check_violation';
+        RAISE EXCEPTION 'El lote % está dado de baja y no admite movimientos.', v_numero_lote;
     END IF;
 
     IF v_tipo_movimiento = 'ENTRADA' THEN
@@ -84,8 +88,7 @@ BEGIN
     ELSIF v_tipo_movimiento = 'SALIDA' THEN
         IF NEW.cantidad > v_disponible THEN
             RAISE EXCEPTION 'Existencia insuficiente en el lote %: disponible %, solicitado %.',
-                            v_numero_lote, v_disponible, NEW.cantidad
-                USING ERRCODE = 'check_violation';
+                            v_numero_lote, v_disponible, NEW.cantidad;
         END IF;
 
         UPDATE lote
@@ -122,8 +125,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     RAISE EXCEPTION 'Los movimientos de inventario no se pueden modificar ni eliminar (tabla %). Registre un movimiento inverso para corregir.',
-                    TG_TABLE_NAME
-        USING ERRCODE = 'restrict_violation';
+                    TG_TABLE_NAME;
 END;
 $$;
 
@@ -167,8 +169,7 @@ BEGIN
      WHERE p.id_producto = NEW.id_producto;
 
     IF v_requiere_vencimiento AND NEW.fecha_vencimiento IS NULL THEN
-        RAISE EXCEPTION 'El producto "%" requiere fecha de vencimiento en sus lotes.', v_nombre_producto
-            USING ERRCODE = 'not_null_violation';
+        RAISE EXCEPTION 'El producto "%" requiere fecha de vencimiento en sus lotes.', v_nombre_producto;
     END IF;
 
     RETURN NEW;
