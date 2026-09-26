@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Corregir lote {{ lote.numero_lote }}{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Corregir lote<span class="subtitle">{{ lote.producto }}</span></h1>
+</div>
+
+<form class="card" method="post">
+  <p class="hint">La existencia no se edita aquí: solo cambia con entradas y salidas, para que siempre esté respaldada por el historial (RN-02, RN-09).</p>
+
+  <label for="numero_lote">Número de lote</label>
+  <input type="text" id="numero_lote" name="numero_lote" required maxlength="50" autofocus value="{{ lote.numero_lote }}">
+
+  <label for="fecha_vencimiento">Fecha de vencimiento
+    <span class="hint">{{ '(obligatoria para este producto, RN-07)' if lote.requiere_vencimiento else '(opcional)' }}</span></label>
+  <input type="date" id="fecha_vencimiento" name="fecha_vencimiento"
+         value="{{ lote.fecha_vencimiento.isoformat() if lote.fecha_vencimiento and lote.fecha_vencimiento.isoformat is defined else (lote.fecha_vencimiento or '') }}">
+
+  <div class="checkbox-row">
+    <input type="checkbox" id="estado" name="estado" {{ 'checked' if lote.estado else '' }}>
+    <label for="estado" style="margin:0;">Lote activo (desmarcar para darlo de baja: ya no admite movimientos)</label>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a class="btn" href="{{ url_for('lotes.detalle', id_lote=lote.id_lote) }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

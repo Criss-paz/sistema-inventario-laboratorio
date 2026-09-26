@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if proveedor and proveedor.id_proveedor else 'Nuevo' }} proveedor{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>{{ 'Editar proveedor' if proveedor and proveedor.id_proveedor else 'Nuevo proveedor' }}</h1>
+</div>
+
+<form class="card" method="post">
+  <label for="nombre">Nombre <span class="hint">(obligatorio)</span></label>
+  <input type="text" id="nombre" name="nombre" required maxlength="150" autofocus
+         value="{{ proveedor.nombre if proveedor else '' }}">
+
+  <label for="nit">NIT <span class="hint">(obligatorio, único)</span></label>
+  <input type="text" id="nit" name="nit" required maxlength="20" pattern="[0-9A-Za-z\-]{2,20}"
+         value="{{ proveedor.nit if proveedor else '' }}">
+
+  <label for="telefono">Teléfono</label>
+  <input type="tel" id="telefono" name="telefono" maxlength="20"
+         value="{{ (proveedor.telefono or '') if proveedor else '' }}">
+
+  <label for="correo">Correo</label>
+  <input type="email" id="correo" name="correo" maxlength="150"
+         value="{{ (proveedor.correo or '') if proveedor else '' }}">
+
+  <label for="direccion">Dirección</label>
+  <textarea id="direccion" name="direccion" rows="2" maxlength="255">{{ (proveedor.direccion or '') if proveedor else '' }}</textarea>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a class="btn" href="{{ url_for('proveedores.listar') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

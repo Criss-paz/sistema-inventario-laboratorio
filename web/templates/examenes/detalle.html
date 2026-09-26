@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ examen.nombre_examen }} — Exámenes{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>{{ examen.nombre_examen }}<span class="subtitle"><code>{{ examen.codigo_interno }}</code> {{ examen.descripcion or '' }}</span></h1>
+  <div class="actions">
+    {% if tiene_rol(ADMIN) %}
+    <a class="btn btn-sm" href="{{ url_for('examenes.editar', id_examen=examen.id_examen) }}">Editar</a>
+    {% endif %}
+    <a class="btn btn-sm" href="{{ url_for('examenes.listar') }}">← Exámenes</a>
+  </div>
+</div>
+
+{% if insumos %}
+  {% set limite = insumos[0] %}
+  <p class="nota">Con la existencia actual alcanza para <strong>{{ m.cantidad(limite.alcanzan) }} exámenes</strong>.
+    El insumo que limita es <strong>{{ limite.nombre }}</strong>.</p>
+{% endif %}
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Código</th><th>Insumo</th><th class="num">Por examen</th><th class="num">Existencia</th><th class="num">Alcanza para</th>
+        {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
+    </thead>
+    <tbody>
+      {% for i in insumos %}
+      <tr>
+        <td><code>{{ i.codigo }}</code></td>
+        <td>{{ i.nombre }}</td>
+        <td class="num">{{ m.cantidad(i.cantidad_requerida) }} {{ i.unidad_medida|lower }}</td>
+        <td class="num">{{ m.cantidad(i.existencia_utilizable) }}</td>
+        <td class="num {{ 'alerta' if i.alcanzan == 0 else '' }}">{{ m.cantidad(i.alcanzan) }}</td>
+        {% if tiene_rol(ADMIN) %}
+        <td class="actions">
+          <form method="post" style="margin:0;"
+                action="{{ url_for('examenes.quitar_insumo', id_examen=examen.id_examen, id_producto=i.id_producto) }}"
+                onsubmit="return confirm('¿Quitar ' + {{ i.nombre|tojson }} + ' del examen?');">
+            <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="6"><div class="empty-state"><p>Este examen todavía no tiene insumos registrados.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if tiene_rol(ADMIN) %}
+<form class="card" method="post" action="{{ url_for('examenes.agregar_insumo', id_examen=examen.id_examen) }}">
+  <h2>Agregar insumo</h2>
+  <label for="producto">Producto</label>
+  <input list="lista-productos" id="producto" name="producto" required autocomplete="off" placeholder="Escriba el nombre o el código">
+  <datalist id="lista-productos">
+    {% for p in productos %}<option value="{{ p.codigo }} — {{ p.nombre }}">{% endfor %}
+  </datalist>
+  <label for="cantidad_requerida">Cantidad por examen <span class="hint">(fracción si el empaque rinde varias pruebas, por ejemplo 0.01)</span></label>
+  <input type="number" id="cantidad_requerida" name="cantidad_requerida" required min="0.01" step="0.01">
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Agregar</button>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

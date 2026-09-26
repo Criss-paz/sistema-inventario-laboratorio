@@ -3,7 +3,9 @@
 {% block content %}
 <div class="top-actions">
   <h1>Categorías<span class="subtitle">Clasificación de los productos del inventario</span></h1>
+  {% if tiene_rol(ADMIN) %}
   <a class="btn btn-primary" href="{{ url_for('categorias.nueva') }}">+ Nueva categoría</a>
+  {% endif %}
 </div>
 
 <div class="stat-row">
@@ -24,7 +26,7 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Nombre</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr>
+      <tr><th>Nombre</th><th>Descripción</th><th>Estado</th>{% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
     </thead>
     <tbody>
       {% for c in categorias %}
@@ -38,6 +40,7 @@
             <span class="badge badge-off">Inactiva</span>
           {% endif %}
         </td>
+        {% if tiene_rol(ADMIN) %}
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('categorias.editar', id_categoria=c.id_categoria) }}">Editar</a>
           <form method="post" action="{{ url_for('categorias.alternar_estado', id_categoria=c.id_categoria) }}" style="margin:0;"
@@ -45,6 +48,7 @@
             <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if c.estado else 'Activar' }}</button>
           </form>
         </td>
+        {% endif %}
       </tr>
       {% else %}
       <tr class="empty-row">
@@ -52,7 +56,9 @@
           <div class="empty-state">
             <span class="empty-icon">🗂️</span>
             <p>No hay categorías registradas todavía.</p>
+            {% if tiene_rol(ADMIN) %}
             <a class="btn btn-primary btn-sm" href="{{ url_for('categorias.nueva') }}">+ Crear la primera categoría</a>
+            {% endif %}
           </div>
         </td>
       </tr>

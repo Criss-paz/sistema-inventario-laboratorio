@@ -1,36 +1,47 @@
 {% extends "base.html" %}
+{% import "_macros.html" as m %}
 {% block title %}Productos — Inventario Laboratorio{% endblock %}
 {% block content %}
 <div class="top-actions">
   <h1>Productos<span class="subtitle">Catálogo de productos e insumos</span></h1>
+  {% if tiene_rol(ADMIN) %}
   <a class="btn btn-primary" href="{{ url_for('productos.nuevo') }}">+ Nuevo producto</a>
+  {% endif %}
 </div>
 
 <div class="stat-row">
   <div class="stat-card">
-    <span class="stat-value">{{ productos|length }}</span>
+    <span class="stat-value">{{ resumen.total }}</span>
     <span class="stat-label">Total</span>
   </div>
   <div class="stat-card">
-    <span class="stat-value stat-ok">{{ productos|selectattr('estado')|list|length }}</span>
+    <span class="stat-value stat-ok">{{ resumen.activos }}</span>
     <span class="stat-label">Activos</span>
   </div>
   <div class="stat-card">
-    <span class="stat-value stat-muted">{{ productos|rejectattr('estado')|list|length }}</span>
-    <span class="stat-label">Inactivos</span>
+    <span class="stat-value stat-info">{{ resumen.con_existencia }}</span>
+    <span class="stat-label">Con existencia</span>
   </div>
   <div class="stat-card">
-    <span class="stat-value stat-info">{{ productos|selectattr('requiere_vencimiento')|list|length }}</span>
+    <span class="stat-value stat-muted">{{ resumen.con_vencimiento }}</span>
     <span class="stat-label">Con vencimiento</span>
   </div>
 </div>
+
+<form class="filtros" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nombre o código" maxlength="100">
+  {{ m.select_categoria(categorias, id_categoria) }}
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+  {% if q or id_categoria %}<a class="btn btn-sm" href="{{ url_for('productos.listar') }}">Limpiar</a>{% endif %}
+</form>
 
 <div class="table-wrap">
   <table>
     <thead>
       <tr>
         <th>Código</th><th>Nombre</th><th>Categoría</th><th>Unidad</th>
-        <th>Stock mínimo</th><th>Vencimiento</th><th>Estado</th><th>Acciones</th>
+        <th class="num">Existencia</th><th class="num">Mínimo</th><th>Vence</th><th>Estado</th>
+        {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -40,7 +51,11 @@
         <td><strong>{{ p.nombre }}</strong></td>
         <td>{{ p.nombre_categoria }}</td>
         <td>{{ p.unidad_medida }}</td>
-        <td>{{ p.stock_minimo }}</td>
+        <td class="num {{ 'alerta' if p.estado and p.existencia_utilizable <= p.stock_minimo else '' }}">
+          {{ m.cantidad(p.existencia_utilizable) }}
+          {% if p.existencia_vencida > 0 %}<span class="hint" title="Existencia en lotes vencidos">(+{{ m.cantidad(p.existencia_vencida) }} vencida)</span>{% endif %}
+        </td>
+        <td class="num">{{ m.cantidad(p.stock_minimo) }}</td>
         <td>{{ 'Sí' if p.requiere_vencimiento else 'No' }}</td>
         <td>
           {% if p.estado %}
@@ -49,6 +64,7 @@
             <span class="badge badge-off">Inactivo</span>
           {% endif %}
         </td>
+        {% if tiene_rol(ADMIN) %}
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('productos.editar', id_producto=p.id_producto) }}">Editar</a>
           <form method="post" action="{{ url_for('productos.alternar_estado', id_producto=p.id_producto) }}" style="margin:0;"
@@ -56,14 +72,14 @@
             <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if p.estado else 'Activar' }}</button>
           </form>
         </td>
+        {% endif %}
       </tr>
       {% else %}
       <tr class="empty-row">
-        <td colspan="8">
+        <td colspan="9">
           <div class="empty-state">
             <span class="empty-icon">🧴</span>
-            <p>No hay productos registrados todavía.</p>
-            <a class="btn btn-primary btn-sm" href="{{ url_for('productos.nuevo') }}">+ Crear el primer producto</a>
+            <p>{{ 'Ningún producto coincide con el filtro.' if q or id_categoria else 'No hay productos registrados todavía.' }}</p>
           </div>
         </td>
       </tr>
@@ -71,4 +87,5 @@
     </tbody>
   </table>
 </div>
+{{ m.paginacion(total, pagina) }}
 {% endblock %}

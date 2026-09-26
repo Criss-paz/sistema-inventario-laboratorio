@@ -1,0 +1,38 @@
+{# Piezas reutilizables de las listas. Uso: {% import "_macros.html" as m %} #}
+
+{# Paginación: conserva los filtros actuales (request.args) al cambiar de página. #}
+{% macro paginacion(total, pagina, por_pagina=50) %}
+  {% set paginas = ((total + por_pagina - 1) // por_pagina) or 1 %}
+  {% if paginas > 1 %}
+  <nav class="paginacion">
+    {% set args = request.args.to_dict() %}
+    {% set _ = args.update(request.view_args or {}) %}
+    {% if pagina > 1 %}
+      {% set _ = args.update({'pagina': pagina - 1}) %}
+      <a class="btn btn-sm" href="{{ url_for(request.endpoint, **args) }}">← Anterior</a>
+    {% endif %}
+    <span>Página {{ pagina }} de {{ paginas }} · {{ total }} registros</span>
+    {% if pagina < paginas %}
+      {% set _ = args.update({'pagina': pagina + 1}) %}
+      <a class="btn btn-sm" href="{{ url_for(request.endpoint, **args) }}">Siguiente →</a>
+    {% endif %}
+  </nav>
+  {% else %}
+  <p class="paginacion"><span>{{ total }} registros</span></p>
+  {% endif %}
+{% endmacro %}
+
+{# Selector de categoría para barras de filtro. #}
+{% macro select_categoria(categorias, seleccionada) %}
+  <select name="categoria">
+    <option value="">Todas las categorías</option>
+    {% for c in categorias %}
+    <option value="{{ c.id_categoria }}" {{ 'selected' if (seleccionada|string) == (c.id_categoria|string) else '' }}>{{ c.nombre }}</option>
+    {% endfor %}
+  </select>
+{% endmacro %}
+
+{# Cantidades: sin decimales cuando son enteras (12 en vez de 12.00). #}
+{% macro cantidad(valor) -%}
+  {%- if valor is none -%}—{%- elif valor == valor|int -%}{{ valor|int }}{%- else -%}{{ valor }}{%- endif -%}
+{%- endmacro %}

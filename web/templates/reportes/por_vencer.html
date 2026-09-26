@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Lotes por vencer — Reportes{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Lotes vencidos y por vencer<span class="subtitle">Lotes con existencia que ya vencieron o vencen en los próximos 90 días (RN-07)</span></h1>
+</div>
+
+<nav class="pestanas">
+  {% for clave, texto in [('', 'Todos'), ('VENCIDO', 'Vencidos'), ('POR VENCER', 'Por vencer')] %}
+  <a href="{{ url_for('reportes.por_vencer', situacion=clave or None, q=q or None) }}" class="{{ 'active' if situacion == clave else '' }}">{{ texto }}</a>
+  {% endfor %}
+</nav>
+
+<form class="filtros" method="get">
+  <input type="hidden" name="situacion" value="{{ situacion }}">
+  <input type="search" name="q" value="{{ q }}" placeholder="Producto, código o lote" maxlength="100">
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Lote</th><th>Producto</th><th>Proveedor</th><th>Vence</th><th class="num">Días</th><th class="num">Existencia</th></tr>
+    </thead>
+    <tbody>
+      {% for l in filas %}
+      <tr>
+        <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"><strong>{{ l.numero_lote }}</strong></a></td>
+        <td><code>{{ l.codigo }}</code> {{ l.producto }}</td>
+        <td>{{ l.proveedor }}</td>
+        <td>{{ l.fecha_vencimiento.strftime('%d/%m/%Y') }}
+          {% if l.situacion == 'VENCIDO' %}<span class="badge badge-danger">Vencido</span>{% else %}<span class="badge badge-warn">Por vencer</span>{% endif %}</td>
+        <td class="num">{{ l.dias_para_vencer }}</td>
+        <td class="num">{{ m.cantidad(l.cantidad_disponible) }} {{ l.unidad_medida|lower }}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="6"><div class="empty-state"><span class="empty-icon">✅</span><p>No hay lotes vencidos ni por vencer con ese filtro.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(total, pagina) }}
+{% endblock %}

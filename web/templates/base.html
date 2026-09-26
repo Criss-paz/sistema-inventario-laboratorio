@@ -15,8 +15,21 @@
       Inventario — Lab. Privado Quetzaltenango
     </div>
     <nav>
-      <a href="{{ url_for('categorias.listar') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('categorias.') else '' }}">Categorías</a>
-      <a href="{{ url_for('productos.listar') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('productos.') else '' }}">Productos</a>
+      {% set actual = request.endpoint or '' %}
+      {% for endpoint, texto in [
+           ('reportes.inicio', 'Inicio'),
+           ('movimientos.historial', 'Movimientos'),
+           ('lotes.listar', 'Lotes'),
+           ('productos.listar', 'Productos'),
+           ('examenes.listar', 'Exámenes'),
+           ('proveedores.listar', 'Proveedores'),
+           ('categorias.listar', 'Categorías'),
+           ('reportes.inventario_bajo', 'Inventario bajo'),
+           ('reportes.por_vencer', 'Por vencer')] %}
+      {% set modulo = endpoint.split('.')[0] %}
+      <a href="{{ url_for(endpoint) }}"
+         class="{{ 'active' if actual == endpoint or (modulo != 'reportes' and actual.startswith(modulo ~ '.')) else '' }}">{{ texto }}</a>
+      {% endfor %}
     </nav>
     <div class="user-box">
       <span>{{ session.get('nombre_usuario') }}</span>

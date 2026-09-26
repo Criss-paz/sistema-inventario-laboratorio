@@ -17,8 +17,8 @@ import psycopg
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
-from db import query_all, query_one, execute
-from routes.auth import login_required
+from db import query_all, query_one, query_page, execute
+from routes.auth import login_required, rol_requerido, ADMIN
 
 bp = Blueprint("productos", __name__, url_prefix="/productos")
 
@@ -67,20 +67,51 @@ def _validar_formulario(form):
 @bp.route("/")
 @login_required
 def listar():
-    productos = query_all(
+    # Filtros (A3: se validan antes de usarlos; van como parámetros, A4).
+    q = (request.args.get("q") or "").strip()
+    id_categoria = request.args.get("categoria", "")
+    pagina = request.args.get("pagina", "1")
+    pagina = int(pagina) if pagina.isdigit() else 1
+
+    condiciones, params = [], []
+    if q:
+        condiciones.append("(e.nombre ILIKE %s OR e.codigo ILIKE %s)")
+        params += [f"%{q}%", f"%{q}%"]
+    if id_categoria.isdigit():
+        condiciones.append("p.id_categoria = %s")
+        params.append(int(id_categoria))
+    where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
+
+    # La existencia sale de la vista (S7: calculada, no almacenada).
+    productos, total = query_page(
+        f"""
+        SELECT e.id_producto, e.codigo, e.nombre, e.categoria AS nombre_categoria,
+               e.unidad_medida, e.stock_minimo, e.requiere_vencimiento, e.estado,
+               e.existencia_utilizable, e.existencia_vencida
+        FROM vw_existencia_producto e
+        JOIN producto p ON p.id_producto = e.id_producto
+        {where}
+        ORDER BY e.nombre
+        """,
+        params, pagina,
+    )
+    resumen = query_one(
         """
-        SELECT p.id_producto, p.codigo, p.nombre, p.unidad_medida, p.stock_minimo,
-               p.requiere_vencimiento, p.estado, c.nombre AS nombre_categoria
-        FROM producto p
-        JOIN categoria c ON c.id_categoria = p.id_categoria
-        ORDER BY p.nombre
+        SELECT count(*) AS total,
+               count(*) FILTER (WHERE estado) AS activos,
+               count(*) FILTER (WHERE existencia_utilizable > 0) AS con_existencia,
+               count(*) FILTER (WHERE requiere_vencimiento) AS con_vencimiento
+        FROM vw_existencia_producto
         """
     )
-    return render_template("productos/list.html", productos=productos)
+    return render_template(
+        "productos/list.html", productos=productos, total=total, pagina=pagina,
+        resumen=resumen, categorias=_categorias_activas(), q=q, id_categoria=id_categoria,
+    )
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
-@login_required
+@rol_requerido(ADMIN)
 def nuevo():
     if request.method == "GET":
         return render_template("productos/form.html", producto=None, categorias=_categorias_activas())
@@ -114,7 +145,7 @@ def nuevo():
 
 
 @bp.route("/<int:id_producto>/editar", methods=["GET", "POST"])
-@login_required
+@rol_requerido(ADMIN)
 def editar(id_producto):
     producto = query_one("SELECT * FROM producto WHERE id_producto = %s", (id_producto,))
     if producto is None:
@@ -154,7 +185,7 @@ def editar(id_producto):
 
 
 @bp.route("/<int:id_producto>/alternar-estado", methods=["POST"])
-@login_required
+@rol_requerido(ADMIN)
 def alternar_estado(id_producto):
     producto = query_one("SELECT estado FROM producto WHERE id_producto = %s", (id_producto,))
     if producto is None:

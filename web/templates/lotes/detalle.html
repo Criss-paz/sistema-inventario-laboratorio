@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Lote {{ lote.numero_lote }}{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Lote {{ lote.numero_lote }}<span class="subtitle"><code>{{ lote.codigo }}</code> {{ lote.producto }}</span></h1>
+  <div class="actions">
+    {% if tiene_rol(ADMIN) %}
+    <a class="btn btn-sm" href="{{ url_for('lotes.editar', id_lote=lote.id_lote) }}">Corregir datos</a>
+    {% endif %}
+    <a class="btn btn-sm" href="{{ url_for('lotes.listar') }}">← Lotes</a>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat-card">
+    <span class="stat-value">{{ m.cantidad(lote.cantidad_disponible) }}</span>
+    <span class="stat-label">Existencia ({{ lote.unidad_medida|lower }})</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-info">{{ lote.fecha_vencimiento.strftime('%d/%m/%Y') if lote.fecha_vencimiento else '—' }}</span>
+    <span class="stat-label">
+      {% if lote.dias_para_vencer is none %}Sin vencimiento
+      {% elif lote.dias_para_vencer < 0 %}Vencido hace {{ -lote.dias_para_vencer }} días
+      {% else %}Vence en {{ lote.dias_para_vencer }} días{% endif %}
+    </span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-muted">{{ lote.fecha_ingreso.strftime('%d/%m/%Y') }}</span>
+    <span class="stat-label">Ingreso · {{ lote.proveedor }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value {{ 'stat-ok' if lote.estado else 'stat-muted' }}">{{ 'Activo' if lote.estado else 'De baja' }}</span>
+    <span class="stat-label">Estado</span>
+  </div>
+</div>
+
+<h2>Movimientos del lote <span class="subtitle">la existencia es entradas − salidas de esta lista</span></h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Fecha</th><th>Tipo</th><th class="num">Cantidad</th><th>Responsable</th><th>Observación</th></tr></thead>
+    <tbody>
+      {% for mv in movimientos %}
+      <tr>
+        <td><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">{{ mv.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</a></td>
+        <td><span class="badge {{ 'badge-on' if mv.tipo_movimiento == 'ENTRADA' else 'badge-out' }}">{{ mv.tipo_movimiento|capitalize }}</span></td>
+        <td class="num">{{ '+' if mv.tipo_movimiento == 'ENTRADA' else '−' }}{{ m.cantidad(mv.cantidad) }}</td>
+        <td>{{ mv.nombre_usuario }}</td>
+        <td class="obs">{{ mv.observacion or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="5"><div class="empty-state"><p>Este lote no tiene movimientos.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

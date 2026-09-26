@@ -367,3 +367,80 @@ body.login-page .login-card .login-subtitle { color: #cfe3ff; }
   .table-wrap { overflow-x: auto; }
   table { min-width: 520px; }
 }
+
+/* =============================================================================
+   Entrega 3 — módulos de inventario (movimientos, lotes, exámenes, reportes)
+   ============================================================================= */
+
+/* El menú creció a 9 módulos: el encabezado se acomoda en dos líneas. */
+header.app-header { flex-wrap: wrap; gap: 0.5rem 1rem; }
+header.app-header nav { flex-wrap: wrap; }
+header.app-header nav a { padding: 0.35rem 0.6rem; }
+main { max-width: 1200px; }
+
+h2 { font-size: 1.02rem; color: var(--brand-dark); margin: 1.5rem 0 0.6rem; }
+h2 .subtitle, h2 a.hint { font-size: 0.78rem; font-weight: 400; color: var(--text-muted); margin-left: 0.4rem; }
+.top-actions h1 code { font-size: 0.8rem; }
+
+/* Barra de filtros sobre las tablas */
+.filtros {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin-bottom: 0.9rem;
+}
+.filtros input[type="search"] { min-width: 240px; flex: 1 1 240px; }
+.filtros input, .filtros select {
+  padding: 0.42rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font: inherit; font-size: 0.85rem; background: var(--surface);
+}
+.filtros label { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; }
+
+/* Pestañas (filtros rápidos de lotes y vencimientos) */
+.pestanas { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+.pestanas a {
+  padding: 0.45rem 0.85rem; font-size: 0.85rem; color: var(--text-muted); text-decoration: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.pestanas a:hover { color: var(--brand); }
+.pestanas a.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+
+/* Paginación */
+.paginacion { display: flex; align-items: center; justify-content: center; gap: 0.8rem; margin: 0.9rem 0; font-size: 0.83rem; color: var(--text-muted); }
+
+/* Tablas: números alineados a la derecha, existencias en alerta */
+th.num, td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.alerta { color: var(--danger); font-weight: 600; }
+td.obs { font-size: 0.8rem; color: var(--text-muted); max-width: 260px; }
+td a, .nota a { color: var(--brand); }
+
+/* Más estados de badge */
+.badge-out { background: var(--info-bg); color: var(--info); }
+.badge-out::before { background: var(--info); }
+.badge-warn { background: var(--warning-bg); color: var(--warning); }
+.badge-warn::before { background: var(--warning); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-danger::before { background: var(--danger); }
+
+.stat-value.stat-danger { color: var(--danger); }
+.stat-value small { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+a.stat-card { text-decoration: none; color: inherit; transition: box-shadow 0.15s ease, border-color 0.15s ease; }
+a.stat-card:hover { border-color: var(--brand-light); box-shadow: var(--shadow-md); }
+
+/* Nota informativa y ficha de datos */
+.nota {
+  background: var(--info-bg); border: 1px solid var(--info-border); color: var(--info);
+  padding: 0.65rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.87rem; margin: 0 0 1rem;
+}
+.ficha { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 1rem; margin: 0 0 1rem; font-size: 0.9rem; }
+.ficha dt { color: var(--text-muted); font-weight: 600; }
+.ficha dd { margin: 0; }
+
+form.card h2 { margin-top: 0; }
+form.card + form.card, .table-wrap + form.card { margin-top: 1.25rem; }
+
+/* Inicio: dos tablas lado a lado */
+.dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.dos-columnas h2 { margin-top: 0.5rem; }
+
+@media (max-width: 900px) {
+  .dos-columnas { grid-template-columns: 1fr; }
+}

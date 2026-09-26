@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Proveedores — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Proveedores<span class="subtitle">Empresas que suministran insumos al laboratorio</span></h1>
+  {% if tiene_rol(ADMIN) %}
+  <a class="btn btn-primary" href="{{ url_for('proveedores.nuevo') }}">+ Nuevo proveedor</a>
+  {% endif %}
+</div>
+
+<form class="filtros" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nombre o NIT" maxlength="100">
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+  {% if q %}<a class="btn btn-sm" href="{{ url_for('proveedores.listar') }}">Limpiar</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Nombre</th><th>NIT</th><th>Teléfono</th><th>Correo</th><th class="num">Productos</th><th>Estado</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pr in proveedores %}
+      <tr class="{{ '' if pr.estado else 'inactivo' }}">
+        <td><strong>{{ pr.nombre }}</strong></td>
+        <td><code>{{ pr.nit }}</code></td>
+        <td>{{ pr.telefono or '—' }}</td>
+        <td>{{ pr.correo or '—' }}</td>
+        <td class="num">{{ pr.productos }}</td>
+        <td>
+          {% if pr.estado %}
+            <span class="badge badge-on">Activo</span>
+          {% else %}
+            <span class="badge badge-off">Inactivo</span>
+          {% endif %}
+        </td>
+        <td class="actions">
+          <a class="btn btn-sm" href="{{ url_for('proveedores.detalle', id_proveedor=pr.id_proveedor) }}">Ver</a>
+          {% if tiene_rol(ADMIN) %}
+          <a class="btn btn-sm" href="{{ url_for('proveedores.editar', id_proveedor=pr.id_proveedor) }}">Editar</a>
+          <form method="post" action="{{ url_for('proveedores.alternar_estado', id_proveedor=pr.id_proveedor) }}" style="margin:0;"
+                onsubmit="return confirm({{ ('¿Desactivar el proveedor ' if pr.estado else '¿Activar el proveedor ')|tojson }} + {{ pr.nombre|tojson }} + '?');">
+            <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if pr.estado else 'Activar' }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr class="empty-row">
+        <td colspan="7">
+          <div class="empty-state">
+            <span class="empty-icon">🚚</span>
+            <p>{{ 'Ningún proveedor coincide con la búsqueda.' if q else 'No hay proveedores registrados todavía.' }}</p>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(total, pagina) }}
+{% endblock %}

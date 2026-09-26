@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Exámenes — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Exámenes<span class="subtitle">Insumos que consume cada examen y cuántos alcanzan con la existencia actual</span></h1>
+  {% if tiene_rol(ADMIN) %}
+  <a class="btn btn-primary" href="{{ url_for('examenes.nuevo') }}">+ Nuevo examen</a>
+  {% endif %}
+</div>
+
+<form class="filtros" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nombre o código" maxlength="100">
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+  {% if q %}<a class="btn btn-sm" href="{{ url_for('examenes.listar') }}">Limpiar</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Código</th><th>Examen</th><th>Descripción</th><th class="num">Insumos</th><th class="num">Alcanzan para</th></tr>
+    </thead>
+    <tbody>
+      {% for e in examenes %}
+      <tr>
+        <td><code>{{ e.codigo_interno }}</code></td>
+        <td><a href="{{ url_for('examenes.detalle', id_examen=e.id_examen) }}"><strong>{{ e.nombre_examen }}</strong></a></td>
+        <td>{{ e.descripcion or '—' }}</td>
+        <td class="num">{{ e.insumos }}</td>
+        <td class="num {{ 'alerta' if e.alcanzan is not none and e.alcanzan == 0 else '' }}">
+          {% if e.alcanzan is none %}<span class="hint">sin insumos</span>{% else %}{{ m.cantidad(e.alcanzan) }} exámenes{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="5"><div class="empty-state"><span class="empty-icon">🔬</span><p>No hay exámenes con esa búsqueda.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(total, pagina) }}
+{% endblock %}

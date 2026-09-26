@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if examen and examen.id_examen else 'Nuevo' }} examen{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>{{ 'Editar examen' if examen and examen.id_examen else 'Nuevo examen' }}</h1>
+</div>
+
+<form class="card" method="post">
+  <label for="nombre_examen">Nombre <span class="hint">(obligatorio)</span></label>
+  <input type="text" id="nombre_examen" name="nombre_examen" required maxlength="150" autofocus
+         value="{{ examen.nombre_examen if examen else '' }}">
+
+  <label for="codigo_interno">Código interno <span class="hint">(obligatorio, único; por ejemplo EX-GLU-01)</span></label>
+  <input type="text" id="codigo_interno" name="codigo_interno" required maxlength="30" pattern="[A-Za-z0-9\-]{2,30}"
+         value="{{ examen.codigo_interno if examen else '' }}">
+
+  <label for="descripcion">Descripción</label>
+  <textarea id="descripcion" name="descripcion" rows="2" maxlength="255">{{ (examen.descripcion or '') if examen else '' }}</textarea>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a class="btn" href="{{ url_for('examenes.detalle', id_examen=examen.id_examen) if examen and examen.id_examen else url_for('examenes.listar') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

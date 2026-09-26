@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ proveedor.nombre }} — Proveedores{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>{{ proveedor.nombre }}<span class="subtitle">NIT {{ proveedor.nit }}{{ ' · Inactivo' if not proveedor.estado else '' }}</span></h1>
+  <div class="actions">
+    {% if tiene_rol(ADMIN) %}
+    <a class="btn btn-sm" href="{{ url_for('proveedores.editar', id_proveedor=proveedor.id_proveedor) }}">Editar</a>
+    {% endif %}
+    <a class="btn btn-sm" href="{{ url_for('proveedores.listar') }}">← Volver</a>
+  </div>
+</div>
+
+<dl class="ficha">
+  <dt>Teléfono</dt><dd>{{ proveedor.telefono or '—' }}</dd>
+  <dt>Correo</dt><dd>{{ proveedor.correo or '—' }}</dd>
+  <dt>Dirección</dt><dd>{{ proveedor.direccion or '—' }}</dd>
+</dl>
+
+<h2>Productos que suministra <span class="subtitle">último precio de compra (RN-16)</span></h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Código</th><th>Producto</th><th>Unidad</th><th class="num">Precio (Q)</th></tr></thead>
+    <tbody>
+      {% for p in productos %}
+      <tr>
+        <td><code>{{ p.codigo }}</code></td>
+        <td>{{ p.nombre }}</td>
+        <td>{{ p.unidad_medida }}</td>
+        <td class="num">{{ '%.2f'|format(p.precio_compra) }}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="4"><div class="empty-state"><p>Este proveedor no tiene productos con precio registrado.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

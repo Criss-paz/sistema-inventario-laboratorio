@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ mov.tipo_movimiento|capitalize }} #{{ mov.id_movimiento }}{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>{{ mov.tipo_movimiento|capitalize }} #{{ mov.id_movimiento }}
+    <span class="subtitle">{{ mov.fecha_hora.strftime('%d/%m/%Y %H:%M') }} · registrada por {{ mov.nombre_usuario }}</span></h1>
+  <a class="btn btn-sm" href="{{ url_for('movimientos.historial') }}">← Historial</a>
+</div>
+
+{% if mov.observacion %}<p class="nota">{{ mov.observacion }}</p>{% endif %}
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Lote</th><th>Producto</th><th class="num">Cantidad</th><th class="num">Precio (Q)</th><th class="num">Subtotal (Q)</th></tr></thead>
+    <tbody>
+      {% for d in detalles %}
+      <tr>
+        <td><a href="{{ url_for('lotes.detalle', id_lote=d.id_lote) }}">{{ d.numero_lote }}</a></td>
+        <td><code>{{ d.codigo }}</code> {{ d.producto }}</td>
+        <td class="num">{{ m.cantidad(d.cantidad) }} {{ d.unidad_medida|lower }}</td>
+        <td class="num">{{ '%.2f'|format(d.precio_unitario) }}</td>
+        <td class="num">{{ '%.2f'|format(d.subtotal) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if mov.tipo_movimiento == 'SALIDA' and detalles|length > 1 %}
+<p class="hint">La salida se repartió en {{ detalles|length }} lotes: primero el que vence antes (FEFO).</p>
+{% endif %}
+{% endblock %}

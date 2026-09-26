@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Registrar entrada{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Registrar entrada<span class="subtitle">Compra o recepción de insumos. Si el lote ya existe, se suma a él.</span></h1>
+</div>
+
+<form class="card" method="post">
+  <label for="producto">Producto <span class="hint">(escriba el nombre o el código y elija de la lista)</span></label>
+  <input list="lista-productos" id="producto" name="producto" required autofocus autocomplete="off"
+         value="{{ form.get('producto', '') }}">
+  <datalist id="lista-productos">
+    {% for p in productos %}<option value="{{ p.codigo }} — {{ p.nombre }}">{% endfor %}
+  </datalist>
+
+  <label for="id_proveedor">Proveedor</label>
+  <select id="id_proveedor" name="id_proveedor" required>
+    <option value="">-- Seleccione --</option>
+    {% for pr in proveedores %}
+    <option value="{{ pr.id_proveedor }}" {{ 'selected' if form.get('id_proveedor') == pr.id_proveedor|string else '' }}>{{ pr.nombre }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="numero_lote">Número de lote</label>
+  <input type="text" id="numero_lote" name="numero_lote" required maxlength="50" value="{{ form.get('numero_lote', '') }}">
+
+  <label for="fecha_vencimiento">Fecha de vencimiento <span class="hint">(obligatoria para reactivos, RN-07)</span></label>
+  <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" value="{{ form.get('fecha_vencimiento', '') }}">
+
+  <label for="cantidad">Cantidad</label>
+  <input type="number" id="cantidad" name="cantidad" required min="0.01" step="0.01" value="{{ form.get('cantidad', '') }}">
+
+  <label for="precio_unitario">Precio unitario (Q)</label>
+  <input type="number" id="precio_unitario" name="precio_unitario" min="0" step="0.01" value="{{ form.get('precio_unitario', '0') }}">
+
+  <label for="observacion">Observación</label>
+  <textarea id="observacion" name="observacion" rows="2" maxlength="255" placeholder="Número de factura, condición del producto...">{{ form.get('observacion', '') }}</textarea>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Registrar entrada</button>
+    <a class="btn" href="{{ url_for('movimientos.historial') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

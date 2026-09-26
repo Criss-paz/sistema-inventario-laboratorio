@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Inventario bajo — Reportes{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Inventario bajo<span class="subtitle">Productos activos cuya existencia utilizable es igual o menor al stock mínimo (RN-11). Los lotes vencidos no cuentan.</span></h1>
+</div>
+
+<form class="filtros" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nombre o código" maxlength="100">
+  {{ m.select_categoria(categorias, id_categoria) }}
+  <label class="check"><input type="checkbox" name="todos" value="1" {{ 'checked' if todos else '' }}> Incluir productos que nunca se han comprado</label>
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+  {% if q or id_categoria or todos %}<a class="btn btn-sm" href="{{ url_for('reportes.inventario_bajo') }}">Limpiar</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Código</th><th>Producto</th><th>Categoría</th><th class="num">Existencia</th><th class="num">Vencida</th><th class="num">Mínimo</th><th class="num">Faltante</th></tr>
+    </thead>
+    <tbody>
+      {% for b in filas %}
+      <tr>
+        <td><code>{{ b.codigo }}</code></td>
+        <td><strong>{{ b.nombre }}</strong></td>
+        <td>{{ b.categoria }}</td>
+        <td class="num alerta">{{ m.cantidad(b.existencia_utilizable) }}</td>
+        <td class="num">{{ m.cantidad(b.existencia_vencida) if b.existencia_vencida > 0 else '—' }}</td>
+        <td class="num">{{ m.cantidad(b.stock_minimo) }}</td>
+        <td class="num"><strong>{{ m.cantidad(b.faltante) }}</strong> {{ b.unidad_medida|lower }}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="7"><div class="empty-state"><span class="empty-icon">✅</span><p>Ningún producto está por debajo de su stock mínimo con esos filtros.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(total, pagina) }}
+{% endblock %}

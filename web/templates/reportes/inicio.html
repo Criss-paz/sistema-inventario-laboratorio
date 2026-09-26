@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Inicio — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Inicio<span class="subtitle">Estado del inventario hoy, {{ hoy.strftime('%d/%m/%Y') }}</span></h1>
+  {% if tiene_rol(ADMIN, ENCARGADO) %}
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">+ Entrada</a>
+    <a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">− Salida</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="stat-row">
+  <a class="stat-card" href="{{ url_for('productos.listar') }}">
+    <span class="stat-value">{{ resumen.con_existencia }}<small> / {{ resumen.productos_activos }}</small></span>
+    <span class="stat-label">Productos con existencia</span>
+  </a>
+  <a class="stat-card" href="{{ url_for('reportes.inventario_bajo') }}">
+    <span class="stat-value {{ 'stat-danger' if resumen.bajo_con_historial else 'stat-ok' }}">{{ resumen.bajo_con_historial }}</span>
+    <span class="stat-label">En inventario bajo</span>
+  </a>
+  <a class="stat-card" href="{{ url_for('reportes.por_vencer', situacion='VENCIDO') }}">
+    <span class="stat-value {{ 'stat-danger' if resumen.lotes_vencidos else 'stat-ok' }}">{{ resumen.lotes_vencidos }}</span>
+    <span class="stat-label">Lotes vencidos con existencia</span>
+  </a>
+  <a class="stat-card" href="{{ url_for('reportes.por_vencer', situacion='POR VENCER') }}">
+    <span class="stat-value stat-info">{{ resumen.lotes_por_vencer }}</span>
+    <span class="stat-label">Lotes que vencen en 90 días</span>
+  </a>
+  <a class="stat-card" href="{{ url_for('movimientos.historial') }}">
+    <span class="stat-value stat-muted">{{ resumen.movimientos_30_dias }}</span>
+    <span class="stat-label">Movimientos en 30 días</span>
+  </a>
+</div>
+
+<div class="dos-columnas">
+  <section>
+    <h2>Próximos a vencer <a class="hint" href="{{ url_for('reportes.por_vencer') }}">ver todos</a></h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th class="num">Existencia</th></tr></thead>
+        <tbody>
+          {% for l in por_vencer %}
+          <tr>
+            <td>{{ l.producto }}</td>
+            <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}">{{ l.numero_lote }}</a></td>
+            <td>
+              {{ l.fecha_vencimiento.strftime('%d/%m/%Y') }}
+              {% if l.situacion == 'VENCIDO' %}<span class="badge badge-danger">Vencido</span>
+              {% else %}<span class="badge badge-warn">{{ l.dias_para_vencer }} días</span>{% endif %}
+            </td>
+            <td class="num">{{ m.cantidad(l.cantidad_disponible) }}</td>
+          </tr>
+          {% else %}
+          <tr class="empty-row"><td colspan="4"><div class="empty-state"><p>Ningún lote vence en los próximos 90 días.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section>
+    <h2>Últimos movimientos <a class="hint" href="{{ url_for('movimientos.historial') }}">ver historial</a></h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th class="num">Cantidad</th></tr></thead>
+        <tbody>
+          {% for mv in ultimos %}
+          <tr>
+            <td><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">{{ mv.fecha_hora.strftime('%d/%m %H:%M') }}</a></td>
+            <td><span class="badge {{ 'badge-on' if mv.tipo_movimiento == 'ENTRADA' else 'badge-out' }}">{{ mv.tipo_movimiento|capitalize }}</span></td>
+            <td>{{ mv.producto }}</td>
+            <td class="num">{{ m.cantidad(mv.cantidad) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

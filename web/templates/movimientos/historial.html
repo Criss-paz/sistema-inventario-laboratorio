@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Movimientos — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Movimientos<span class="subtitle">Historial de entradas y salidas (no se puede modificar, RN-09)</span></h1>
+  {% if tiene_rol(ADMIN, ENCARGADO) %}
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">+ Entrada</a>
+    <a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">− Salida</a>
+  </div>
+  {% endif %}
+</div>
+
+<form class="filtros" method="get">
+  <select name="tipo">
+    <option value="">Entradas y salidas</option>
+    <option value="ENTRADA" {{ 'selected' if tipo == 'ENTRADA' else '' }}>Solo entradas</option>
+    <option value="SALIDA" {{ 'selected' if tipo == 'SALIDA' else '' }}>Solo salidas</option>
+  </select>
+  <input type="search" name="q" value="{{ q }}" placeholder="Producto, código o lote" maxlength="100">
+  <label>Desde <input type="date" name="desde" value="{{ desde }}"></label>
+  <label>Hasta <input type="date" name="hasta" value="{{ hasta }}"></label>
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+  {% if tipo or q or desde or hasta %}<a class="btn btn-sm" href="{{ url_for('movimientos.historial') }}">Limpiar</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha</th><th>Tipo</th><th>Producto</th><th>Lote</th><th class="num">Cantidad</th>
+        <th class="num">Precio (Q)</th><th>Responsable</th><th>Observación</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in filas %}
+      <tr>
+        <td><a href="{{ url_for('movimientos.detalle', id_movimiento=f.id_movimiento) }}">{{ f.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</a></td>
+        <td><span class="badge {{ 'badge-on' if f.tipo_movimiento == 'ENTRADA' else 'badge-out' }}">{{ f.tipo_movimiento|capitalize }}</span></td>
+        <td><code>{{ f.codigo }}</code> {{ f.producto }}</td>
+        <td><a href="{{ url_for('lotes.detalle', id_lote=f.id_lote) }}">{{ f.numero_lote }}</a></td>
+        <td class="num">{{ m.cantidad(f.cantidad) }} {{ f.unidad_medida|lower }}</td>
+        <td class="num">{{ '%.2f'|format(f.precio_unitario) if f.tipo_movimiento == 'ENTRADA' else '—' }}</td>
+        <td>{{ f.nombre_usuario }}</td>
+        <td class="obs">{{ f.observacion or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="8"><div class="empty-state"><span class="empty-icon">📦</span><p>No hay movimientos con esos filtros.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(total, pagina) }}
+{% endblock %}

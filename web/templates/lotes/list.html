@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Lotes — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Lotes<span class="subtitle">Existencia por lote y vencimientos. Los lotes nacen con una entrada.</span></h1>
+</div>
+
+<nav class="pestanas">
+  {% for clave, texto in [('existencia', 'Con existencia'), ('por_vencer', 'Vencen en 90 días'), ('vencidos', 'Vencidos con existencia'), ('todos', 'Todos')] %}
+  <a href="{{ url_for('lotes.listar', filtro=clave, q=q or None) }}" class="{{ 'active' if filtro == clave else '' }}">{{ texto }}</a>
+  {% endfor %}
+</nav>
+
+<form class="filtros" method="get">
+  <input type="hidden" name="filtro" value="{{ filtro }}">
+  <input type="search" name="q" value="{{ q }}" placeholder="Producto, código o número de lote" maxlength="100">
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+  {% if q %}<a class="btn btn-sm" href="{{ url_for('lotes.listar', filtro=filtro) }}">Limpiar</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Lote</th><th>Producto</th><th>Proveedor</th><th>Ingreso</th><th>Vence</th><th class="num">Existencia</th><th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in lotes %}
+      <tr class="{{ '' if l.estado else 'inactivo' }}">
+        <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"><strong>{{ l.numero_lote }}</strong></a></td>
+        <td><code>{{ l.codigo }}</code> {{ l.producto }}</td>
+        <td>{{ l.proveedor }}</td>
+        <td>{{ l.fecha_ingreso.strftime('%d/%m/%Y') }}</td>
+        <td>
+          {% if l.fecha_vencimiento %}
+            {{ l.fecha_vencimiento.strftime('%d/%m/%Y') }}
+            {% if l.dias_para_vencer < 0 %}<span class="badge badge-danger">Vencido</span>
+            {% elif l.dias_para_vencer <= 90 %}<span class="badge badge-warn">{{ l.dias_para_vencer }} días</span>{% endif %}
+          {% else %}—{% endif %}
+        </td>
+        <td class="num">{{ m.cantidad(l.cantidad_disponible) }} {{ l.unidad_medida|lower }}</td>
+        <td>{% if l.estado %}<span class="badge badge-on">Activo</span>{% else %}<span class="badge badge-off">De baja</span>{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="7"><div class="empty-state"><span class="empty-icon">🏷️</span><p>No hay lotes con ese filtro.</p></div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(total, pagina) }}
+{% endblock %}

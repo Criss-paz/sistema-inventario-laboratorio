@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Registrar salida{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Registrar salida<span class="subtitle">Consumo de insumos. El sistema elige los lotes que vencen primero (FEFO) y no usa lotes vencidos.</span></h1>
+</div>
+
+<form class="card" method="post">
+  <label for="producto">Producto <span class="hint">(escriba el nombre o el código y elija de la lista)</span></label>
+  <input list="lista-productos" id="producto" name="producto" required autofocus autocomplete="off"
+         value="{{ form.get('producto', '') }}">
+  <datalist id="lista-productos">
+    {% for p in productos %}<option value="{{ p.codigo }} — {{ p.nombre }}">{% endfor %}
+  </datalist>
+  <p id="existencia" class="hint" aria-live="polite"></p>
+
+  <label for="cantidad">Cantidad</label>
+  <input type="number" id="cantidad" name="cantidad" required min="0.01" step="0.01" value="{{ form.get('cantidad', '') }}">
+
+  <label for="observacion">Observación</label>
+  <textarea id="observacion" name="observacion" rows="2" maxlength="255" placeholder="Área que consume: química clínica, hematología...">{{ form.get('observacion', '') }}</textarea>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Registrar salida</button>
+    <a class="btn" href="{{ url_for('movimientos.historial') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Muestra la existencia utilizable al elegir el producto. Es solo una
+  // ayuda: la validación real la hace sp_registrar_salida (RN-04).
+  (function () {
+    var campo = document.getElementById('producto');
+    var aviso = document.getElementById('existencia');
+    function consultar() {
+      if (!campo.value.includes(' — ')) { aviso.textContent = ''; return; }
+      fetch({{ url_for('movimientos.existencia')|tojson }} + '?producto=' + encodeURIComponent(campo.value))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          aviso.textContent = d.ok ? 'Existencia utilizable: ' + d.existencia + ' ' + d.unidad.toLowerCase() : '';
+        })
+        .catch(function () { aviso.textContent = ''; });
+    }
+    campo.addEventListener('change', consultar);
+    consultar();
+  })();
+</script>
+{% endblock %}
