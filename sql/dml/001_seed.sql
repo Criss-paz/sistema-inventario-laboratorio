@@ -5,15 +5,15 @@
 -- Descripción:  Roles, catálogo real de categorías y productos (curado a mano
 --               por el equipo desde la interfaz web — ver
 --               docs/casos-prueba/casos-prueba-entrega-2.md, CP-18),
---               proveedores, exámenes, relaciones N:M y lotes de ejemplo.
+--               proveedores, exámenes y relaciones N:M.
 --               NO incluye la tabla `usuario`: esos registros se crean con
 --               web/seed_usuarios.py porque las contraseñas deben hashearse
 --               con la misma librería (werkzeug.security) que usa la app al
 --               validar el login — nunca se escribe un hash a mano en SQL.
 -- Dependencias: 001_schema.sql (debe ejecutarse primero)
--- Nota:         Set de demostración (no las 50 filas/tabla que pide el
---               requisito mínimo del sistema completo) — suficiente para
---               probar los 2 CRUD de la Entrega 2. Se amplía en Entrega 3.
+-- Nota:         Catálogo base de la Entrega 2. El volumen de 50 registros
+--               por tabla principal se completa en 002_seed_catalogos.sql y
+--               003_seed_movimientos.sql (Entrega 3).
 -- =============================================================================
 
 -- Roles (coinciden con los 3 actores de la Entrega 1)
@@ -78,11 +78,9 @@ INSERT INTO examen_producto (id_examen, id_producto, cantidad_requerida) VALUES
     (3, 3, 1.5),   -- HbA1c requiere su cassette
     (4, 9, 1.0);   -- Hematología requiere tubo EDTA
 
--- Lotes de ejemplo (id_producto, id_proveedor referenciados por posición de inserción arriba)
-INSERT INTO lote (id_producto, id_proveedor, numero_lote, fecha_ingreso, fecha_vencimiento, cantidad_disponible) VALUES
-    (1, 1, 'L-2026-001', '2026-07-01', '2027-07-01', 1000.00),
-    (2, 2, 'L-2026-002', '2026-07-05', '2027-01-05', 800.00),
-    (6, 2, 'L-2026-003', '2026-06-15', NULL, 50.00),  -- EPP no requiere vencimiento
-    (8, 3, 'L-2026-004', '2026-07-10', '2028-07-10', 600.00);
+-- Lotes: ya NO se insertan aquí con una existencia fija. Desde la Entrega 3
+-- cada lote nace en 0 y lo carga una ENTRADA registrada en el historial
+-- (ver sql/dml/003_seed_movimientos.sql), para que la existencia siempre esté
+-- respaldada por movimientos (RN-02, RN-09).
 
 -- Fin de 001_seed.sql
