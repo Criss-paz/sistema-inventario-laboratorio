@@ -1,19 +1,29 @@
 """
-routes/auth.py — Login, logout y control básico de acceso.
-RF-01 (iniciar sesión), RF-02 (cerrar sesión), RNF-03/04/05/06/17.
+routes/auth.py — Login, logout y control de acceso por rol.
+RF-01 (iniciar sesión), RF-02 (cerrar sesión), RF-05 (acceso según rol),
+RNF-03/04/05/06/17.
 
-El control de acceso POR ROL (RF-05: qué puede hacer cada rol dentro de la
-app) queda para la Entrega 3 — la propia rúbrica lo pondera aparte
-("Control de acceso por rol en la app", 0.5 pts de Entrega 3). Aquí solo se
-valida que exista sesión activa (login_required) para entrar a cualquier
-módulo, y se guarda el rol en sesión para usarlo después.
+El acceso por rol se controla en dos capas:
+  1. Aquí, en la app: rol_requerido() bloquea la ruta y las plantillas
+     ocultan lo que el rol no puede hacer.
+  2. En la base: db.get_db() adopta el rol de BD con SET ROLE, así que
+     PostgreSQL niega la operación aunque la capa 1 fallara.
+
+Qué puede hacer cada rol (igual que sql/security/001_roles.sql):
+  Administrador            todo: catálogos, lotes, movimientos, reportes
+  Encargado de inventario  consultar + registrar entradas y salidas
+  Usuario de consulta      solo consultar
 """
 from functools import wraps
 
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, abort
 from werkzeug.security import check_password_hash
 
-from db import query_one
+from db import query_one, ROL_BD
+
+ADMIN = "Administrador"
+ENCARGADO = "Encargado de inventario"
+CONSULTA = "Usuario de consulta"
 
 bp = Blueprint("auth", __name__)
 
@@ -29,6 +39,24 @@ def login_required(view):
     return wrapped
 
 
+def rol_requerido(*roles):
+    """Decorador: exige sesión activa y que el rol del usuario esté en `roles`."""
+    def decorador(view):
+        @wraps(view)
+        @login_required
+        def wrapped(*args, **kwargs):
+            if session.get("nombre_rol") not in roles:
+                abort(403)
+            return view(*args, **kwargs)
+        return wrapped
+    return decorador
+
+
+def tiene_rol(*roles):
+    """Para las plantillas: ¿el usuario en sesión tiene alguno de `roles`?"""
+    return session.get("nombre_rol") in roles
+
+
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
@@ -42,6 +70,9 @@ def login():
         flash("Usuario y contraseña son obligatorios.", "danger")
         return render_template("login.html"), 400
 
+    # Se descarta la sesión anterior ANTES de consultar: la verificación del
+    # password la hace usuario_app, sin adoptar el rol de otro usuario.
+    session.clear()
     try:
         row = query_one(
             """
@@ -61,7 +92,7 @@ def login():
     # (RNF-17: evitar accesos no autorizados / fuga de información de login).
     error_generico = "Usuario o contraseña incorrectos."
 
-    if row is None or not row["estado"]:
+    if row is None or not row["estado"] or row["nombre_rol"] not in ROL_BD:
         flash(error_generico, "danger")
         return render_template("login.html"), 401
 
@@ -69,12 +100,14 @@ def login():
         flash(error_generico, "danger")
         return render_template("login.html"), 401
 
-    session.clear()
     session["id_usuario"] = row["id_usuario"]
     session["nombre_usuario"] = row["nombre"]
     session["nombre_rol"] = row["nombre_rol"]
 
-    destino = request.args.get("next") or url_for("index")
+    # Solo rutas internas: evita que ?next=https://otro-sitio redirija fuera.
+    destino = request.args.get("next") or ""
+    if not destino.startswith("/") or destino.startswith("//"):
+        destino = url_for("index")
     return redirect(destino)
 
 
