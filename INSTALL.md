@@ -30,6 +30,7 @@ psql -U usuario_app -d inventario_laboratorio -f sql/ddl/001_schema.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/triggers/001_triggers.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/procedures/001_procedures.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/views/001_views.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/views/002_valorizacion_promedio.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/dml/001_seed.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/dml/002_carga_catalogo.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/dml/003_seed_examenes.sql
@@ -41,7 +42,7 @@ Por qué este orden:
 1. `ddl/` — tablas y restricciones.
 2. `triggers/` — **antes** del seed, para que las reglas de negocio (RN-07, existencias) se apliquen también a los datos de prueba.
 3. `procedures/` — dependen de las tablas y de los triggers.
-4. `views/` — solo dependen de las tablas.
+4. `views/` — `001` solo depende de las tablas; `002` (kardex y valorización a costo promedio ponderado) usa las vistas de `001`.
 5. `dml/001` a `003` — catálogos: 806 productos y 26 proveedores reales del laboratorio (+24 de prueba inactivos), 50 exámenes.
 6. `seed_usuarios.py` — usuarios con contraseña hasheada por la app; los movimientos necesitan un responsable (RN-08).
 7. `dml/004` — el inventario real de marzo a septiembre de 2026: 1,188 lotes y 5,839 movimientos, con la existencia calculada por los triggers (tarda unos segundos).

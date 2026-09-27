@@ -44,7 +44,8 @@
 -- permisos aunque la interfaz tuviera un error (defensa en profundidad).
 --
 -- Dependencias: sql/ddl/001_schema.sql, sql/triggers/001_triggers.sql,
---               sql/procedures/001_procedures.sql, sql/views/001_views.sql
+--               sql/procedures/001_procedures.sql, sql/views/001_views.sql,
+--               sql/views/002_valorizacion_promedio.sql
 -- SGBD:         PostgreSQL 14+
 -- Ejecutar:     como superusuario (CREATE ROLE requiere ese privilegio):
 --               psql -U postgres -d inventario_laboratorio -f 001_roles.sql
@@ -109,8 +110,13 @@ GRANT SELECT ON categoria, producto, proveedor, lote,
     TO rol_consulta;
 
 GRANT SELECT ON vw_existencia_producto, vw_inventario_bajo,
-                vw_lotes_por_vencer, vw_historial_movimientos
+                vw_lotes_por_vencer, vw_historial_movimientos,
+                vw_valorizacion_inventario
     TO rol_consulta;
+
+-- Reportes valorizados (sql/views/002_valorizacion_promedio.sql): kardex a
+-- costo promedio ponderado. Lee vw_historial_movimientos como el invocador.
+GRANT EXECUTE ON FUNCTION fn_kardex_promedio(INTEGER) TO rol_consulta;
 
 -- -----------------------------------------------------------------------------
 -- 5. rol_encargado — todo lo de consulta + registrar entradas y salidas.
