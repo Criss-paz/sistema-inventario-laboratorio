@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m with context %}
+{% block title %}Inventario valorizado — Reportes{% endblock %}
+{% block content %}
+{{ m.encabezado_impresion('Inventario valorizado a costo promedio ponderado', 'al ' ~ hoy.strftime('%d/%m/%Y')) }}
+<div class="top-actions">
+  <h1>Inventario valorizado<span class="subtitle">Existencia y valor de cada producto al {{ hoy.strftime('%d/%m/%Y') }}, por el método de costo promedio ponderado: cada compra recalcula el costo promedio y cada salida se valoriza a ese promedio.</span></h1>
+  {{ m.acciones_reporte() }}
+</div>
+
+<div class="stat-row">
+  <div class="stat-card">
+    <span class="stat-value">Q{{ total|q }}</span>
+    <span class="stat-label">Valor del inventario</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-muted">{{ filas|length }}</span>
+    <span class="stat-label">{{ 'Productos' if todos else 'Productos con existencia' }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value {{ 'stat-danger' if valor_vencido > 0 else 'stat-ok' }}">Q{{ valor_vencido|q }}</span>
+    <span class="stat-label">Incluido en lotes vencidos</span>
+  </div>
+</div>
+
+<form class="filtros no-imprimir" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nombre o código" maxlength="100">
+  {{ m.select_categoria(categorias, id_categoria or '') }}
+  <label class="check"><input type="checkbox" name="todos" value="1" {{ 'checked' if todos else '' }}> Incluir productos sin existencia</label>
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+</form>
+
+<div class="dos-columnas reporte-resumen">
+  <section>
+    <h2>Valor por categoría</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Categoría</th><th class="num">Productos</th><th class="num">Valor (Q)</th><th class="num">% del total</th></tr></thead>
+        <tbody>
+          {% for nombre, c in por_categoria %}
+          <tr>
+            <td>{{ nombre }}</td>
+            <td class="num">{{ c.productos }}</td>
+            <td class="num">{{ c.valor|q }}</td>
+            <td class="num">{{ '%.1f'|format(100 * c.valor / total) if total else '0.0' }} %</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><th>Total</th><th class="num">{{ filas|length }}</th><th class="num">{{ total|q }}</th><th class="num">100.0 %</th></tr></tfoot>
+      </table>
+    </div>
+  </section>
+</div>
+
+<h2>Detalle por producto</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Código</th><th>Producto</th><th>Categoría</th><th class="num">Existencia</th><th class="num">Costo promedio (Q)</th><th class="num">Valor (Q)</th><th class="no-imprimir"></th></tr>
+    </thead>
+    <tbody>
+      {% for f in filas %}
+      <tr>
+        <td><code>{{ f.codigo }}</code></td>
+        <td>{{ f.nombre }}</td>
+        <td>{{ f.categoria }}</td>
+        <td class="num">
+          {{ m.con_unidad(f.existencia, f.unidad_medida) }}
+          {% if f.existencia_vencida > 0 %}<span class="hint">{{ m.cantidad(f.existencia_vencida) }} vencida</span>{% endif %}
+        </td>
+        <td class="num">{{ f.costo_promedio|q }}</td>
+        <td class="num"><strong>{{ f.valor_inventario|q }}</strong></td>
+        <td class="no-imprimir"><a class="btn btn-sm" href="{{ url_for('informes.kardex', id_producto=f.id_producto) }}">Kardex</a></td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="7">{{ i.vacio('Ningún producto coincide con los filtros.', 'productos') }}</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if filas %}
+    <tfoot><tr><th colspan="5">Valor total del inventario</th><th class="num">Q{{ total|q }}</th><th class="no-imprimir"></th></tr></tfoot>
+    {% endif %}
+  </table>
+</div>
+{% endblock %}

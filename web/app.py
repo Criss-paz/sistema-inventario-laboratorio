@@ -10,6 +10,8 @@ Ejecutar:
     pip install -r requirements.txt
     python app.py
 """
+import datetime as dt
+
 import psycopg
 from flask import Flask, redirect, url_for, render_template
 
@@ -24,6 +26,7 @@ from routes.movimientos import bp as movimientos_bp
 from routes.examenes import bp as examenes_bp
 from routes.reportes import bp as reportes_bp
 from routes.usuarios import bp as usuarios_bp
+from routes.informes import bp as informes_bp
 
 
 def create_app():
@@ -33,13 +36,19 @@ def create_app():
     app.teardown_appcontext(close_db)
 
     for bp in (auth_bp, categorias_bp, productos_bp, proveedores_bp, lotes_bp,
-               movimientos_bp, examenes_bp, reportes_bp, usuarios_bp):
+               movimientos_bp, examenes_bp, reportes_bp, usuarios_bp, informes_bp):
         app.register_blueprint(bp)
 
     # Las plantillas deciden qué botones mostrar con tiene_rol(ADMIN, ...).
     @app.context_processor
     def roles():
-        return {"tiene_rol": tiene_rol, "ADMIN": ADMIN, "ENCARGADO": ENCARGADO, "CONSULTA": CONSULTA}
+        return {"tiene_rol": tiene_rol, "ADMIN": ADMIN, "ENCARGADO": ENCARGADO, "CONSULTA": CONSULTA,
+                "ahora": dt.datetime.now()}
+
+    # Montos en quetzales con separador de miles: 12,345.60
+    @app.template_filter("q")
+    def quetzales(valor):
+        return "—" if valor is None else f"{valor:,.2f}"
 
     @app.route("/")
     @login_required

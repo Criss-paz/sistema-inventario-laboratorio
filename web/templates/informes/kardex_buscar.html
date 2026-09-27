@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Kardex — Reportes{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Kardex por producto<span class="subtitle">La tarjeta de un producto: cada entrada y salida con su costo, y el saldo con su costo promedio ponderado después de cada movimiento.</span></h1>
+</div>
+
+<form class="card" method="get">
+  <label for="producto">Producto <span class="hint">(escriba el nombre o el código y elija de la lista)</span></label>
+  <input list="lista-productos" id="producto" name="producto" required autofocus autocomplete="off">
+  <datalist id="lista-productos">
+    {% for p in productos %}<option value="{{ p.codigo }} — {{ p.nombre }}">{% endfor %}
+  </datalist>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Ver kardex</button>
+  </div>
+</form>
+{% endblock %}

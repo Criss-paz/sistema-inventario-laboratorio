@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m with context %}
+{% set periodo = ('del ' ~ desde.strftime('%d/%m/%Y') ~ ' al ' ~ hasta.strftime('%d/%m/%Y')) if desde else 'todo el historial' %}
+{% block title %}Kardex {{ producto.codigo }} — Reportes{% endblock %}
+{% block content %}
+{{ m.encabezado_impresion('Kardex de ' ~ producto.nombre ~ ' (' ~ producto.codigo ~ ')', periodo) }}
+<div class="top-actions">
+  <h1>Kardex: {{ producto.nombre }}<span class="subtitle"><code>{{ producto.codigo }}</code> {{ producto.categoria }}, {{ periodo }}. Método de costo promedio ponderado.</span></h1>
+  <div class="actions no-imprimir">
+    {{ m.acciones_reporte() }}
+    <a class="btn" href="{{ url_for('informes.kardex_buscar') }}">Otro producto</a>
+  </div>
+</div>
+
+<form class="filtros no-imprimir" method="get">
+  <label>Desde <input type="date" name="desde" value="{{ desde.isoformat() if desde else '' }}"></label>
+  <label>Hasta <input type="date" name="hasta" value="{{ hasta.isoformat() if hasta else '' }}"></label>
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+  {% if desde %}<a class="btn btn-sm" href="{{ url_for('informes.kardex', id_producto=producto.id_producto) }}">Todo el historial</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table class="kardex">
+    <thead>
+      <tr class="grupos">
+        <th rowspan="2">Fecha</th><th rowspan="2">Detalle</th>
+        <th colspan="3" class="centro grupo-entrada">Entradas</th>
+        <th colspan="3" class="centro grupo-salida">Salidas</th>
+        <th colspan="3" class="centro grupo-saldo">Saldo</th>
+      </tr>
+      <tr>
+        <th class="num grupo-entrada">Cantidad</th><th class="num grupo-entrada">Costo u.</th><th class="num grupo-entrada">Total</th>
+        <th class="num grupo-salida">Cantidad</th><th class="num grupo-salida">Costo u.</th><th class="num grupo-salida">Total</th>
+        <th class="num grupo-saldo">Cantidad</th><th class="num grupo-saldo">Costo prom.</th><th class="num grupo-saldo">Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if desde %}
+      <tr class="saldo-inicial">
+        <td class="fecha">{{ desde.strftime('%d/%m/%Y') }}</td><td>Saldo inicial</td>
+        <td colspan="6"></td>
+        <td class="num">{{ m.cantidad(saldo_inicial.saldo_cantidad if saldo_inicial else 0) }}</td>
+        <td class="num">{{ (saldo_inicial.costo_promedio if saldo_inicial else 0)|q }}</td>
+        <td class="num">{{ (saldo_inicial.saldo_valor if saldo_inicial else 0)|q }}</td>
+      </tr>
+      {% endif %}
+      {% for f in filas %}
+      <tr>
+        <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=f.id_movimiento) }}">{{ f.fecha_hora.strftime('%d/%m/%Y') }}</a></td>
+        <td class="obs">{{ f.observacion or f.tipo_movimiento|capitalize }}</td>
+        {% if f.tipo_movimiento == 'ENTRADA' %}
+          <td class="num">{{ m.cantidad(f.cantidad_entrada) }}</td><td class="num">{{ f.costo_unitario_entrada|q }}</td><td class="num">{{ f.total_entrada|q }}</td>
+          <td class="num vacio-celda"></td><td class="num vacio-celda"></td><td class="num vacio-celda"></td>
+        {% else %}
+          <td class="num vacio-celda"></td><td class="num vacio-celda"></td><td class="num vacio-celda"></td>
+          <td class="num">{{ m.cantidad(f.cantidad_salida) }}</td><td class="num">{{ f.costo_unitario_salida|q }}</td><td class="num">{{ f.total_salida|q }}</td>
+        {% endif %}
+        <td class="num"><strong>{{ m.cantidad(f.saldo_cantidad) }}</strong></td>
+        <td class="num">{{ f.costo_promedio|q }}</td>
+        <td class="num"><strong>{{ f.saldo_valor|q }}</strong></td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="11">{{ i.vacio('Este producto no tiene movimientos en ese período.', 'movimientos') }}</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if filas %}
+    <tfoot>
+      <tr>
+        <th colspan="2">Totales del período</th>
+        <th colspan="2"></th><th class="num">{{ total_entradas|q }}</th>
+        <th colspan="2"></th><th class="num">{{ total_salidas|q }}</th>
+        <th class="num">{{ m.cantidad(filas[-1].saldo_cantidad) }}</th><th class="num">{{ filas[-1].costo_promedio|q }}</th><th class="num">{{ filas[-1].saldo_valor|q }}</th>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table>
+</div>
+<p class="hint nota-metodo">Costo promedio = (valor del saldo + valor de la compra) ÷ (cantidad del saldo + cantidad comprada). Las salidas no cambian el promedio. Montos en quetzales.</p>
+{% endblock %}

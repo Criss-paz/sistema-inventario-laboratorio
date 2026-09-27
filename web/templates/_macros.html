@@ -34,7 +34,7 @@
 
 {# Cantidades: sin decimales cuando son enteras (12 en vez de 12.00). #}
 {% macro cantidad(valor) -%}
-  {%- if valor is none -%}—{%- elif valor == valor|int -%}{{ valor|int }}{%- else -%}{{ valor }}{%- endif -%}
+  {%- if valor is none -%}—{%- elif valor == valor|int -%}{{ '{:,}'.format(valor|int) }}{%- else -%}{{ '{:,}'.format(valor) }}{%- endif -%}
 {%- endmacro %}
 
 {# Cantidad con su unidad en singular o plural: "1 unidad", "3 unidades", "2 cajas". #}
@@ -42,4 +42,23 @@
   {%- set u = (unidad or '')|lower -%}
   {%- if valor != 1 and u and u[-1] in 'aeiou' -%}{% set u = u ~ 's' %}{%- elif valor != 1 and u -%}{% set u = u ~ 'es' %}{%- endif -%}
   {{ cantidad(valor) }} {{ u }}
+{%- endmacro %}
+
+{# Botones de un reporte: descargar CSV (mismos filtros) e imprimir. #}
+{% macro acciones_reporte() -%}
+  {%- set args = request.args.to_dict() -%}
+  {%- set _ = args.update(request.view_args or {}) -%}
+  {%- set _ = args.update({'formato': 'csv'}) -%}
+  <div class="actions no-imprimir">
+    <a class="btn" href="{{ url_for(request.endpoint, **args) }}">Descargar CSV</a>
+    <button type="button" class="btn" onclick="window.print()">Imprimir</button>
+  </div>
+{%- endmacro %}
+
+{# Encabezado que solo aparece al imprimir: quién, qué y cuándo. #}
+{% macro encabezado_impresion(titulo, detalle='') -%}
+  <div class="solo-impresion encabezado-impresion">
+    <strong>Laboratorio Privado Quetzaltenango</strong>, {{ titulo }}{{ ', ' ~ detalle if detalle else '' }}.
+    Generado el {{ ahora.strftime('%d/%m/%Y a las %H:%M') }} por {{ session.get('nombre_usuario') }}.
+  </div>
 {%- endmacro %}

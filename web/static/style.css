@@ -483,3 +483,42 @@ th .hint { display: block; font-weight: 400; margin-top: 0.1rem; }
   background: #e7ebef; color: var(--muted); font-size: 0.75rem; font-weight: 600;
 }
 .pestanas a.active .conteo { background: var(--accent-soft); color: var(--accent); }
+
+/* =============================================================================
+   Reportes valorizados (inventario, entradas, salidas, kardex)
+   ============================================================================= */
+tfoot th {
+  background: var(--surface-2); border-top: 1px solid var(--line-strong);
+  color: var(--ink); font-size: 0.875rem; font-weight: 700; padding-top: 0.75rem; padding-bottom: 0.75rem;
+}
+.reporte-resumen { grid-template-columns: minmax(0, 36rem); margin-bottom: 0.5rem; }
+.solo-impresion { display: none; }
+
+/* Kardex: grupos Entradas / Salidas / Saldo */
+table.kardex th, table.kardex td { padding-left: 0.6rem; padding-right: 0.6rem; }
+table.kardex tr.grupos th { border-bottom: 1px solid var(--line); }
+table.kardex .grupo-entrada { background: #eef6f1; }
+table.kardex .grupo-salida { background: #edf4f7; }
+table.kardex .grupo-saldo { background: #f1f1f5; }
+table.kardex td.vacio-celda { background: repeating-linear-gradient(135deg, transparent 0 6px, rgba(19, 33, 46, 0.025) 6px 7px); }
+table.kardex tr.saldo-inicial td { background: var(--surface-2); font-style: italic; color: var(--ink-2); }
+.nota-metodo { margin-top: 0.75rem; max-width: 72ch; }
+
+/* Impresión: solo el reporte, sin menú ni controles */
+@media print {
+  @page { size: landscape; margin: 12mm; }
+  body { background: #fff; font-size: 10pt; }
+  .sidebar, .skip-link, #flash-stack, .no-imprimir, .filtros, .pestanas, .paginacion { display: none !important; }
+  .app { display: block; }
+  main { padding: 0; max-width: none; }
+  .solo-impresion { display: block; }
+  .encabezado-impresion { margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid #999; font-size: 9pt; }
+  .table-wrap, .stat-row { box-shadow: none; border-color: #bbb; overflow: visible; }
+  table { font-size: 8.5pt; }
+  th, td { padding: 0.3rem 0.45rem; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+  .lote { border-color: #999; }
+  .dos-columnas { display: block; }
+}

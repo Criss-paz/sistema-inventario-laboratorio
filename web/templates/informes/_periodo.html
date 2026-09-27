@@ -1,0 +1,12 @@
+{# Filtro de período, agrupación y categoría, compartido por los reportes de entradas y salidas. #}
+<form class="filtros no-imprimir" method="get">
+  <label>Desde <input type="date" name="desde" value="{{ desde.isoformat() }}" required></label>
+  <label>Hasta <input type="date" name="hasta" value="{{ hasta.isoformat() }}" required></label>
+  <select name="agrupar" aria-label="Agrupar por">
+    {% for valor, texto in opciones_agrupar %}
+    <option value="{{ valor }}" {{ 'selected' if agrupar == valor else '' }}>Agrupar por {{ texto }}</option>
+    {% endfor %}
+  </select>
+  {{ m.select_categoria(categorias, id_categoria or '') }}
+  <button type="submit" class="btn btn-sm btn-primary">Generar</button>
+</form>

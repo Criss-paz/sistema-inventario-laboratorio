@@ -35,7 +35,11 @@
                             ('examenes.listar', 'Exámenes', 'examenes'),
                             ('proveedores.listar', 'Proveedores', 'proveedores'),
                             ('categorias.listar', 'Categorías', 'categorias')]),
-             ('Reportes',  [('reportes.inventario_bajo', 'Inventario bajo', 'bajo'),
+             ('Reportes',  [('informes.inventario', 'Inventario valorizado', 'valor'),
+                            ('informes.entradas', 'Reporte de entradas', 'entradas'),
+                            ('informes.salidas', 'Reporte de salidas', 'salidas'),
+                            ('informes.kardex_buscar', 'Kardex', 'kardex'),
+                            ('reportes.inventario_bajo', 'Inventario bajo', 'bajo'),
                             ('reportes.por_vencer', 'Vencimientos', 'vencer')])] %}
         {% if tiene_rol(ADMIN) %}
           {% set grupos = grupos + [('Administración', [('usuarios.listar', 'Usuarios y roles', 'usuarios')])] %}
@@ -45,7 +49,7 @@
         <ul>
           {% for endpoint, texto, icono in enlaces %}
           {% set modulo = endpoint.split('.')[0] %}
-          {% set activo = actual == endpoint or (modulo != 'reportes' and actual.startswith(modulo ~ '.')) %}
+          {% set activo = actual == endpoint or (modulo not in ('reportes', 'informes') and actual.startswith(modulo ~ '.')) or (endpoint == 'informes.kardex_buscar' and actual == 'informes.kardex') %}
           <li><a href="{{ url_for(endpoint) }}" {% if activo %}class="active" aria-current="page"{% endif %}>{{ i.icono(icono) }}{{ texto }}</a></li>
           {% endfor %}
         </ul>

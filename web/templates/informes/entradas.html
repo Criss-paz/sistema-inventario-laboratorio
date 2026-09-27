@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m with context %}
+{% set periodo = 'del ' ~ desde.strftime('%d/%m/%Y') ~ ' al ' ~ hasta.strftime('%d/%m/%Y') %}
+{% block title %}Reporte de entradas — Reportes{% endblock %}
+{% block content %}
+{{ m.encabezado_impresion('Reporte de entradas', periodo) }}
+<div class="top-actions">
+  <h1>Reporte de entradas<span class="subtitle">Compras recibidas {{ periodo }}, agrupadas por {{ agrupar }}.</span></h1>
+  {{ m.acciones_reporte() }}
+</div>
+
+{% set opciones_agrupar = [('producto', 'producto'), ('proveedor', 'proveedor')] %}
+{% include "informes/_periodo.html" %}
+
+<div class="stat-row">
+  <div class="stat-card">
+    <span class="stat-value">Q{{ total|q }}</span>
+    <span class="stat-label">Total comprado</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-muted">{{ compras }}</span>
+    <span class="stat-label">Entradas registradas</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-value stat-muted">{{ filas|length }}</span>
+    <span class="stat-label">{{ 'Productos distintos' if agrupar == 'producto' else 'Proveedores' }}</span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    {% if agrupar == 'producto' %}
+    <thead><tr><th>Código</th><th>Producto</th><th class="num">Compras</th><th class="num">Cantidad</th><th class="num">Precio promedio (Q)</th><th class="num">Total (Q)</th></tr></thead>
+    <tbody>
+      {% for f in filas %}
+      <tr>
+        <td><code>{{ f.codigo }}</code></td>
+        <td><a href="{{ url_for('informes.kardex', id_producto=f.id_producto, desde=desde.isoformat(), hasta=hasta.isoformat()) }}">{{ f.nombre }}</a></td>
+        <td class="num">{{ f.compras }}</td>
+        <td class="num">{{ m.con_unidad(f.cantidad, f.unidad_medida) }}</td>
+        <td class="num">{{ f.precio_promedio|q }}</td>
+        <td class="num"><strong>{{ f.total|q }}</strong></td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="6">{{ i.vacio('No hubo entradas en ese período. Amplíe las fechas.', 'movimientos') }}</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if filas %}<tfoot><tr><th colspan="5">Total del período</th><th class="num">Q{{ total|q }}</th></tr></tfoot>{% endif %}
+    {% else %}
+    <thead><tr><th>Proveedor</th><th class="num">Compras</th><th class="num">Productos distintos</th><th class="num">Total (Q)</th><th class="num">% del total</th></tr></thead>
+    <tbody>
+      {% for f in filas %}
+      <tr>
+        <td>{{ f.nombre }}</td>
+        <td class="num">{{ f.compras }}</td>
+        <td class="num">{{ f.productos }}</td>
+        <td class="num"><strong>{{ f.total|q }}</strong></td>
+        <td class="num">{{ '%.1f'|format(100 * f.total / total) if total else '0.0' }} %</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="5">{{ i.vacio('No hubo entradas en ese período. Amplíe las fechas.', 'proveedores') }}</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if filas %}<tfoot><tr><th colspan="3">Total del período</th><th class="num">Q{{ total|q }}</th><th class="num">100.0 %</th></tr></tfoot>{% endif %}
+    {% endif %}
+  </table>
+</div>
+{% endblock %}
