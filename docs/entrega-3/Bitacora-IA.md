@@ -56,5 +56,65 @@ Continúa el registro de `docs/entrega-2/Bitacora-IA.md`. La IA se utiliza como 
 
 ---
 
+### Registro de Bitácora IA
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 26/09/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Llevar la aplicación web al 70%: control de acceso por rol y módulos principales. |
+| **Prompt utilizado** | "Sí, por favor continuemos" (continuar con la web después de cargar los datos reales). Luego: "donde verifico los usuarios y los roles, eso no lo veo" y "no me despliega las salidas aparte y las entradas aparte". |
+| **Resultado obtenido** | Control de acceso en dos capas: `rol_requerido()` en la app y `SET ROLE` en cada conexión, para que PostgreSQL aplique los permisos aunque la app fallara. Módulos de Movimientos (entradas y salidas por procedimiento, con pestañas separadas), Lotes, Proveedores, Exámenes, Usuarios y roles, y búsqueda y paginación en Productos. Los mensajes de los triggers llegan tal cual al usuario. Se corrigió además una redirección abierta en el login (`?next=` a sitios externos). |
+| **Validación del grupo** | Pruebas automatizadas con los 3 usuarios contra la base real, con las escrituras revertidas. El equipo detectó dos faltantes que la IA no había cubierto: el módulo de usuarios (RF-03, RF-04) y la separación visible de entradas y salidas. Ambos se agregaron. |
+| **Estándares aplicados** | RF-03 a RF-05, RF-11 a RF-28, RF-36 a RF-39, A2, A3, A4, RNF-06, RNF-17. |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
+### Registro de Bitácora IA
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 26/09/2026 |
+| **Herramienta** | Claude Code (Opus) con las skills de diseño redesign-skill, frontend-design, impeccable y ui-ux-pro-max |
+| **Objetivo** | Rediseñar la interfaz para que se vea profesional. |
+| **Prompt utilizado** | "¿Puedes rediseñar para que se vea profesional utilizando todas las skill?" |
+| **Resultado obtenido** | Tipografía Atkinson Hyperlegible (legible para códigos y lotes), alojada en la app; menú lateral por tarea; íconos SVG propios en lugar de emojis; un solo color de acento y colores de estado; login en dos paneles; números de lote con aspecto de etiqueta de reactivo. |
+| **Validación del grupo** | Revisión con capturas reales en escritorio (1440 px) y celular (390 px). Se corrigieron los problemas que aparecieron: desborde horizontal en celular, fechas partidas en dos líneas, botones apilados y unidades sin concordancia ("2 unidad"). |
+| **Estándares aplicados** | RNF-09, RNF-18, A1. |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
+### Registro de Bitácora IA
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 26/09/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Generar reportes de inventario con valuación por costo promedio ponderado. |
+| **Prompt utilizado** | "…generar reportes, en el cual se despliegue… el inventario, reporte de entradas, reporte de salidas, método de inventario que sea calculado por promedio ponderado". Corrección posterior: el inventario debe mostrar código, producto, presentación, precio unitario, precio total y existencias actuales, y debe haber una sola opción de reportes donde el usuario elija el tipo. |
+| **Resultado obtenido** | En la base: `fn_kardex_promedio` (promedio ponderado móvil) y `vw_valorizacion_inventario`. En la web: pantalla única de reportes con 9 tipos (inventario, entradas, salidas, kardex, proveedores, pruebas, catálogo, inventario bajo, vencimientos), CSV para Excel e impresión. |
+| **Validación del grupo** | El promedio se comprobó a mano (colesterol HDL: 7 a Q900 + 5 a Q600 = Q775). El saldo del kardex coincide con la existencia de los 806 productos. Comprobación contable: compras − costo de lo consumido = inventario valorizado, con una diferencia de Q0.06 por redondeo. El equipo corrigió las columnas del reporte de inventario y pidió unificar los reportes en una sola pantalla. |
+| **Estándares aplicados** | RF-33, RF-34, S6, S7. |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
+### Registro de Bitácora IA
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 26/09/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Documentación de cierre: matriz de trazabilidad v2, casos de prueba, `AVANCE_WEB.md`, estándares y README. |
+| **Prompt utilizado** | "Sí, puedes iniciar, necesitamos avanzar por favor." |
+| **Resultado obtenido** | Matriz con los 39 RF, 18 RN y 18 RNF. 8 casos de prueba sobre un producto de prueba (`PRUEBA-CP3`) para no alterar el inventario real. Estándares actualizados: S6 pasa a "cumple"; S5 (despliegue) sigue pendiente y se declara. |
+| **Validación del grupo** | Los resultados esperados de los 8 casos salen de ejecutarlos contra la base real en una transacción revertida. **Pendiente:** la ejecución manual de los casos con capturas, a cargo de Cristopher Alexis Castellanos Paz. |
+| **Estándares aplicados** | Consigna, sección 5 (casos de prueba y matriz de trazabilidad). |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
 ## Declaración
 La IA se utilizó como apoyo de implementación y documentación, no como sustituto de las decisiones del equipo. Las decisiones sobre los datos reales (qué corregir, qué rechazar, qué anonimizar) las tomó el equipo con la justificación presentada por la IA.
