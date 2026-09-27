@@ -41,7 +41,7 @@ def _validar_formulario(form):
     if not nombre:
         errores.append("El nombre es obligatorio.")
     if not unidad_medida:
-        errores.append("La unidad de medida es obligatoria.")
+        errores.append("La presentación es obligatoria.")
     if not id_categoria.isdigit():
         errores.append("Debe seleccionar una categoría válida.")
 

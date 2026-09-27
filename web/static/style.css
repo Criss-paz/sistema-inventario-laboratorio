@@ -522,3 +522,38 @@ table.kardex tr.saldo-inicial td { background: var(--surface-2); font-style: ita
   .lote { border-color: #999; }
   .dos-columnas { display: block; }
 }
+
+/* ---------- Pantalla única de reportes ---------- */
+.generador { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.generador fieldset {
+  margin: 0; padding: 1.25rem 1.25rem 1.4rem; min-width: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow);
+}
+.generador legend { padding: 0 0.35rem; font-weight: 700; font-size: 0.9375rem; color: var(--ink); }
+.tipos-reporte { display: grid; gap: 0.35rem; }
+.tipo-opcion {
+  display: flex; gap: 0.75rem; align-items: flex-start;
+  padding: 0.65rem 0.75rem; border: 1px solid transparent; border-radius: var(--r); cursor: pointer;
+  transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+.tipo-opcion:hover { background: var(--surface-2); }
+.tipo-opcion:has(input:checked) { background: var(--accent-soft); border-color: var(--accent-line); }
+.tipo-opcion input { margin: 0.2rem 0 0; width: 1rem; height: 1rem; flex: none; }
+.tipo-texto { display: flex; flex-direction: column; gap: 0.1rem; }
+.tipo-texto strong { font-weight: 600; }
+.tipo-texto span { font-size: 0.8125rem; color: var(--muted); }
+.filtros-reporte { position: sticky; top: 1rem; }
+.filtros-reporte .campo { margin-bottom: 1rem; }
+.filtros-reporte label { display: block; margin-bottom: 0.35rem; font-size: 0.875rem; font-weight: 600; color: var(--ink-2); }
+.filtros-reporte input:not([type="radio"]), .filtros-reporte select {
+  width: 100%; min-height: 2.5rem; padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--surface);
+}
+.filtros-reporte input:focus, .filtros-reporte select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.fila-fechas { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.fila-fechas .hint { grid-column: 1 / -1; margin: 0; }
+.filtros-reporte [hidden] { display: none !important; }
+.filtros-reporte .form-actions { margin-top: 0.5rem; }
+.filtros-reporte .form-actions .btn { width: 100%; min-height: 2.75rem; }
+.resumen-angosto { max-width: 40rem; }
+@media (max-width: 900px) { .generador { grid-template-columns: minmax(0, 1fr); } .filtros-reporte { position: static; } }

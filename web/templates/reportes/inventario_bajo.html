@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% import "_iconos.html" as i %}
-{% import "_macros.html" as m %}
+{% import "_macros.html" as m with context %}
 {% block title %}Inventario bajo — Reportes{% endblock %}
 {% block content %}
+{{ m.encabezado_impresion('Inventario bajo', 'al ' ~ ahora.strftime('%d/%m/%Y')) }}
 <div class="top-actions">
   <h1>Inventario bajo<span class="subtitle">Productos activos cuya existencia utilizable es igual o menor al stock mínimo (RN-11). Los lotes vencidos no cuentan.</span></h1>
+  {{ m.acciones_reporte() }}
 </div>
 
-<form class="filtros" method="get">
+<form class="filtros no-imprimir" method="get">
   <input type="search" name="q" value="{{ q }}" placeholder="Buscar por nombre o código" maxlength="100">
   {{ m.select_categoria(categorias, id_categoria) }}
   <label class="check"><input type="checkbox" name="todos" value="1" {{ 'checked' if todos else '' }}> Incluir productos que nunca se han comprado</label>

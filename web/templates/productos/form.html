@@ -28,7 +28,7 @@
     {% endfor %}
   </select>
 
-  <label for="unidad_medida">Unidad de medida *</label>
+  <label for="unidad_medida">Presentación <span class="hint">(unidad, caja, paquete...)</span></label>
   <input type="text" id="unidad_medida" name="unidad_medida" required maxlength="20"
          placeholder="unidad, caja, ml..." value="{{ producto.unidad_medida if producto else '' }}">
 

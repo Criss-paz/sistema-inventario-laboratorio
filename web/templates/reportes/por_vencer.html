@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 {% import "_iconos.html" as i %}
-{% import "_macros.html" as m %}
+{% import "_macros.html" as m with context %}
 {% block title %}Lotes por vencer — Reportes{% endblock %}
 {% block content %}
+{{ m.encabezado_impresion('Lotes vencidos y por vencer', 'al ' ~ ahora.strftime('%d/%m/%Y')) }}
 <div class="top-actions">
   <h1>Lotes vencidos y por vencer<span class="subtitle">Lotes con existencia que ya vencieron o vencen en los próximos 90 días (RN-07)</span></h1>
+  {{ m.acciones_reporte() }}
 </div>
 
-<nav class="pestanas">
+<nav class="pestanas no-imprimir">
   {% for clave, texto in [('', 'Todos'), ('VENCIDO', 'Vencidos'), ('POR VENCER', 'Por vencer')] %}
   <a href="{{ url_for('reportes.por_vencer', situacion=clave or None, q=q or None) }}" class="{{ 'active' if situacion == clave else '' }}">{{ texto }}</a>
   {% endfor %}
 </nav>
 
-<form class="filtros" method="get">
+<form class="filtros no-imprimir" method="get">
   <input type="hidden" name="situacion" value="{{ situacion }}">
   <input type="search" name="q" value="{{ q }}" placeholder="Producto, código o lote" maxlength="100">
   <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>

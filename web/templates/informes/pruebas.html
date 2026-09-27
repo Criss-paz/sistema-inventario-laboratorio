@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m with context %}
+{% block title %}Pruebas de laboratorio — Reportes{% endblock %}
+{% block content %}
+{{ m.encabezado_impresion('Pruebas de laboratorio e insumos', 'al ' ~ ahora.strftime('%d/%m/%Y')) }}
+<div class="top-actions">
+  <h1>Pruebas de laboratorio<span class="subtitle">Cada examen, cuántos insumos consume y para cuántas pruebas alcanza la existencia actual. El insumo que limita es el que se agota primero.</span></h1>
+  {{ m.acciones_reporte() }}
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Código</th><th>Prueba</th><th>Descripción</th><th class="num">Insumos</th><th class="num">Alcanza para</th><th>Insumo que limita</th></tr>
+    </thead>
+    <tbody>
+      {% for f in filas %}
+      <tr>
+        <td><code>{{ f.codigo_interno }}</code></td>
+        <td><a href="{{ url_for('examenes.detalle', id_examen=f.id_examen) }}">{{ f.nombre_examen }}</a></td>
+        <td>{{ f.descripcion or '—' }}</td>
+        <td class="num">{{ f.insumos }}</td>
+        <td class="num {{ 'alerta' if f.alcanzan == 0 else '' }}">
+          {% if f.alcanzan is none %}<span class="hint">sin insumos</span>{% else %}{{ m.cantidad(f.alcanzan) }} {{ 'prueba' if f.alcanzan == 1 else 'pruebas' }}{% endif %}
+        </td>
+        <td>{{ f.insumo_limitante or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="6">{{ i.vacio('No hay pruebas registradas.', 'examenes') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,10 +1,17 @@
 """
-routes/informes.py — Reportes de inventario valorizados (RF-33, RF-34).
+routes/informes.py — Reportes (RF-33 generar reportes, RF-34 información
+histórica). Una sola entrada en el menú: el usuario elige el tipo de reporte
+y sus filtros en /informes/ (TIPOS, abajo).
 
-  Inventario valorizado  existencia, costo promedio y valor por producto
-  Entradas               compras de un período, por producto o proveedor
-  Salidas                consumo de un período, valorizado a costo promedio
-  Kardex                 tarjeta de un producto, movimiento por movimiento
+  Inventario     código, producto, presentación, existencia, precio unitario
+                 y precio total de cada producto
+  Entradas       compras de un período, por producto o proveedor
+  Salidas        consumo de un período, valorizado a costo promedio
+  Kardex         tarjeta de un producto, movimiento por movimiento
+  Proveedores    datos de contacto y compras del período
+  Pruebas        exámenes, sus insumos y cuántos alcanzan
+  Productos      catálogo con presentación, mínimo y existencia
+  (Inventario bajo y Vencimientos viven en routes/reportes.py)
 
 Método de valuación: COSTO PROMEDIO PONDERADO MÓVIL. El cálculo lo hace la
 base de datos (fn_kardex_promedio y vw_valorizacion_inventario, en
@@ -23,6 +30,31 @@ from db import query_all, query_one
 from routes.auth import login_required
 
 bp = Blueprint("informes", __name__, url_prefix="/informes")
+
+
+# Tipos de reporte que se ofrecen en /informes/. Cada uno declara qué filtros
+# usa, para que la pantalla muestre solo esos.
+#   clave: (título, descripción, endpoint, filtros)
+TIPOS = {
+    "inventario": ("Inventario", "Existencias actuales con precio unitario (costo promedio ponderado) y precio total.",
+                   "informes.inventario", ("categoria",)),
+    "entradas": ("Entradas", "Compras recibidas en un período, por producto o por proveedor.",
+                 "informes.entradas", ("periodo", "categoria", "agrupar_entradas")),
+    "salidas": ("Salidas", "Consumo de un período, valorizado al costo promedio de cada día.",
+                "informes.salidas", ("periodo", "categoria", "agrupar_salidas")),
+    "kardex": ("Kardex de un producto", "Entradas, salidas y saldo de un producto, movimiento por movimiento.",
+               "informes.kardex_buscar", ("producto", "periodo_opcional")),
+    "proveedores": ("Proveedores", "Contacto de cada proveedor y cuánto se le compró en un período.",
+                    "informes.proveedores", ("periodo",)),
+    "pruebas": ("Pruebas de laboratorio", "Exámenes, insumos que consumen y cuántos alcanzan con la existencia actual.",
+                "informes.pruebas", ()),
+    "productos": ("Catálogo de productos", "Código, presentación, categoría, stock mínimo y existencia de cada producto.",
+                  "informes.productos", ("categoria",)),
+    "bajo": ("Inventario bajo", "Productos con existencia igual o menor a su stock mínimo.",
+             "reportes.inventario_bajo", ("categoria",)),
+    "vencimientos": ("Vencimientos", "Lotes vencidos o que vencen en los próximos 90 días.",
+                     "reportes.por_vencer", ()),
+}
 
 
 def _categorias():
@@ -68,6 +100,49 @@ def _csv(nombre, encabezados, filas):
     )
 
 
+@bp.route("/")
+@login_required
+def index():
+    """Pantalla única de reportes: el usuario elige el tipo y sus filtros."""
+    hoy = dt.date.today()
+    productos = query_all(
+        """
+        SELECT p.codigo, p.nombre FROM producto p
+        WHERE EXISTS (SELECT 1 FROM lote l WHERE l.id_producto = p.id_producto)
+        ORDER BY p.nombre
+        """
+    )
+    return render_template(
+        "informes/index.html", tipos=TIPOS, categorias=_categorias(), productos=productos,
+        desde=hoy.replace(day=1), hasta=hoy, tipo=request.args.get("tipo", "inventario"),
+    )
+
+
+@bp.route("/generar")
+@login_required
+def generar():
+    """Recibe el formulario de /informes/ y abre el reporte elegido con sus filtros."""
+    tipo = request.args.get("tipo", "")
+    if tipo not in TIPOS:
+        flash("Elija un tipo de reporte.", "warning")
+        return redirect(url_for("informes.index"))
+    _, _, endpoint, filtros = TIPOS[tipo]
+    args = {}
+    if "periodo" in filtros or "periodo_opcional" in filtros:
+        for clave in ("desde", "hasta"):
+            if request.args.get(clave):
+                args[clave] = request.args[clave]
+    if "categoria" in filtros and request.args.get("categoria", "").isdigit():
+        args["categoria"] = request.args["categoria"]
+    if "agrupar_entradas" in filtros:
+        args["agrupar"] = request.args.get("agrupar_entradas", "producto")
+    if "agrupar_salidas" in filtros:
+        args["agrupar"] = request.args.get("agrupar_salidas", "producto")
+    if "producto" in filtros:
+        args["producto"] = request.args.get("producto", "")
+    return redirect(url_for(endpoint, **args))
+
+
 @bp.route("/inventario")
 @login_required
 def inventario():
@@ -88,30 +163,31 @@ def inventario():
 
     filas = query_all(
         f"""
-        SELECT v.id_producto, v.codigo, v.nombre, v.categoria, v.unidad_medida, v.existencia,
-               v.existencia_vencida, v.costo_promedio, v.valor_inventario
+        SELECT v.id_producto, v.codigo, v.nombre, v.categoria, v.unidad_medida AS presentacion,
+               v.existencia, v.existencia_vencida,
+               v.costo_promedio AS precio_unitario, v.valor_inventario AS precio_total
         FROM vw_valorizacion_inventario v
         JOIN producto p ON p.id_producto = v.id_producto
         WHERE {where}
-        ORDER BY v.categoria, v.nombre
+        ORDER BY v.nombre
         """,
         params,
     )
     if _quiere_csv():
-        return _csv("inventario-valorizado",
-                    ["Código", "Producto", "Categoría", "Unidad", "Existencia", "Existencia vencida",
-                     "Costo promedio (Q)", "Valor (Q)"],
-                    [[f["codigo"], f["nombre"], f["categoria"], f["unidad_medida"], f["existencia"],
-                      f["existencia_vencida"], f["costo_promedio"], f["valor_inventario"]] for f in filas])
+        return _csv("inventario",
+                    ["Código de producto", "Producto", "Presentación", "Existencia actual",
+                     "Precio unitario (Q)", "Precio total (Q)"],
+                    [[f["codigo"], f["nombre"], f["presentacion"], f["existencia"],
+                      f["precio_unitario"], f["precio_total"]] for f in filas])
 
     # Totales por categoría, de las mismas filas del reporte.
     por_categoria = {}
     for f in filas:
         c = por_categoria.setdefault(f["categoria"], {"productos": 0, "valor": 0})
         c["productos"] += 1
-        c["valor"] += f["valor_inventario"]
+        c["valor"] += f["precio_total"]
     total = sum(c["valor"] for c in por_categoria.values())
-    valor_vencido = sum(f["existencia_vencida"] * f["costo_promedio"] for f in filas)
+    valor_vencido = sum(f["existencia_vencida"] * f["precio_unitario"] for f in filas)
     return render_template(
         "informes/inventario.html", filas=filas, por_categoria=sorted(por_categoria.items()),
         total=total, valor_vencido=valor_vencido, categorias=_categorias(),
@@ -254,7 +330,8 @@ def kardex_buscar():
         codigo = texto.split(" — ")[0].strip()
         producto = query_one("SELECT id_producto FROM producto WHERE codigo = %s", (codigo,))
         if producto:
-            return redirect(url_for("informes.kardex", id_producto=producto["id_producto"]))
+            fechas = {k: request.args[k] for k in ("desde", "hasta") if request.args.get(k)}
+            return redirect(url_for("informes.kardex", id_producto=producto["id_producto"], **fechas))
         flash("Seleccione un producto de la lista.", "warning")
     productos = query_all(
         """
@@ -307,4 +384,105 @@ def kardex(id_producto):
         desde=desde, hasta=hasta,
         total_entradas=sum(f["total_entrada"] or 0 for f in filas),
         total_salidas=sum(f["total_salida"] or 0 for f in filas),
+    )
+
+
+@bp.route("/proveedores")
+@login_required
+def proveedores():
+    desde, hasta = _periodo()
+    todos = request.args.get("todos") == "1"
+    filas = query_all(
+        f"""
+        SELECT pr.id_proveedor, pr.nombre, pr.nit, pr.telefono, pr.correo, pr.estado,
+               (SELECT count(*) FROM proveedor_producto pp WHERE pp.id_proveedor = pr.id_proveedor) AS productos,
+               count(DISTINCT h.id_movimiento) AS compras,
+               COALESCE(sum(h.subtotal), 0) AS total,
+               max(h.fecha_hora) AS ultima_compra
+        FROM proveedor pr
+        LEFT JOIN lote l ON l.id_proveedor = pr.id_proveedor
+        LEFT JOIN vw_historial_movimientos h
+               ON h.id_lote = l.id_lote AND h.tipo_movimiento = 'ENTRADA'
+              AND h.fecha_hora >= %s AND h.fecha_hora < %s
+        {"" if todos else "WHERE pr.estado"}
+        GROUP BY pr.id_proveedor
+        ORDER BY total DESC, pr.nombre
+        """,
+        (desde, hasta + dt.timedelta(days=1)),
+    )
+    if _quiere_csv():
+        return _csv("proveedores",
+                    ["Proveedor", "NIT", "Teléfono", "Correo", "Estado", "Productos que suministra",
+                     "Compras en el período", "Total comprado (Q)", "Última compra"],
+                    [[f["nombre"], f["nit"], f["telefono"] or "", f["correo"] or "",
+                      "Activo" if f["estado"] else "Inactivo", f["productos"], f["compras"], f["total"],
+                      f"{f['ultima_compra']:%d/%m/%Y}" if f["ultima_compra"] else ""] for f in filas])
+    return render_template(
+        "informes/proveedores.html", filas=filas, desde=desde, hasta=hasta, todos=todos,
+        total=sum(f["total"] for f in filas),
+    )
+
+
+@bp.route("/pruebas")
+@login_required
+def pruebas():
+    filas = query_all(
+        """
+        SELECT e.id_examen, e.codigo_interno, e.nombre_examen, e.descripcion,
+               count(ep.id_producto) AS insumos,
+               min(floor(v.existencia_utilizable / ep.cantidad_requerida)) AS alcanzan,
+               (SELECT v2.nombre
+                  FROM examen_producto ep2
+                  JOIN vw_existencia_producto v2 ON v2.id_producto = ep2.id_producto
+                 WHERE ep2.id_examen = e.id_examen
+                 ORDER BY floor(v2.existencia_utilizable / ep2.cantidad_requerida), v2.nombre
+                 LIMIT 1) AS insumo_limitante
+        FROM examen_laboratorio e
+        LEFT JOIN examen_producto ep ON ep.id_examen = e.id_examen
+        LEFT JOIN vw_existencia_producto v ON v.id_producto = ep.id_producto
+        GROUP BY e.id_examen
+        ORDER BY e.nombre_examen
+        """
+    )
+    if _quiere_csv():
+        return _csv("pruebas-de-laboratorio",
+                    ["Código", "Prueba", "Descripción", "Insumos", "Alcanza para (pruebas)", "Insumo que limita"],
+                    [[f["codigo_interno"], f["nombre_examen"], f["descripcion"] or "", f["insumos"],
+                      f["alcanzan"] if f["alcanzan"] is not None else "", f["insumo_limitante"] or ""] for f in filas])
+    return render_template("informes/pruebas.html", filas=filas)
+
+
+@bp.route("/productos")
+@login_required
+def productos():
+    id_categoria = _categoria()
+    condiciones, params = [], []
+    if request.args.get("todos") != "1":
+        condiciones.append("e.estado")
+    if id_categoria:
+        condiciones.append("p.id_categoria = %s")
+        params.append(id_categoria)
+    where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
+    filas = query_all(
+        f"""
+        SELECT e.codigo, e.nombre, e.unidad_medida AS presentacion, e.categoria, e.stock_minimo,
+               e.existencia_utilizable, e.existencia_vencida, e.requiere_vencimiento, e.estado
+        FROM vw_existencia_producto e
+        JOIN producto p ON p.id_producto = e.id_producto
+        {where}
+        ORDER BY e.nombre
+        """,
+        params,
+    )
+    if _quiere_csv():
+        return _csv("catalogo-de-productos",
+                    ["Código de producto", "Producto", "Presentación", "Categoría", "Stock mínimo",
+                     "Existencia utilizable", "Existencia vencida", "Requiere vencimiento", "Estado"],
+                    [[f["codigo"], f["nombre"], f["presentacion"], f["categoria"], f["stock_minimo"],
+                      f["existencia_utilizable"], f["existencia_vencida"],
+                      "Sí" if f["requiere_vencimiento"] else "No", "Activo" if f["estado"] else "Inactivo"]
+                     for f in filas])
+    return render_template(
+        "informes/productos.html", filas=filas, categorias=_categorias(), id_categoria=id_categoria,
+        todos=request.args.get("todos") == "1",
     )

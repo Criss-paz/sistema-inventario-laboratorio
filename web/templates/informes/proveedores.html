@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m with context %}
+{% set periodo = 'del ' ~ desde.strftime('%d/%m/%Y') ~ ' al ' ~ hasta.strftime('%d/%m/%Y') %}
+{% block title %}Proveedores — Reportes{% endblock %}
+{% block content %}
+{{ m.encabezado_impresion('Reporte de proveedores', 'compras ' ~ periodo) }}
+<div class="top-actions">
+  <h1>Proveedores<span class="subtitle">Datos de contacto de cada proveedor y cuánto se le compró {{ periodo }}.</span></h1>
+  {{ m.acciones_reporte() }}
+</div>
+
+<form class="filtros no-imprimir" method="get">
+  <label>Desde <input type="date" name="desde" value="{{ desde.isoformat() }}" required></label>
+  <label>Hasta <input type="date" name="hasta" value="{{ hasta.isoformat() }}" required></label>
+  <label class="check"><input type="checkbox" name="todos" value="1" {{ 'checked' if todos else '' }}> Incluir inactivos</label>
+  <button type="submit" class="btn btn-sm btn-primary">Generar</button>
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Proveedor</th><th>NIT</th><th>Teléfono</th><th>Correo</th><th class="num">Productos</th><th class="num">Compras</th><th class="num">Total comprado (Q)</th><th>Última compra</th></tr>
+    </thead>
+    <tbody>
+      {% for f in filas %}
+      <tr class="{{ '' if f.estado else 'inactivo' }}">
+        <td><a href="{{ url_for('proveedores.detalle', id_proveedor=f.id_proveedor) }}">{{ f.nombre }}</a></td>
+        <td><code>{{ f.nit }}</code></td>
+        <td>{{ f.telefono or '—' }}</td>
+        <td>{{ f.correo or '—' }}</td>
+        <td class="num">{{ f.productos }}</td>
+        <td class="num">{{ f.compras }}</td>
+        <td class="num"><strong>{{ f.total|q }}</strong></td>
+        <td class="fecha">{{ f.ultima_compra.strftime('%d/%m/%Y') if f.ultima_compra else '—' }}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="8">{{ i.vacio('No hay proveedores registrados.', 'proveedores') }}</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if filas %}<tfoot><tr><th colspan="6">Total comprado en el período</th><th class="num">Q{{ total|q }}</th><th></th></tr></tfoot>{% endif %}
+  </table>
+</div>
+{% endblock %}

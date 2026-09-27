@@ -52,6 +52,7 @@
   <div class="actions no-imprimir">
     <a class="btn" href="{{ url_for(request.endpoint, **args) }}">Descargar CSV</a>
     <button type="button" class="btn" onclick="window.print()">Imprimir</button>
+    <a class="btn" href="{{ url_for('informes.index') }}">Otro reporte</a>
   </div>
 {%- endmacro %}
 

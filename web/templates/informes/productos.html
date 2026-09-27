@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m with context %}
+{% block title %}Catálogo de productos — Reportes{% endblock %}
+{% block content %}
+{{ m.encabezado_impresion('Catálogo de productos', 'al ' ~ ahora.strftime('%d/%m/%Y')) }}
+<div class="top-actions">
+  <h1>Catálogo de productos<span class="subtitle">{{ filas|length }} productos con su presentación, categoría, stock mínimo y existencia actual.</span></h1>
+  {{ m.acciones_reporte() }}
+</div>
+
+<form class="filtros no-imprimir" method="get">
+  {{ m.select_categoria(categorias, id_categoria or '') }}
+  <label class="check"><input type="checkbox" name="todos" value="1" {{ 'checked' if todos else '' }}> Incluir inactivos</label>
+  <button type="submit" class="btn btn-sm btn-primary">Generar</button>
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Código de producto</th><th>Producto</th><th>Presentación</th><th>Categoría</th><th class="num">Stock mínimo</th><th class="num">Existencia</th><th>Vence</th></tr>
+    </thead>
+    <tbody>
+      {% for f in filas %}
+      <tr class="{{ '' if f.estado else 'inactivo' }}">
+        <td><code>{{ f.codigo }}</code></td>
+        <td>{{ f.nombre }}</td>
+        <td>{{ f.presentacion|capitalize }}</td>
+        <td>{{ f.categoria }}</td>
+        <td class="num">{{ m.cantidad(f.stock_minimo) }}</td>
+        <td class="num {{ 'alerta' if f.estado and f.existencia_utilizable <= f.stock_minimo else '' }}">{{ m.cantidad(f.existencia_utilizable) }}</td>
+        <td>{{ 'Sí' if f.requiere_vencimiento else 'No' }}</td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="7">{{ i.vacio('Ningún producto coincide con los filtros.', 'productos') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -30,17 +30,12 @@
         {% set grupos = [
              ('Operación', [('reportes.inicio', 'Inicio', 'inicio'),
                             ('movimientos.historial', 'Movimientos', 'movimientos'),
-                            ('lotes.listar', 'Lotes', 'lotes')]),
+                            ('lotes.listar', 'Lotes', 'lotes'),
+                            ('informes.index', 'Reportes', 'reporte')]),
              ('Catálogos', [('productos.listar', 'Productos', 'productos'),
                             ('examenes.listar', 'Exámenes', 'examenes'),
                             ('proveedores.listar', 'Proveedores', 'proveedores'),
-                            ('categorias.listar', 'Categorías', 'categorias')]),
-             ('Reportes',  [('informes.inventario', 'Inventario valorizado', 'valor'),
-                            ('informes.entradas', 'Reporte de entradas', 'entradas'),
-                            ('informes.salidas', 'Reporte de salidas', 'salidas'),
-                            ('informes.kardex_buscar', 'Kardex', 'kardex'),
-                            ('reportes.inventario_bajo', 'Inventario bajo', 'bajo'),
-                            ('reportes.por_vencer', 'Vencimientos', 'vencer')])] %}
+                            ('categorias.listar', 'Categorías', 'categorias')])] %}
         {% if tiene_rol(ADMIN) %}
           {% set grupos = grupos + [('Administración', [('usuarios.listar', 'Usuarios y roles', 'usuarios')])] %}
         {% endif %}
@@ -49,7 +44,10 @@
         <ul>
           {% for endpoint, texto, icono in enlaces %}
           {% set modulo = endpoint.split('.')[0] %}
-          {% set activo = actual == endpoint or (modulo not in ('reportes', 'informes') and actual.startswith(modulo ~ '.')) or (endpoint == 'informes.kardex_buscar' and actual == 'informes.kardex') %}
+          {# "Reportes" queda marcado en cualquier reporte, incluidas las alertas de inventario bajo y vencimientos. #}
+          {% set activo = actual == endpoint
+                or (modulo not in ('reportes', 'informes') and actual.startswith(modulo ~ '.'))
+                or (endpoint == 'informes.index' and (actual.startswith('informes.') or actual in ('reportes.inventario_bajo', 'reportes.por_vencer'))) %}
           <li><a href="{{ url_for(endpoint) }}" {% if activo %}class="active" aria-current="page"{% endif %}>{{ i.icono(icono) }}{{ texto }}</a></li>
           {% endfor %}
         </ul>

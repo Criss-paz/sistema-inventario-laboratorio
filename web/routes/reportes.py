@@ -13,6 +13,7 @@ from flask import Blueprint, render_template, request
 
 from db import query_all, query_one, query_page
 from routes.auth import login_required
+from routes.informes import _csv
 
 bp = Blueprint("reportes", __name__, url_prefix="/reportes")
 
@@ -78,16 +79,20 @@ def inventario_bajo():
         params += [f"%{q}%", f"%{q}%"]
     where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
 
-    filas, total = query_page(
-        f"""
+    consulta = f"""
         SELECT b.*
         FROM vw_inventario_bajo b
         JOIN producto p ON p.id_producto = b.id_producto
         {where}
         ORDER BY b.faltante DESC, b.nombre
-        """,
-        params, _pagina(),
-    )
+    """
+    if request.args.get("formato") == "csv":
+        return _csv("inventario-bajo",
+                    ["Código de producto", "Producto", "Categoría", "Presentación", "Existencia utilizable",
+                     "Existencia vencida", "Stock mínimo", "Faltante"],
+                    [[f["codigo"], f["nombre"], f["categoria"], f["unidad_medida"], f["existencia_utilizable"],
+                      f["existencia_vencida"], f["stock_minimo"], f["faltante"]] for f in query_all(consulta, params)])
+    filas, total = query_page(consulta, params, _pagina())
     return render_template(
         "reportes/inventario_bajo.html", filas=filas, total=total, pagina=_pagina(),
         categorias=_categorias(), id_categoria=id_categoria, q=q, todos=todos,
@@ -107,10 +112,15 @@ def por_vencer():
         condiciones.append("(producto ILIKE %s OR codigo ILIKE %s OR numero_lote ILIKE %s)")
         params += [f"%{q}%"] * 3
     where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
-    filas, total = query_page(
-        f"SELECT * FROM vw_lotes_por_vencer {where} ORDER BY fecha_vencimiento, producto",
-        params, _pagina(),
-    )
+    consulta = f"SELECT * FROM vw_lotes_por_vencer {where} ORDER BY fecha_vencimiento, producto"
+    if request.args.get("formato") == "csv":
+        return _csv("vencimientos",
+                    ["Lote", "Código de producto", "Producto", "Proveedor", "Vence", "Días", "Situación",
+                     "Existencia", "Presentación"],
+                    [[f["numero_lote"], f["codigo"], f["producto"], f["proveedor"],
+                      f"{f['fecha_vencimiento']:%d/%m/%Y}", f["dias_para_vencer"], f["situacion"],
+                      f["cantidad_disponible"], f["unidad_medida"]] for f in query_all(consulta, params)])
+    filas, total = query_page(consulta, params, _pagina())
     return render_template(
         "reportes/por_vencer.html", filas=filas, total=total, pagina=_pagina(), situacion=situacion, q=q,
     )

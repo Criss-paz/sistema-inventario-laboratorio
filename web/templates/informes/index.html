@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Reportes — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Reportes<span class="subtitle">Elija qué reporte generar y sus filtros. Todos se pueden descargar en CSV para Excel o imprimir.</span></h1>
+</div>
+
+<form class="generador" method="get" action="{{ url_for('informes.generar') }}">
+  <fieldset class="tipos-reporte">
+    <legend>1. Tipo de reporte</legend>
+    {% for clave, (titulo, descripcion, endpoint, filtros) in tipos.items() %}
+    <label class="tipo-opcion">
+      <input type="radio" name="tipo" value="{{ clave }}" data-filtros="{{ filtros|join(' ') }}" {{ 'checked' if tipo == clave else '' }} required>
+      <span class="tipo-texto"><strong>{{ titulo }}</strong><span>{{ descripcion }}</span></span>
+    </label>
+    {% endfor %}
+  </fieldset>
+
+  <fieldset class="filtros-reporte">
+    <legend>2. Filtros</legend>
+
+    <div class="campo" data-filtro="producto">
+      <label for="producto">Producto</label>
+      <input list="lista-productos" id="producto" name="producto" autocomplete="off" placeholder="Escriba el nombre o el código">
+      <datalist id="lista-productos">
+        {% for p in productos %}<option value="{{ p.codigo }} — {{ p.nombre }}">{% endfor %}
+      </datalist>
+    </div>
+
+    <div class="campo fila-fechas" data-filtro="periodo periodo_opcional">
+      <label>Desde <input type="date" name="desde" value="{{ desde.isoformat() }}"></label>
+      <label>Hasta <input type="date" name="hasta" value="{{ hasta.isoformat() }}"></label>
+      <p class="hint" data-filtro="periodo_opcional">En el kardex las fechas son opcionales: bórrelas para ver todo el historial.</p>
+    </div>
+
+    <div class="campo" data-filtro="categoria">
+      <label for="categoria">Categoría</label>
+      <select id="categoria" name="categoria">
+        <option value="">Todas las categorías</option>
+        {% for c in categorias %}<option value="{{ c.id_categoria }}">{{ c.nombre }}</option>{% endfor %}
+      </select>
+    </div>
+
+    <div class="campo" data-filtro="agrupar_entradas">
+      <label for="agrupar_entradas">Agrupar entradas por</label>
+      <select id="agrupar_entradas" name="agrupar_entradas">
+        <option value="producto">Producto</option>
+        <option value="proveedor">Proveedor</option>
+      </select>
+    </div>
+
+    <div class="campo" data-filtro="agrupar_salidas">
+      <label for="agrupar_salidas">Agrupar salidas por</label>
+      <select id="agrupar_salidas" name="agrupar_salidas">
+        <option value="producto">Producto</option>
+        <option value="categoria">Categoría</option>
+      </select>
+    </div>
+
+    <p class="hint sin-filtros" data-filtro="ninguno">Este reporte no necesita filtros.</p>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Generar reporte</button>
+    </div>
+  </fieldset>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Muestra solo los filtros del tipo elegido. Sin JavaScript se ven todos
+  // y el servidor ignora los que no aplican (informes.generar).
+  (function () {
+    var form = document.querySelector('.generador');
+    function actualizar() {
+      var elegido = form.querySelector('input[name="tipo"]:checked');
+      var filtros = elegido ? elegido.dataset.filtros.split(' ').filter(Boolean) : [];
+      form.querySelectorAll('[data-filtro]').forEach(function (el) {
+        var suyos = el.dataset.filtro.split(' ');
+        var visible = suyos.indexOf('ninguno') >= 0 ? filtros.length === 0
+                    : suyos.some(function (f) { return filtros.indexOf(f) >= 0; });
+        el.hidden = !visible;
+      });
+      var producto = form.querySelector('#producto');
+      producto.required = filtros.indexOf('producto') >= 0;
+    }
+    form.addEventListener('change', function (e) { if (e.target.name === 'tipo') actualizar(); });
+    actualizar();
+  })();
+</script>
+{% endblock %}
