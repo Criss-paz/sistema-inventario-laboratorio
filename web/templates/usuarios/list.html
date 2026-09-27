@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% block title %}Usuarios — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Usuarios y roles<span class="subtitle">Quién entra al sistema y qué puede hacer cada rol. Las contraseñas se guardan cifradas con hash; nadie puede verlas, ni el administrador.</span></h1>
+  <a class="btn btn-primary" href="{{ url_for('usuarios.nuevo') }}">{{ i.icono('mas') }}Nuevo usuario</a>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Creado</th><th class="num">Movimientos</th><th>Estado</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+      {% for u in usuarios %}
+      <tr class="{{ '' if u.estado else 'inactivo' }}">
+        <td><strong>{{ u.nombre }}</strong>{% if u.id_usuario == session.get('id_usuario') %} <span class="hint">(usted)</span>{% endif %}</td>
+        <td><code>{{ u.usuario }}</code></td>
+        <td>{{ u.rol }}</td>
+        <td>{{ u.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+        <td class="num">{{ u.movimientos }}</td>
+        <td>{% if u.estado %}<span class="badge badge-on">Activo</span>{% else %}<span class="badge badge-off">Inactivo</span>{% endif %}</td>
+        <td class="actions">
+          <a class="btn btn-sm" href="{{ url_for('usuarios.editar', id_usuario=u.id_usuario) }}">Editar</a>
+          {% if u.id_usuario != session.get('id_usuario') %}
+          <form method="post" action="{{ url_for('usuarios.alternar_estado', id_usuario=u.id_usuario) }}"
+                onsubmit="return confirm({{ ('¿Desactivar a ' if u.estado else '¿Activar a ')|tojson }} + {{ u.usuario|tojson }} + '?');">
+            <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if u.estado else 'Activar' }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Qué puede hacer cada rol <span class="subtitle">la app oculta lo que el rol no permite y la base de datos lo niega aunque se intente (SET ROLE)</span></h2>
+<div class="table-wrap">
+  <table class="permisos">
+    <thead>
+      <tr>
+        <th>Permiso</th>
+        {% for r in roles %}<th class="centro">{{ r.nombre }}<span class="hint">{{ r.activos }} {{ 'usuario activo' if r.activos == 1 else 'usuarios activos' }}</span></th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for texto, admin, encargado, consulta in permisos %}
+      <tr>
+        <td>{{ texto }}</td>
+        {% for permitido in [admin, encargado, consulta] %}
+        <td class="centro">
+          {% if permitido %}<span class="permitido">{{ i.icono('ok') }}<span class="sr-only">Sí</span></span>
+          {% else %}<span class="denegado" aria-label="No">—</span>{% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

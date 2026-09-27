@@ -468,3 +468,11 @@ body.login-page #flash-stack { position: fixed; top: 1rem; right: 1rem; z-index:
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/* ---------- Usuarios: tabla de permisos por rol ---------- */
+th.centro, td.centro { text-align: center; }
+th .hint { display: block; font-weight: 400; margin-top: 0.1rem; }
+.permitido { display: inline-flex; color: var(--ok); }
+.denegado { color: var(--line-strong); font-weight: 700; }
+.permisos td:first-child { color: var(--ink); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

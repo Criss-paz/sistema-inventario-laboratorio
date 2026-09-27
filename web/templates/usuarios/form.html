@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% set editando = usuario and usuario.id_usuario %}
+{% block title %}{{ 'Editar' if editando else 'Nuevo' }} usuario{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>{{ 'Editar usuario' if editando else 'Nuevo usuario' }}</h1>
+</div>
+
+<form class="card" method="post" autocomplete="off">
+  <label for="nombre">Nombre completo</label>
+  <input type="text" id="nombre" name="nombre" required maxlength="100" autofocus value="{{ usuario.nombre if usuario else '' }}">
+
+  <label for="usuario">Usuario <span class="hint">(para iniciar sesión: minúsculas, números, punto o guion)</span></label>
+  <input type="text" id="usuario" name="usuario" required maxlength="50" pattern="[a-z0-9._\-]{3,50}"
+         autocapitalize="none" spellcheck="false" value="{{ usuario.usuario if usuario else '' }}">
+
+  <label for="id_rol">Rol</label>
+  <select id="id_rol" name="id_rol" required {{ 'disabled' if es_propio else '' }}>
+    <option value="">-- Seleccione --</option>
+    {% for r in roles %}
+    <option value="{{ r.id_rol }}" {{ 'selected' if usuario and (usuario.id_rol|string) == (r.id_rol|string) else '' }}>{{ r.nombre }}</option>
+    {% endfor %}
+  </select>
+  {% if es_propio %}
+  <input type="hidden" name="id_rol" value="{{ usuario.id_rol }}">
+  <p class="hint">No puede cambiar su propio rol.</p>
+  {% endif %}
+
+  <label for="password">{{ 'Nueva contraseña' if editando else 'Contraseña' }}
+    <span class="hint">{{ '(déjela vacía para no cambiarla)' if editando else '(mínimo 8 caracteres)' }}</span></label>
+  <input type="password" id="password" name="password" minlength="8" autocomplete="new-password" {{ '' if editando else 'required' }}>
+
+  <label for="password2">Repita la contraseña</label>
+  <input type="password" id="password2" name="password2" minlength="8" autocomplete="new-password" {{ '' if editando else 'required' }}>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ 'Guardar cambios' if editando else 'Crear usuario' }}</button>
+    <a class="btn" href="{{ url_for('usuarios.listar') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

@@ -23,6 +23,7 @@ from routes.lotes import bp as lotes_bp
 from routes.movimientos import bp as movimientos_bp
 from routes.examenes import bp as examenes_bp
 from routes.reportes import bp as reportes_bp
+from routes.usuarios import bp as usuarios_bp
 
 
 def create_app():
@@ -32,7 +33,7 @@ def create_app():
     app.teardown_appcontext(close_db)
 
     for bp in (auth_bp, categorias_bp, productos_bp, proveedores_bp, lotes_bp,
-               movimientos_bp, examenes_bp, reportes_bp):
+               movimientos_bp, examenes_bp, reportes_bp, usuarios_bp):
         app.register_blueprint(bp)
 
     # Las plantillas deciden qué botones mostrar con tiene_rol(ADMIN, ...).

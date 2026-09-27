@@ -27,7 +27,7 @@
 
       <nav class="menu">
         {% set actual = request.endpoint or '' %}
-        {% for grupo, enlaces in [
+        {% set grupos = [
              ('Operación', [('reportes.inicio', 'Inicio', 'inicio'),
                             ('movimientos.historial', 'Movimientos', 'movimientos'),
                             ('lotes.listar', 'Lotes', 'lotes')]),
@@ -37,6 +37,10 @@
                             ('categorias.listar', 'Categorías', 'categorias')]),
              ('Reportes',  [('reportes.inventario_bajo', 'Inventario bajo', 'bajo'),
                             ('reportes.por_vencer', 'Vencimientos', 'vencer')])] %}
+        {% if tiene_rol(ADMIN) %}
+          {% set grupos = grupos + [('Administración', [('usuarios.listar', 'Usuarios y roles', 'usuarios')])] %}
+        {% endif %}
+        {% for grupo, enlaces in grupos %}
         <p class="menu-grupo">{{ grupo }}</p>
         <ul>
           {% for endpoint, texto, icono in enlaces %}
