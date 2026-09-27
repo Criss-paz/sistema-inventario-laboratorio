@@ -1,5 +1,11 @@
 # sql/ddl
 
-Scripts de definición de datos (CREATE TABLE, restricciones PK/FK/CHECK/UNIQUE, secuencias/identidades).
+Scripts de definición de datos (CREATE TABLE, restricciones PK/FK/CHECK/UNIQUE, identidades).
 
-**Estado:** pendiente — se generará en la Entrega 2, Fase 6 (DDL), una vez cerradas las Fases 1-5 (auditoría, modelo relacional, normalización 3FN, diccionario de datos y matriz de restricciones).
+**Estado:** implementado desde la Entrega 2.
+
+| Script | Contenido |
+|---|---|
+| `001_schema.sql` | Las 11 tablas del modelo relacional en 3FN, con 38 restricciones explícitas (PK, FK con `ON DELETE`/`ON UPDATE`, `UNIQUE`, `CHECK`) e índices en las llaves foráneas. |
+
+Detalle de cada tabla y restricción: `docs/entrega-2/diccionario-datos.md` y `docs/entrega-2/modelo-relacional.md`. Orden de instalación: `INSTALL.md`, paso 3.

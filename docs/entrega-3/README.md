@@ -1,7 +1,8 @@
 # docs/entrega-3
 
 **Entrega 3 — Implementación avanzada, seguridad y pruebas.**
-**Estado:** en cierre. Falta la ejecución manual de los casos de prueba con capturas, la certificación firmada y el tag `entrega-3`.
+**Estado:** implementada (26/09/2026). Base de datos, aplicación web y documentación completas.
+**Cierre formal pendiente** (antes del 29/09): ejecución manual de los 8 casos de prueba con capturas, firma de Cristopher Alexis Castellanos Paz en la certificación (José Eduardo Escobar ya firmó) y tag `entrega-3`.
 
 ## Qué se entrega
 
