@@ -2,9 +2,11 @@
 
 **Proyecto:** Sistema Web de Gestión y Control de Inventario para el Laboratorio Privado Quetzaltenango
 **Entrega:** Entrega 3 — Implementación avanzada, seguridad y pruebas
-**Fecha:** ___/09/2026
+**Fecha de revisión:** 26/09/2026
 
-> **BORRADOR.** Esta certificación se firma cuando todas las casillas estén marcadas. Las que siguen vacías indican lo que falta antes del tag `entrega-3`.
+> **Pendiente de cierre.** José Eduardo Escobar revisó y firmó el 26/09/2026. La certificación queda final cuando se marquen las dos casillas vacías y firme Cristopher Alexis Castellanos Paz, antes del tag `entrega-3`.
+
+Revisión del 26/09/2026, contra el repositorio y la base de datos real: 806 productos, 50 proveedores, 50 exámenes, 1,188 lotes y 5,839 movimientos; 3 roles de base de datos, 4 triggers y 5 vistas instalados; ningún `.env`, Excel del laboratorio ni contraseña real versionado.
 
 Por medio de la presente, los integrantes del equipo hacemos constar que la documentación y el código de la **Entrega 3** fueron revisados antes de su presentación. Estado real de cada punto:
 
@@ -29,4 +31,4 @@ Se dio el visto bueno para la entrega de este proyecto; ambos integrantes revisa
 | Nombre completo | Carné | Firma |
 |---|---|---|
 | Cristopher Alexis Castellanos Paz | 2690245972 | |
-| José Eduardo Escobar | 2690245346 | |
+| José Eduardo Escobar | 2690245346 | X (26/09/2026) |
