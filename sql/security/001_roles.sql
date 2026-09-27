@@ -75,8 +75,18 @@ COMMENT ON ROLE rol_administrador IS 'Administrador: catálogos, usuarios, lotes
 COMMENT ON ROLE rol_encargado     IS 'Encargado de inventario: registra entradas/salidas y consulta';
 COMMENT ON ROLE rol_consulta      IS 'Usuario de consulta: solo lectura, sin datos de usuarios';
 
--- La app se conecta como usuario_app y adopta uno de estos roles tras el login.
-GRANT rol_administrador, rol_encargado, rol_consulta TO usuario_app;
+-- La app se conecta con el usuario dueño de las tablas (usuario_app en la
+-- instalación local, el dueño del proyecto en Neon) y adopta uno de estos
+-- roles tras el login. Se toma el dueño de `producto` para no depender del
+-- nombre del usuario en cada servidor.
+DO $$
+DECLARE
+    v_duenio NAME;
+BEGIN
+    SELECT tableowner INTO v_duenio FROM pg_tables WHERE schemaname = 'public' AND tablename = 'producto';
+    EXECUTE format('GRANT rol_administrador, rol_encargado, rol_consulta TO %I', v_duenio);
+END;
+$$;
 
 -- -----------------------------------------------------------------------------
 -- 2. Punto de partida limpio: nada es público.

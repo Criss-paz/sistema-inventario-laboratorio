@@ -36,14 +36,18 @@ def get_db():
     `row_factory=dict_row` hace que cada fila se devuelva como dict.
     """
     if "db" not in g:
-        conn = psycopg.connect(
-            host=current_app.config["DB_HOST"],
-            port=current_app.config["DB_PORT"],
-            dbname=current_app.config["DB_NAME"],
-            user=current_app.config["DB_USER"],
-            password=current_app.config["DB_PASSWORD"],
-            row_factory=dict_row,
-        )
+        if current_app.config["DATABASE_URL"]:
+            # Producción (Neon): la URL ya trae usuario, servidor y sslmode.
+            conn = psycopg.connect(current_app.config["DATABASE_URL"], row_factory=dict_row)
+        else:
+            conn = psycopg.connect(
+                host=current_app.config["DB_HOST"],
+                port=current_app.config["DB_PORT"],
+                dbname=current_app.config["DB_NAME"],
+                user=current_app.config["DB_USER"],
+                password=current_app.config["DB_PASSWORD"],
+                row_factory=dict_row,
+            )
         if "id_usuario" in session:
             rol_bd = ROL_BD.get(session.get("nombre_rol"))
             if rol_bd is None:

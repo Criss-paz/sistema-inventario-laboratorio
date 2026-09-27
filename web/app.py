@@ -8,12 +8,14 @@ SQL ni lógica de negocio en este archivo.
 Ejecutar:
     cd web
     pip install -r requirements.txt
-    python app.py
+    python app.py                 # desarrollo
+    gunicorn app:app              # producción (Render)
 """
 import datetime as dt
 
 import psycopg
 from flask import Flask, redirect, url_for, render_template
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from db import close_db
@@ -32,6 +34,10 @@ from routes.informes import bp as informes_bp
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    if app.config["APP_ENV"] == "production":
+        # Detrás del proxy de Render: toma el esquema (https) y el host reales
+        # de los encabezados X-Forwarded-*, para que las URL salgan bien.
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     app.teardown_appcontext(close_db)
 
