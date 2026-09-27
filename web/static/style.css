@@ -476,3 +476,10 @@ th .hint { display: block; font-weight: 400; margin-top: 0.1rem; }
 .denegado { color: var(--line-strong); font-weight: 700; }
 .permisos td:first-child { color: var(--ink); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Contador dentro de una pestaña (Entradas 1,575) */
+.pestanas .conteo {
+  margin-left: 0.3rem; padding: 0.05rem 0.4rem; border-radius: var(--r-sm);
+  background: #e7ebef; color: var(--muted); font-size: 0.75rem; font-weight: 600;
+}
+.pestanas a.active .conteo { background: var(--accent-soft); color: var(--accent); }

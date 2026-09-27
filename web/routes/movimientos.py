@@ -65,12 +65,14 @@ def historial():
     pagina = int(pagina) if pagina.isdigit() else 1
 
     condiciones, params = [], []
-    if tipo in ("ENTRADA", "SALIDA"):
-        condiciones.append("tipo_movimiento = %s")
+    if tipo not in ("ENTRADA", "SALIDA"):
+        tipo = ""
+    if tipo:
+        condiciones.append("h.tipo_movimiento = %s")
         params.append(tipo)
     if q:
-        condiciones.append("(producto ILIKE %s OR codigo ILIKE %s OR numero_lote ILIKE %s)")
-        params += [f"%{q}%"] * 3
+        condiciones.append("(h.producto ILIKE %s OR h.codigo ILIKE %s OR h.numero_lote ILIKE %s OR pr.nombre ILIKE %s)")
+        params += [f"%{q}%"] * 4
     for valor, operador in ((desde, ">="), (hasta, "<")):
         try:
             fecha = dt.date.fromisoformat(valor)
@@ -78,23 +80,30 @@ def historial():
             continue
         if operador == "<":
             fecha += dt.timedelta(days=1)  # "hasta" incluye todo ese día
-        condiciones.append(f"fecha_hora {operador} %s")
+        condiciones.append(f"h.fecha_hora {operador} %s")
         params.append(fecha)
     where = ("WHERE " + " AND ".join(condiciones)) if condiciones else ""
 
     filas, total = query_page(
         f"""
-        SELECT id_movimiento, fecha_hora, tipo_movimiento, nombre_usuario, numero_lote,
-               id_lote, codigo, producto, cantidad, unidad_medida, precio_unitario, subtotal, observacion
-        FROM vw_historial_movimientos
+        SELECT h.id_movimiento, h.fecha_hora, h.tipo_movimiento, h.nombre_usuario, h.numero_lote,
+               h.id_lote, h.codigo, h.producto, h.cantidad, h.unidad_medida, h.precio_unitario,
+               h.subtotal, h.observacion, pr.nombre AS proveedor
+        FROM vw_historial_movimientos h
+        JOIN lote l ON l.id_lote = h.id_lote
+        JOIN proveedor pr ON pr.id_proveedor = l.id_proveedor
         {where}
-        ORDER BY fecha_hora DESC, id_movimiento DESC, id_detalle
+        ORDER BY h.fecha_hora DESC, h.id_movimiento DESC, h.id_detalle
         """,
         params, pagina,
     )
+    # Conteo de movimientos por tipo para las pestañas (no de líneas de detalle).
+    conteo = {f["tipo_movimiento"]: f["n"] for f in query_all(
+        "SELECT tipo_movimiento, count(DISTINCT id_movimiento) AS n FROM vw_historial_movimientos GROUP BY 1"
+    )}
     return render_template(
         "movimientos/historial.html", filas=filas, total=total, pagina=pagina,
-        tipo=tipo, q=q, desde=desde, hasta=hasta,
+        tipo=tipo, q=q, desde=desde, hasta=hasta, conteo=conteo,
     )
 
 
