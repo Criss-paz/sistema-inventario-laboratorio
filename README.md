@@ -84,6 +84,22 @@ sistema-inventario-laboratorio/
 - `docs/certificaciones/CERTIFICACION_ENTREGA_2.md` — firmada por ambos integrantes
 - `docs/entrega-2/Bitacora-IA.md` — bitácora de IA de esta entrega
 
+### Documentacion de Entrega 3
+- `sql/triggers/001_triggers.sql` — existencia por lote, historial inmutable, vencimiento obligatorio
+- `sql/procedures/001_procedures.sql` — `sp_registrar_entrada` y `sp_registrar_salida` (FEFO)
+- `sql/views/001_views.sql` — existencia, inventario bajo, lotes por vencer, historial
+- `sql/views/002_valorizacion_promedio.sql` — kardex y valorización por costo promedio ponderado
+- `sql/security/001_roles.sql` — 3 roles de base de datos con privilegios diferenciados
+- `sql/dml/` + `sql/dml/generar_carga.py` — inventario real del laboratorio (806 productos, 1,188 lotes, 5,839 movimientos)
+- `docs/entrega-3/reporte-carga-datos.md` — errores encontrados en los registros en papel
+- `web/` — movimientos, lotes, productos, exámenes, proveedores, categorías, reportes y usuarios, con control de acceso por rol
+- `AVANCE_WEB.md` — estado de la app web
+- `docs/entrega-3/matriz-trazabilidad.md` — trazabilidad v2 (RF, RN y RNF)
+- `docs/casos-prueba/casos-prueba-entrega-3.md` — 8 casos de prueba
+- `docs/entrega-3/estandares-cumplimiento.md` — estándares SQL y web actualizados
+- `docs/entrega-3/Bitacora-IA.md` — bitácora de IA de esta entrega
+- `docs/certificaciones/CERTIFICACION_ENTREGA_3.md`
+
 ### SGBD
 **PostgreSQL** — decidido en la Entrega 2. La Entrega 1 dejó este punto abierto ("a definir") y la bitácora de IA de la Entrega 1 mencionaba Oracle como intención inicial; el equipo confirmó PostgreSQL por su soporte completo de CHECK/FK/triggers/funciones, instalación simple y facilidad de defensa académica. Justificación completa en `docs/entrega-2/Bitacora-IA.md`.
 
@@ -94,11 +110,11 @@ sistema-inventario-laboratorio/
 |JOSE EDUARDO ESCOBAR|2690245346|
 
 ### Control de versiones
-Cada entrega finaliza con un commit de cierre y su tag: `entrega-1`, `entrega-2`.
+Cada entrega finaliza con un commit de cierre y su tag: `entrega-1`, `entrega-2`, `entrega-3`.
 
 ### Estado
 - Entrega 1 — Análisis, propuesta y diseño conceptual: **cerrada** (tag `entrega-1`).
 - Entrega 2 — Diseño lógico, diccionario e implementación base: **cerrada** (tag `entrega-2`, 01/09/2026). Contenido verificado por ejecución real (PostgreSQL 18 + Python 3.14, 30/08/2026 — 15/15 casos automatizados y 3 manuales en navegador). Incluye: SGBD (PostgreSQL), stack web (Flask + psycopg 3), modelo relacional, normalización 3FN, diccionario de datos, DDL, datos de prueba, login + 2 CRUD (Categorías, Productos), `AVANCE_WEB.md`, matriz de trazabilidad, casos de prueba ejecutados, diagrama ER corregido y re-exportado, y certificación firmada por ambos integrantes.
-- Entrega 3 — Implementación avanzada, seguridad y pruebas: **en curso**. Pendiente: vistas, triggers, procedimientos, 3 roles de PostgreSQL, control de acceso por rol en la app, ampliación del seed a 50+ registros por tabla principal y app web al 70%.
+- Entrega 3 — Implementación avanzada, seguridad y pruebas: **en cierre**. Hecho: triggers, procedimientos, vistas, valorización por costo promedio ponderado, 3 roles de PostgreSQL, carga del inventario real, módulos web principales con control de acceso por rol en la app y en la base, reportes, matriz de trazabilidad v2 y 8 casos de prueba verificados. Falta: ejecución manual de los casos con capturas, certificación firmada y tag `entrega-3`.
 
 > **Nota sobre la integración:** el proyecto lo desarrollan 2 estudiantes. La consigna indica grupos de 3 "puede variar con autorización del catedrático".

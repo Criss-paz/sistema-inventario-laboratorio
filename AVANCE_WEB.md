@@ -1,57 +1,82 @@
-# Avance de la aplicación web — Entrega 2
+# Avance de la aplicación web — Entrega 3
 
-**Meta de la rúbrica para esta entrega:** ≈30% (login + 2 CRUD funcionales).
-**Stack:** Python 3 + Flask + PostgreSQL (driver `psycopg` v3 — se probó `psycopg2-binary` primero pero no tiene wheel para Python 3.14 en Windows), decidido el 30/08/2026 — ver `docs/entrega-2/Bitacora-IA.md`.
+**Meta de la rúbrica para esta entrega:** 70% (módulos principales y control de acceso por rol).
+**Avance declarado:** los 39 requerimientos funcionales de la Entrega 1 tienen pantalla o están cubiertos por la base de datos. Queda para la Entrega 4: despliegue en internet (S5), respaldos (RNF-11) y pulido final.
+**Stack:** Python 3.14 + Flask 3 + PostgreSQL 18 (driver `psycopg` v3). Sin frameworks de interfaz: HTML, CSS y JavaScript propios.
 
-## Módulos implementados
-| Módulo | Estado | Detalle |
-|---|---|---|
-| Login | ✅ Implementado | `web/routes/auth.py` — valida usuario/contraseña contra `usuario`/`rol`, hash con `werkzeug.security`, sesión firmada con `APP_SECRET`, mensaje de error genérico (no revela si el usuario existe), redirige a `next` tras iniciar sesión |
-| Logout | ✅ Implementado | Limpia la sesión, requiere POST (evita cierre de sesión por link/CSRF trivial) |
-| Layout | ✅ Implementado | `web/templates/base.html` — encabezado con navegación activa, usuario+rol, mensajes flash con auto-cierre, tarjetas de resumen (KPI) en los listados, confirmación antes de desactivar/activar registros, páginas de error 404/500 con el mismo estilo de la app |
-| Control de acceso | ⏳ Parcial | `login_required` protege todas las rutas de Categorías/Productos. El control **por rol** (qué puede hacer cada rol) es explícitamente de Entrega 3 en la rúbrica — no se implementó todavía |
-| CRUD 1 — Categorías | ✅ Implementado | Listar, crear, editar, activar/desactivar (baja lógica) — persiste en `categoria` |
-| CRUD 2 — Productos | ✅ Implementado | Listar, crear, editar, activar/desactivar — persiste en `producto`, con FK real a `categoria` (selector, no texto libre) |
+## Módulos
 
-## Por qué Categorías + Productos (y no Lote/Movimiento)
-Lote y Movimiento dependen de reglas de negocio (RN-01 a RN-04: nunca negativo, entrada suma, salida resta, no exceder existencia) que la propia rúbrica asigna a triggers/procedimientos de **Entrega 3**. Construir su CRUD ahora sin esas reglas en la base de datos sería exponer una pantalla que puede dejar el inventario en un estado inconsistente. Categorías y Productos son las dos entidades base sin ese riesgo, y Productos ya demuestra una FK real (selector de categoría), que es lo que pide la revisión funcional de esta entrega.
+| Módulo | Estado | Qué hace | Quién lo usa |
+|---|---|---|---|
+| Login / logout | ✅ | Sesión firmada, contraseña con hash, mensaje genérico ante error, redirección solo a rutas internas | Todos |
+| Inicio | ✅ | Resumen del inventario: productos con existencia, inventario bajo, lotes vencidos y por vencer, últimos movimientos | Todos |
+| Movimientos | ✅ | Pestañas Todos / Entradas / Salidas con filtros por fecha y búsqueda. Registrar entrada (crea o alimenta un lote) y salida (FEFO) llamando a los procedimientos almacenados | Consultar: todos. Registrar: administrador y encargado |
+| Lotes | ✅ | Existencia por lote, vencidos, por vencer y la ficha de cada lote con sus movimientos. Corregir número, vencimiento o dar de baja (nunca la existencia) | Consultar: todos. Corregir: administrador |
+| Productos | ✅ | CRUD con búsqueda, filtro por categoría, paginación y existencia en vivo | Consultar: todos. Editar: administrador |
+| Exámenes | ✅ | CRUD, insumos que consume cada examen y para cuántas pruebas alcanza la existencia | Consultar: todos. Editar: administrador |
+| Proveedores | ✅ | CRUD con baja lógica y productos que suministra con su precio | Consultar: todos. Editar: administrador |
+| Categorías | ✅ | CRUD con baja lógica | Consultar: todos. Editar: administrador |
+| Reportes | ✅ | Pantalla única: el usuario elige Inventario, Entradas, Salidas, Kardex, Proveedores, Pruebas, Catálogo de productos, Inventario bajo o Vencimientos. Todos en CSV e impresión | Todos |
+| Usuarios y roles | ✅ | Crear usuarios, cambiar rol, restablecer contraseña, desactivar; tabla de permisos por rol | Administrador |
 
-## Validaciones implementadas
-- Campos obligatorios verificados en el servidor antes de tocar la BD (no solo `required` de HTML).
-- Duplicados: `codigo` de producto y `nombre` de categoría son `UNIQUE` — el error de PostgreSQL (`UniqueViolation`) se captura y se muestra como mensaje claro, nunca como el error SQL crudo.
-- `stock_minimo` se valida como número ≥ 0 en el servidor (refuerza `ck_producto_stock_minimo`).
-- Consultas 100% parametrizadas (`db.py`) — ninguna ruta concatena SQL con datos del usuario.
+## Control de acceso por rol (RF-05)
 
-## Conexión a la base de datos
-`web/config.py` lee `.env` (nunca credenciales en el código); `web/db.py` centraliza la conexión y las consultas — ninguna ruta abre su propia conexión ni escribe SQL crudo.
+Dos capas independientes:
 
-## Pendiente (fuera del alcance de Entrega 2, según la rúbrica)
-- Módulos de Proveedores, Lotes, Movimientos, Exámenes → Entrega 3 (junto con triggers/procedimientos que sí les aplican).
-- Control de acceso por rol dentro de la app → Entrega 3.
-- Vistas, triggers, procedimientos, roles de PostgreSQL → Entrega 3.
-- Ampliar `sql/dml/001_seed.sql` hasta el mínimo de 50 registros por tabla principal exigido para el sistema completo → progresivo hasta Entrega 3/4.
+1. **En la aplicación.** `routes/auth.py::rol_requerido()` protege cada ruta (responde 403 si el rol no corresponde) y las plantillas muestran solo los botones que el rol puede usar (`tiene_rol()`).
+2. **En la base de datos.** Después del login, cada petición ejecuta `SET ROLE rol_administrador | rol_encargado | rol_consulta` (`web/db.py`). Aunque la interfaz tuviera un error, PostgreSQL niega lo que el rol no permite. Ningún rol puede leer `password_hash`, editar `cantidad_disponible` ni insertar movimientos sin pasar por los procedimientos.
 
-## Cómo ejecutar
-Ver `INSTALL.md` (pasos 1-6). Resumen:
-```bash
-psql -U usuario_app -d inventario_laboratorio -f sql/ddl/001_schema.sql
-psql -U usuario_app -d inventario_laboratorio -f sql/dml/001_seed.sql
-cd web && pip install -r requirements.txt && python seed_usuarios.py && python app.py
-```
+| Rol | Puede |
+|---|---|
+| Administrador | Todo, incluidos catálogos, corrección de lotes y usuarios |
+| Encargado de inventario | Consultar y registrar entradas y salidas |
+| Usuario de consulta | Solo consultar y generar reportes |
+
+## Reglas de negocio visibles en la interfaz
+
+Los mensajes de los triggers y procedimientos (SQLSTATE P0001) llegan tal cual al usuario; cualquier otro error se reemplaza por un mensaje genérico (A2). Ejemplos:
+- *"Existencia insuficiente de "CUVETTES FOR URISED": disponible 26.00 (sin contar lotes vencidos), solicitado 99999."*
+- *"El producto "AIA-PACK CA19-9 CALIBRATOR SET" requiere fecha de vencimiento en sus lotes."*
+
+## Reportes y método de valuación
+
+El inventario se valoriza por **costo promedio ponderado móvil**, calculado en la base de datos (`fn_kardex_promedio`, `vw_valorizacion_inventario`):
+- cada compra recalcula el costo promedio: (valor del saldo + valor de la compra) ÷ (cantidad del saldo + cantidad comprada);
+- cada salida se valoriza al promedio vigente ese día;
+- el reporte de inventario muestra código de producto, producto, presentación, existencia actual, precio unitario y precio total.
+
+Comprobación contable con los datos reales (marzo a septiembre de 2026): compras Q3,811,436.54 − costo de lo consumido Q3,286,722.24 = Q524,714.30, frente a un inventario valorizado de Q524,714.36. La diferencia de Q0.06 viene del redondeo de cada salida.
+
+## Datos
+
+La base se carga con el inventario real del laboratorio (registros en papel transcritos a Excel): 806 productos, 1,188 lotes y 5,839 movimientos. Los errores que tenía el papel y cómo se trataron están en `docs/entrega-3/reporte-carga-datos.md`.
+
+## Interfaz
+
+Rediseñada como herramienta de trabajo: tipografía Atkinson Hyperlegible (distingue 0/O y 1/l/I al leer códigos y lotes), alojada en la app para funcionar sin internet; menú lateral por tarea; íconos SVG propios; un solo color de acento y colores de estado para vencido, por vencer y disponible. Verificada a 1440 px y a 390 px (celular), con foco visible para teclado.
+
+## Validaciones
+
+- Validación en el servidor antes de tocar la base (A3): campos obligatorios, números, fechas, formato de NIT, correo, usuario y contraseña (mínimo 8 caracteres y confirmación).
+- Consultas 100% parametrizadas (A4); los filtros de tipo "lista fija" salen de diccionarios del código, nunca del texto del usuario.
+- Duplicados (código, NIT, número de lote, usuario) se informan con un mensaje claro.
 
 ## Evidencia de pruebas
-**Ejecutado el 30/08/2026** contra PostgreSQL 18 + Python 3.14 real (el equipo instaló ambos). Los 15 casos de `docs/casos-prueba/casos-prueba-entrega-2.md` pasaron, incluyendo un reinicio real del servidor para confirmar que los datos persisten en PostgreSQL y no en memoria (CP-15). Durante la ejecución se encontraron y corrigieron 2 problemas reales:
-1. `psycopg2-binary` no tiene wheel precompilado para Python 3.14 en Windows (pide Visual C++ Build Tools) → se migró a `psycopg` (v3), que sí trae wheel para 3.14.
-2. PostgreSQL 15+ ya no da permiso de `CREATE` en el schema `public` a un usuario que no es dueño de la BD → se agregó el `GRANT ALL ON SCHEMA public` a `INSTALL.md`.
 
-Ambos quedaron corregidos en el código y en `INSTALL.md` antes de que nadie más los sufra. Detalle completo de la sesión de pruebas en `docs/entrega-2/Bitacora-IA.md`.
+- **Casos de la Entrega 3:** `docs/casos-prueba/casos-prueba-entrega-3.md`. Los 8 verificados contra la base real en una transacción revertida; la ejecución manual con capturas está pendiente.
+- **Pruebas automatizadas de la app (26/09/2026):** 142 verificaciones con los 3 usuarios (páginas, permisos por rol, formularios, mensajes de la base, reportes y CSV) y 19 del módulo de usuarios. 0 fallos. Las escrituras se revierten para no alterar el inventario.
 
-## Cierre de la entrega (01/09/2026)
-Auditoría final contra la consigna antes de taggear (detalle en `docs/entrega-2/Bitacora-IA.md`):
-- Diagrama ER corregido: la relación `Registra` conectaba USUARIO con PRODUCTO, pero la FK real es `movimiento.id_usuario` — ahora es **USUARIO (1) — Registra — (N) MOVIMIENTO**. Se agregó también el atributo `requiere_vencimiento` a PRODUCTO. PNG y PDF re-exportados.
-- `CERTIFICACION_ENTREGA_2.md` firmada por ambos integrantes.
-- Rutas rotas corregidas en `README.md` (nombres reales de los archivos del diagrama) y en el encabezado de `sql/dml/001_seed.sql`.
-- Tag `entrega-2` creado y publicado.
+## Cómo ejecutar
 
-## Pruebas manuales del equipo (además de las automatizadas)
-El equipo inició sesión manualmente en el navegador con los 3 usuarios de prueba (`admin.dev`, `encargado.dev`, `consulta.dev`) y usó el CRUD web para curar el catálogo completo con datos reales del laboratorio: las 5 categorías y los 10 productos del seed inicial (genéricos) se editaron uno por uno hasta reflejar el catálogo real (códigos, nombres y unidades tal como los maneja el laboratorio), y se agregó un producto adicional. Todo verificado directamente en PostgreSQL. Detalle en `docs/casos-prueba/casos-prueba-entrega-2.md` (CP-16, CP-17, CP-18). `sql/dml/001_seed.sql` se actualizó para que una instalación desde cero cargue directamente este catálogo real, no datos de ejemplo genéricos.
+Ver `INSTALL.md`. En Windows, antes de ejecutar los scripts SQL: `$env:PGCLIENTENCODING = "UTF8"`.
+
+```bash
+cd web
+.venv\Scripts\python.exe app.py      # http://localhost:8080
+```
+
+## Pendiente (Entrega 4)
+
+- Despliegue en internet (estándar S5).
+- Respaldo y restauración de la base (RNF-11).
+- Pulido final a partir de la ejecución de los casos de prueba y la revisión del catedrático.
