@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% block title %}Categorías — Inventario Laboratorio{% endblock %}
 {% block content %}
 <div class="top-actions">
   <h1>Categorías<span class="subtitle">Clasificación de los productos del inventario</span></h1>
   {% if tiene_rol(ADMIN) %}
-  <a class="btn btn-primary" href="{{ url_for('categorias.nueva') }}">+ Nueva categoría</a>
+  <a class="btn btn-primary" href="{{ url_for('categorias.nueva') }}">{{ i.icono('mas') }}Nueva categoría</a>
   {% endif %}
 </div>
 
@@ -43,7 +44,7 @@
         {% if tiene_rol(ADMIN) %}
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('categorias.editar', id_categoria=c.id_categoria) }}">Editar</a>
-          <form method="post" action="{{ url_for('categorias.alternar_estado', id_categoria=c.id_categoria) }}" style="margin:0;"
+          <form method="post" action="{{ url_for('categorias.alternar_estado', id_categoria=c.id_categoria) }}"
                 onsubmit="return confirm({{ ('¿Desactivar la categoría ' if c.estado else '¿Activar la categoría ')|tojson }} + {{ c.nombre|tojson }} + '?');">
             <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if c.estado else 'Activar' }}</button>
           </form>
@@ -54,10 +55,10 @@
       <tr class="empty-row">
         <td colspan="4">
           <div class="empty-state">
-            <span class="empty-icon">🗂️</span>
+            {{ i.icono('categorias', 'empty-icon') }}
             <p>No hay categorías registradas todavía.</p>
             {% if tiene_rol(ADMIN) %}
-            <a class="btn btn-primary btn-sm" href="{{ url_for('categorias.nueva') }}">+ Crear la primera categoría</a>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('categorias.nueva') }}">Crear la primera categoría</a>
             {% endif %}
           </div>
         </td>

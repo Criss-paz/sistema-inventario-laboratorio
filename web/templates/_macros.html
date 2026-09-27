@@ -9,16 +9,16 @@
     {% set _ = args.update(request.view_args or {}) %}
     {% if pagina > 1 %}
       {% set _ = args.update({'pagina': pagina - 1}) %}
-      <a class="btn btn-sm" href="{{ url_for(request.endpoint, **args) }}">← Anterior</a>
+      <a class="btn btn-sm" href="{{ url_for(request.endpoint, **args) }}">Anterior</a>
     {% endif %}
-    <span>Página {{ pagina }} de {{ paginas }} · {{ total }} registros</span>
+    <span>Página {{ pagina }} de {{ paginas }}, {{ total }} registros</span>
     {% if pagina < paginas %}
       {% set _ = args.update({'pagina': pagina + 1}) %}
-      <a class="btn btn-sm" href="{{ url_for(request.endpoint, **args) }}">Siguiente →</a>
+      <a class="btn btn-sm" href="{{ url_for(request.endpoint, **args) }}">Siguiente</a>
     {% endif %}
   </nav>
   {% else %}
-  <p class="paginacion"><span>{{ total }} registros</span></p>
+  <p class="paginacion"><span>{{ total }} {{ "registro" if total == 1 else "registros" }}</span></p>
   {% endif %}
 {% endmacro %}
 
@@ -35,4 +35,11 @@
 {# Cantidades: sin decimales cuando son enteras (12 en vez de 12.00). #}
 {% macro cantidad(valor) -%}
   {%- if valor is none -%}—{%- elif valor == valor|int -%}{{ valor|int }}{%- else -%}{{ valor }}{%- endif -%}
+{%- endmacro %}
+
+{# Cantidad con su unidad en singular o plural: "1 unidad", "3 unidades", "2 cajas". #}
+{% macro con_unidad(valor, unidad) -%}
+  {%- set u = (unidad or '')|lower -%}
+  {%- if valor != 1 and u and u[-1] in 'aeiou' -%}{% set u = u ~ 's' %}{%- elif valor != 1 and u -%}{% set u = u ~ 'es' %}{%- endif -%}
+  {{ cantidad(valor) }} {{ u }}
 {%- endmacro %}

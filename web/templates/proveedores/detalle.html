@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% block title %}{{ proveedor.nombre }} — Proveedores{% endblock %}
 {% block content %}
 <div class="top-actions">
-  <h1>{{ proveedor.nombre }}<span class="subtitle">NIT {{ proveedor.nit }}{{ ' · Inactivo' if not proveedor.estado else '' }}</span></h1>
+  <h1>{{ proveedor.nombre }}<span class="subtitle">NIT <code>{{ proveedor.nit }}</code>{{ ', inactivo' if not proveedor.estado else '' }}</span></h1>
   <div class="actions">
     {% if tiene_rol(ADMIN) %}
     <a class="btn btn-sm" href="{{ url_for('proveedores.editar', id_proveedor=proveedor.id_proveedor) }}">Editar</a>
     {% endif %}
-    <a class="btn btn-sm" href="{{ url_for('proveedores.listar') }}">← Volver</a>
+    <a class="btn btn-sm" href="{{ url_for('proveedores.listar') }}">{{ i.icono('volver') }}Proveedores</a>
   </div>
 </div>
 
@@ -30,7 +31,7 @@
         <td class="num">{{ '%.2f'|format(p.precio_compra) }}</td>
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="4"><div class="empty-state"><p>Este proveedor no tiene productos con precio registrado.</p></div></td></tr>
+      <tr class="empty-row"><td colspan="4">{{ i.vacio('Este proveedor no tiene productos con precio registrado. Los precios se registran con cada entrada.', 'productos') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

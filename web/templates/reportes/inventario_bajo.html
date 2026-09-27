@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
 {% block title %}Inventario bajo — Reportes{% endblock %}
 {% block content %}
@@ -28,10 +29,10 @@
         <td class="num alerta">{{ m.cantidad(b.existencia_utilizable) }}</td>
         <td class="num">{{ m.cantidad(b.existencia_vencida) if b.existencia_vencida > 0 else '—' }}</td>
         <td class="num">{{ m.cantidad(b.stock_minimo) }}</td>
-        <td class="num"><strong>{{ m.cantidad(b.faltante) }}</strong> {{ b.unidad_medida|lower }}</td>
+        <td class="num"><strong>{{ m.con_unidad(b.faltante, b.unidad_medida) }}</strong></td>
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="7"><div class="empty-state"><span class="empty-icon">✅</span><p>Ningún producto está por debajo de su stock mínimo con esos filtros.</p></div></td></tr>
+      <tr class="empty-row"><td colspan="7">{{ i.vacio('Ningún producto está por debajo de su stock mínimo con esos filtros.', 'ok') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
 {% block title %}Productos — Inventario Laboratorio{% endblock %}
 {% block content %}
 <div class="top-actions">
   <h1>Productos<span class="subtitle">Catálogo de productos e insumos</span></h1>
   {% if tiene_rol(ADMIN) %}
-  <a class="btn btn-primary" href="{{ url_for('productos.nuevo') }}">+ Nuevo producto</a>
+  <a class="btn btn-primary" href="{{ url_for('productos.nuevo') }}">{{ i.icono('mas') }}Nuevo producto</a>
   {% endif %}
 </div>
 
@@ -67,7 +68,7 @@
         {% if tiene_rol(ADMIN) %}
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('productos.editar', id_producto=p.id_producto) }}">Editar</a>
-          <form method="post" action="{{ url_for('productos.alternar_estado', id_producto=p.id_producto) }}" style="margin:0;"
+          <form method="post" action="{{ url_for('productos.alternar_estado', id_producto=p.id_producto) }}"
                 onsubmit="return confirm({{ ('¿Desactivar el producto ' if p.estado else '¿Activar el producto ')|tojson }} + {{ p.nombre|tojson }} + '?');">
             <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if p.estado else 'Activar' }}</button>
           </form>
@@ -78,7 +79,7 @@
       <tr class="empty-row">
         <td colspan="9">
           <div class="empty-state">
-            <span class="empty-icon">🧴</span>
+            {{ i.icono('productos', 'empty-icon') }}
             <p>{{ 'Ningún producto coincide con el filtro.' if q or id_categoria else 'No hay productos registrados todavía.' }}</p>
           </div>
         </td>

@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
 {% block title %}Exámenes — Inventario Laboratorio{% endblock %}
 {% block content %}
 <div class="top-actions">
   <h1>Exámenes<span class="subtitle">Insumos que consume cada examen y cuántos alcanzan con la existencia actual</span></h1>
   {% if tiene_rol(ADMIN) %}
-  <a class="btn btn-primary" href="{{ url_for('examenes.nuevo') }}">+ Nuevo examen</a>
+  <a class="btn btn-primary" href="{{ url_for('examenes.nuevo') }}">{{ i.icono('mas') }}Nuevo examen</a>
   {% endif %}
 </div>
 
@@ -32,7 +33,7 @@
         </td>
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="5"><div class="empty-state"><span class="empty-icon">🔬</span><p>No hay exámenes con esa búsqueda.</p></div></td></tr>
+      <tr class="empty-row"><td colspan="5">{{ i.vacio('No hay exámenes con esa búsqueda.', 'examenes') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

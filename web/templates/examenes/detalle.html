@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
 {% block title %}{{ examen.nombre_examen }} — Exámenes{% endblock %}
 {% block content %}
@@ -8,7 +9,7 @@
     {% if tiene_rol(ADMIN) %}
     <a class="btn btn-sm" href="{{ url_for('examenes.editar', id_examen=examen.id_examen) }}">Editar</a>
     {% endif %}
-    <a class="btn btn-sm" href="{{ url_for('examenes.listar') }}">← Exámenes</a>
+    <a class="btn btn-sm" href="{{ url_for('examenes.listar') }}">{{ i.icono('volver') }}Exámenes</a>
   </div>
 </div>
 
@@ -25,25 +26,25 @@
         {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
     </thead>
     <tbody>
-      {% for i in insumos %}
+      {% for ins in insumos %}
       <tr>
-        <td><code>{{ i.codigo }}</code></td>
-        <td>{{ i.nombre }}</td>
-        <td class="num">{{ m.cantidad(i.cantidad_requerida) }} {{ i.unidad_medida|lower }}</td>
-        <td class="num">{{ m.cantidad(i.existencia_utilizable) }}</td>
-        <td class="num {{ 'alerta' if i.alcanzan == 0 else '' }}">{{ m.cantidad(i.alcanzan) }}</td>
+        <td><code>{{ ins.codigo }}</code></td>
+        <td>{{ ins.nombre }}</td>
+        <td class="num">{{ m.con_unidad(ins.cantidad_requerida, ins.unidad_medida) }}</td>
+        <td class="num">{{ m.cantidad(ins.existencia_utilizable) }}</td>
+        <td class="num {{ 'alerta' if ins.alcanzan == 0 else '' }}">{{ m.cantidad(ins.alcanzan) }}</td>
         {% if tiene_rol(ADMIN) %}
         <td class="actions">
-          <form method="post" style="margin:0;"
-                action="{{ url_for('examenes.quitar_insumo', id_examen=examen.id_examen, id_producto=i.id_producto) }}"
-                onsubmit="return confirm('¿Quitar ' + {{ i.nombre|tojson }} + ' del examen?');">
+          <form method="post"
+                action="{{ url_for('examenes.quitar_insumo', id_examen=examen.id_examen, id_producto=ins.id_producto) }}"
+                onsubmit="return confirm('¿Quitar ' + {{ ins.nombre|tojson }} + ' del examen?');">
             <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
           </form>
         </td>
         {% endif %}
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="6"><div class="empty-state"><p>Este examen todavía no tiene insumos registrados.</p></div></td></tr>
+      <tr class="empty-row"><td colspan="6">{{ i.vacio('Este examen todavía no tiene insumos registrados.', 'examenes') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

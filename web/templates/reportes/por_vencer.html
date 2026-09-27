@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
 {% block title %}Lotes por vencer — Reportes{% endblock %}
 {% block content %}
@@ -26,16 +27,16 @@
     <tbody>
       {% for l in filas %}
       <tr>
-        <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"><strong>{{ l.numero_lote }}</strong></a></td>
+        <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"><span class="lote">{{ l.numero_lote }}</span></a></td>
         <td><code>{{ l.codigo }}</code> {{ l.producto }}</td>
         <td>{{ l.proveedor }}</td>
         <td>{{ l.fecha_vencimiento.strftime('%d/%m/%Y') }}
           {% if l.situacion == 'VENCIDO' %}<span class="badge badge-danger">Vencido</span>{% else %}<span class="badge badge-warn">Por vencer</span>{% endif %}</td>
         <td class="num">{{ l.dias_para_vencer }}</td>
-        <td class="num">{{ m.cantidad(l.cantidad_disponible) }} {{ l.unidad_medida|lower }}</td>
+        <td class="num">{{ m.con_unidad(l.cantidad_disponible, l.unidad_medida) }}</td>
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="6"><div class="empty-state"><span class="empty-icon">✅</span><p>No hay lotes vencidos ni por vencer con ese filtro.</p></div></td></tr>
+      <tr class="empty-row"><td colspan="6">{{ i.vacio('No hay lotes vencidos ni por vencer con ese filtro.', 'ok') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

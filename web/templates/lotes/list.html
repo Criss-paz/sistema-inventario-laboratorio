@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
 {% block title %}Lotes — Inventario Laboratorio{% endblock %}
 {% block content %}
@@ -29,7 +30,7 @@
     <tbody>
       {% for l in lotes %}
       <tr class="{{ '' if l.estado else 'inactivo' }}">
-        <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"><strong>{{ l.numero_lote }}</strong></a></td>
+        <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"><span class="lote">{{ l.numero_lote }}</span></a></td>
         <td><code>{{ l.codigo }}</code> {{ l.producto }}</td>
         <td>{{ l.proveedor }}</td>
         <td>{{ l.fecha_ingreso.strftime('%d/%m/%Y') }}</td>
@@ -40,11 +41,11 @@
             {% elif l.dias_para_vencer <= 90 %}<span class="badge badge-warn">{{ l.dias_para_vencer }} días</span>{% endif %}
           {% else %}—{% endif %}
         </td>
-        <td class="num">{{ m.cantidad(l.cantidad_disponible) }} {{ l.unidad_medida|lower }}</td>
+        <td class="num">{{ m.con_unidad(l.cantidad_disponible, l.unidad_medida) }}</td>
         <td>{% if l.estado %}<span class="badge badge-on">Activo</span>{% else %}<span class="badge badge-off">De baja</span>{% endif %}</td>
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="7"><div class="empty-state"><span class="empty-icon">🏷️</span><p>No hay lotes con ese filtro.</p></div></td></tr>
+      <tr class="empty-row"><td colspan="7">{{ i.vacio('No hay lotes con ese filtro. Pruebe con otra pestaña o borre la búsqueda.', 'lotes') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
 {% block title %}Inicio — Inventario Laboratorio{% endblock %}
 {% block content %}
@@ -6,8 +7,8 @@
   <h1>Inicio<span class="subtitle">Estado del inventario hoy, {{ hoy.strftime('%d/%m/%Y') }}</span></h1>
   {% if tiene_rol(ADMIN, ENCARGADO) %}
   <div class="actions">
-    <a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">+ Entrada</a>
-    <a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">− Salida</a>
+    <a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">{{ i.icono('mas') }}Registrar entrada</a>
+    <a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">{{ i.icono('menos') }}Registrar salida</a>
   </div>
   {% endif %}
 </div>
@@ -45,7 +46,7 @@
           {% for l in por_vencer %}
           <tr>
             <td>{{ l.producto }}</td>
-            <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}">{{ l.numero_lote }}</a></td>
+            <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"><span class="lote">{{ l.numero_lote }}</span></a></td>
             <td>
               {{ l.fecha_vencimiento.strftime('%d/%m/%Y') }}
               {% if l.situacion == 'VENCIDO' %}<span class="badge badge-danger">Vencido</span>
@@ -54,7 +55,7 @@
             <td class="num">{{ m.cantidad(l.cantidad_disponible) }}</td>
           </tr>
           {% else %}
-          <tr class="empty-row"><td colspan="4"><div class="empty-state"><p>Ningún lote vence en los próximos 90 días.</p></div></td></tr>
+          <tr class="empty-row"><td colspan="4">{{ i.vacio('Ningún lote vence en los próximos 90 días.', 'ok') }}</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -68,7 +69,7 @@
         <tbody>
           {% for mv in ultimos %}
           <tr>
-            <td><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">{{ mv.fecha_hora.strftime('%d/%m %H:%M') }}</a></td>
+            <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">{{ mv.fecha_hora.strftime('%d/%m %H:%M') }}</a></td>
             <td><span class="badge {{ 'badge-on' if mv.tipo_movimiento == 'ENTRADA' else 'badge-out' }}">{{ mv.tipo_movimiento|capitalize }}</span></td>
             <td>{{ mv.producto }}</td>
             <td class="num">{{ m.cantidad(mv.cantidad) }}</td>

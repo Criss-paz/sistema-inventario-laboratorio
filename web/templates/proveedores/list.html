@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
 {% block title %}Proveedores — Inventario Laboratorio{% endblock %}
 {% block content %}
 <div class="top-actions">
   <h1>Proveedores<span class="subtitle">Empresas que suministran insumos al laboratorio</span></h1>
   {% if tiene_rol(ADMIN) %}
-  <a class="btn btn-primary" href="{{ url_for('proveedores.nuevo') }}">+ Nuevo proveedor</a>
+  <a class="btn btn-primary" href="{{ url_for('proveedores.nuevo') }}">{{ i.icono('mas') }}Nuevo proveedor</a>
   {% endif %}
 </div>
 
@@ -41,7 +42,7 @@
           <a class="btn btn-sm" href="{{ url_for('proveedores.detalle', id_proveedor=pr.id_proveedor) }}">Ver</a>
           {% if tiene_rol(ADMIN) %}
           <a class="btn btn-sm" href="{{ url_for('proveedores.editar', id_proveedor=pr.id_proveedor) }}">Editar</a>
-          <form method="post" action="{{ url_for('proveedores.alternar_estado', id_proveedor=pr.id_proveedor) }}" style="margin:0;"
+          <form method="post" action="{{ url_for('proveedores.alternar_estado', id_proveedor=pr.id_proveedor) }}"
                 onsubmit="return confirm({{ ('¿Desactivar el proveedor ' if pr.estado else '¿Activar el proveedor ')|tojson }} + {{ pr.nombre|tojson }} + '?');">
             <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if pr.estado else 'Activar' }}</button>
           </form>
@@ -52,7 +53,7 @@
       <tr class="empty-row">
         <td colspan="7">
           <div class="empty-state">
-            <span class="empty-icon">🚚</span>
+            {{ i.icono('proveedores', 'empty-icon') }}
             <p>{{ 'Ningún proveedor coincide con la búsqueda.' if q else 'No hay proveedores registrados todavía.' }}</p>
           </div>
         </td>
