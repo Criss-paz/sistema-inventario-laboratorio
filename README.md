@@ -84,6 +84,9 @@ sistema-inventario-laboratorio/
 - `docs/certificaciones/CERTIFICACION_ENTREGA_2.md` — firmada por ambos integrantes
 - `docs/entrega-2/Bitacora-IA.md` — bitácora de IA de esta entrega
 
+### Aplicación en línea
+**https://inventario-laboratorio-03s7.onrender.com** (Render + Neon, plan gratuito: la primera visita tras 15 minutos sin uso tarda unos 50 segundos). Las credenciales de producción no están en el repositorio; se entregan por un canal privado.
+
 ### Documentacion de Entrega 3
 - `sql/triggers/001_triggers.sql` — existencia por lote, historial inmutable, vencimiento obligatorio
 - `sql/procedures/001_procedures.sql` — `sp_registrar_entrada` y `sp_registrar_salida` (FEFO)
@@ -115,6 +118,6 @@ Cada entrega finaliza con un commit de cierre y su tag: `entrega-1`, `entrega-2`
 ### Estado
 - Entrega 1 — Análisis, propuesta y diseño conceptual: **cerrada** (tag `entrega-1`).
 - Entrega 2 — Diseño lógico, diccionario e implementación base: **cerrada** (tag `entrega-2`, 01/09/2026). Contenido verificado por ejecución real (PostgreSQL 18 + Python 3.14, 30/08/2026 — 15/15 casos automatizados y 3 manuales en navegador). Incluye: SGBD (PostgreSQL), stack web (Flask + psycopg 3), modelo relacional, normalización 3FN, diccionario de datos, DDL, datos de prueba, login + 2 CRUD (Categorías, Productos), `AVANCE_WEB.md`, matriz de trazabilidad, casos de prueba ejecutados, diagrama ER corregido y re-exportado, y certificación firmada por ambos integrantes.
-- Entrega 3 — Implementación avanzada, seguridad y pruebas: **implementada** (26/09/2026). Base de datos: triggers, procedimientos (FEFO), vistas, valorización por costo promedio ponderado, 3 roles de PostgreSQL y el inventario real del laboratorio cargado (806 productos, 1,188 lotes, 5,839 movimientos). Web al 70%: movimientos, lotes, productos, exámenes, proveedores, categorías, reportes y usuarios, con control de acceso por rol en la app y en la base. Documentación: matriz de trazabilidad v2, estándares, 8 casos de prueba verificados y bitácora IA. **Cierre formal pendiente** (antes del 29/09): ejecución manual de los casos con capturas, firma de Cristopher en la certificación y tag `entrega-3`.
+- Entrega 3 — Implementación avanzada, seguridad y pruebas: **implementada** (26/09/2026). Base de datos: triggers, procedimientos (FEFO), vistas, valorización por costo promedio ponderado, 3 roles de PostgreSQL y el inventario real del laboratorio cargado (806 productos, 1,188 lotes, 5,839 movimientos). Web al 70%: movimientos, lotes, productos, exámenes, proveedores, categorías, reportes y usuarios, con control de acceso por rol en la app y en la base. Documentación: matriz de trazabilidad v2, estándares, 8 casos de prueba verificados y bitácora IA. Desplegada en internet (estándar S5). **Cierre formal pendiente** (antes del 29/09): ejecución manual de los casos con capturas, firma de Cristopher en la certificación y tag `entrega-3`.
 
 > **Nota sobre la integración:** el proyecto lo desarrollan 2 estudiantes. La consigna indica grupos de 3 "puede variar con autorización del catedrático".

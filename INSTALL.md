@@ -82,6 +82,50 @@ Abrir `http://localhost:8080` (o el valor de `APP_PORT` en `.env`) e iniciar ses
 - [ ] El módulo Productos lista, crea, edita y desactiva un registro, y su categoría viene de la tabla `categoria` (no texto libre).
 - [ ] Cerrar sesión redirige al login y bloquea el acceso directo a `/productos` sin sesión.
 
+## 8. Despliegue en internet (Render + Neon)
+
+La versión pública corre en **https://inventario-laboratorio-03s7.onrender.com**. La aplicación está en Render y la base de datos en Neon (PostgreSQL 17), las dos en la región **US East (Ohio)** para que la latencia entre ellas sea mínima. Ambos servicios usan el plan gratuito.
+
+### 8.1 Base de datos en Neon
+1. Crear un proyecto en https://console.neon.tech (PostgreSQL 17, región AWS US East 2, Ohio).
+2. En **Connect**, copiar la cadena de conexión con **Connection pooling desactivado** (el servidor **no** debe tener `-pooler`). La app cambia de rol con `SET ROLE` en cada conexión; con el pooler de Neon (PgBouncer en modo transacción) ese rol podría quedar en otra sesión y romper el control de acceso.
+3. Ejecutar los scripts del paso 3 contra esa cadena, en el mismo orden, con `PGCLIENTENCODING=UTF8`:
+   ```bash
+   psql "<cadena de Neon>" -v ON_ERROR_STOP=1 -f sql/ddl/001_schema.sql
+   # … mismos scripts del paso 3 …
+   ```
+   En Neon, `sql/security/001_roles.sql` se ejecuta con el mismo usuario dueño del proyecto (`neondb_owner`, que puede crear roles). El script otorga los roles al dueño de las tablas, sin importar su nombre.
+4. **Usuarios:** no usar `seed_usuarios.py` en producción, porque sus contraseñas están en el repositorio. Crear los 3 usuarios con contraseñas aleatorias propias y entregarlas por un canal privado. Se cambian después desde **Usuarios y roles**.
+
+### 8.2 Aplicación en Render
+1. En https://dashboard.render.com: **New → Web Service → Public Git Repository**, con la URL del repositorio.
+2. Configuración:
+
+   | Campo | Valor |
+   |---|---|
+   | Branch | `main` |
+   | Region | Ohio (US East) |
+   | Root Directory | `web` |
+   | Build Command | `pip install -r requirements.txt` |
+   | Start Command | `gunicorn app:app --workers 2 --timeout 60` |
+   | Instance Type | Free |
+
+3. Variables de entorno (**nunca** en el repositorio):
+
+   | Variable | Valor |
+   |---|---|
+   | `DATABASE_URL` | Cadena de Neon (paso 8.1) |
+   | `APP_ENV` | `production`: activa la cookie solo por HTTPS y `ProxyFix` |
+   | `APP_SECRET` | Clave aleatoria larga, por ejemplo `python -c "import secrets; print(secrets.token_urlsafe(48))"`. Sin ella la app no arranca en producción |
+   | `PYTHON_VERSION` | `3.12.7` |
+
+4. **Deploy Web Service**. Como el repositorio se conecta por URL pública, Render no despliega solo con cada `push`: después de subir cambios se usa **Manual Deploy → Deploy latest commit**.
+
+### 8.3 Consideraciones del plan gratuito
+- Render apaga la instancia tras 15 minutos sin uso. La primera visita después tarda unos 50 segundos; antes de una demostración, abrir la página un minuto antes.
+- Neon suspende el cómputo sin actividad y lo reanuda en la primera consulta (menos de un segundo).
+- Si una credencial se expone (por ejemplo, en un chat o una captura), rotarla: en Neon, **Connect → Reset password**, y actualizar `DATABASE_URL` en Render.
+
 ## Solución de errores frecuentes
 | Síntoma | Causa probable | Solución |
 |---|---|---|

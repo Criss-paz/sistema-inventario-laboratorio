@@ -116,5 +116,48 @@ Continúa el registro de `docs/entrega-2/Bitacora-IA.md`. La IA se utiliza como 
 
 ---
 
+### Registro de Bitácora IA — Despliegue en producción
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 26/09/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Publicar el sistema en internet (estándar S5) con la base de datos en la nube, conservando las reglas de negocio, la seguridad por roles y los datos reales. |
+| **Prompt utilizado** | "Sí necesito con Render y Neon, pero como el repositorio lo tiene Cris, ¿puedo trabajarlo yo?", seguido de la guía paso a paso y la decisión de publicar el inventario real completo. |
+| **Resultado obtenido** | Aplicación en **https://inventario-laboratorio-03s7.onrender.com**: Flask con gunicorn en Render y PostgreSQL 17 en Neon, ambos en US East (Ohio). Procedimiento reproducible en `INSTALL.md`, paso 8. |
+| **Responsable** | José Eduardo Escobar (cuentas de Render y Neon); IA como apoyo técnico |
+
+**Decisiones técnicas y su justificación**
+
+| Decisión | Alternativas consideradas | Por qué se eligió |
+|---|---|---|
+| Render (app) + Neon (base de datos) | Render con su propia base; Railway; Supabase | Neon ofrece PostgreSQL completo, con triggers, funciones PL/pgSQL y `CREATE ROLE`, que el proyecto necesita. El plan gratuito de Render no incluye una base persistente a largo plazo. |
+| Misma región (Ohio) para ambos | Regiones distintas | Cada petición hace varias consultas; en la misma región la latencia entre app y base es de milisegundos. En producción las páginas responden en 0.2 a 1.2 s. |
+| Conexión **directa**, sin el pooler de Neon | Conexión con pooling (PgBouncer) | La app adopta el rol de cada usuario con `SET ROLE` por conexión. En modo transacción, el pooler puede entregar esa conexión a otra petición y romper el control de acceso. Se priorizó la seguridad sobre la escalabilidad. |
+| Despliegue desde la URL pública del repositorio | Conectar la cuenta de GitHub del dueño; hacer un fork | El repositorio pertenece a otro integrante. La URL pública permite desplegar sin pedir permisos sobre su cuenta ni mantener una copia paralela. Costo: cada despliegue se dispara a mano. |
+| `DATABASE_URL`, `APP_SECRET` y `APP_ENV` como variables de entorno | Archivo de configuración versionado | Ninguna credencial entra al repositorio (R6). |
+| Usuarios de producción con contraseñas aleatorias | Reutilizar los de `seed_usuarios.py` | Las contraseñas de desarrollo son públicas en el repositorio; en producción se generaron nuevas y se entregaron por un canal privado. |
+| Script de roles independiente del nombre del usuario | Mantener `GRANT … TO usuario_app` | En Neon el dueño se llama `neondb_owner`. El script otorga los roles al dueño de las tablas, lo que permite usar el mismo archivo en local y en la nube. |
+
+**Riesgos identificados y mitigación**
+
+| Riesgo | Mitigación |
+|---|---|
+| Falsificación de la sesión | La app no arranca en producción sin `APP_SECRET` propia. Cookie de sesión `HttpOnly`, `SameSite=Lax` y `Secure` (solo HTTPS). |
+| URL incorrectas detrás del proxy de Render | `ProxyFix` toma el esquema y el host reales de `X-Forwarded-*`. |
+| Uso del servidor de desarrollo en internet | gunicorn con 2 workers y tiempo límite de 60 s. |
+| Exposición de datos del laboratorio | Publicación autorizada por el equipo (inventario real). Todo el contenido exige inicio de sesión, y los proveedores que son personas siguen anonimizados. |
+| Credencial de la base compartida durante la configuración | Queda pendiente rotar la contraseña de Neon (**Reset password**) y actualizar `DATABASE_URL` en Render. |
+| Instancia gratuita que se apaga tras 15 min sin uso | Documentado. Antes de la defensa se abre la página con un minuto de anticipación. |
+
+**Validación del grupo**
+- La base de Neon se instaló con los mismos scripts del repositorio y se comparó con la local: 806 productos, 1,188 lotes, 5,839 movimientos, 0 inconsistencias entre lotes e historial, 0 textos corruptos y el mismo valor de inventario (Q524,714.36).
+- Permisos en la base de producción: `rol_consulta` no puede modificar productos y `rol_administrador` no puede leer contraseñas.
+- Prueba del sitio público con los 3 usuarios: 48 comprobaciones de carga de páginas, permisos por rol (403 donde corresponde), cookie segura, rechazo de las contraseñas de desarrollo, reportes y exportación CSV. La única diferencia detectada fue un error del propio script de prueba (buscaba el encabezado `Location` con mayúscula), no de la aplicación.
+
+**Estándares aplicados:** S5, R6, A1, RNF-01, RNF-06, RNF-17.
+
+---
+
 ## Declaración
 La IA se utilizó como apoyo de implementación y documentación, no como sustituto de las decisiones del equipo. Las decisiones sobre los datos reales (qué corregir, qué rechazar, qué anonimizar) las tomó el equipo con la justificación presentada por la IA.

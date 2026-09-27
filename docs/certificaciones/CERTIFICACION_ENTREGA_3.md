@@ -17,7 +17,8 @@ Por medio de la presente, los integrantes del equipo hacemos constar que la docu
 - [x] **Seguridad:** 3 roles de base de datos con privilegios diferenciados (`sql/security/001_roles.sql`), aplicados por la app con `SET ROLE`.
 - [x] **Aplicación web al 70%:** módulos principales y control de acceso por rol (`AVANCE_WEB.md`).
 - [x] **Matriz de trazabilidad** actualizada (`docs/entrega-3/matriz-trazabilidad.md`).
-- [x] **Estándares** SQL y web revisados (`docs/entrega-3/estandares-cumplimiento.md`), con la única excepción declarada: S5, despliegue en internet, planificado para la Entrega 4.
+- [x] **Estándares** SQL y web revisados (`docs/entrega-3/estandares-cumplimiento.md`): se cumplen los 8 SQL y los 6 de aplicación.
+- [x] **Despliegue en internet (S5):** https://inventario-laboratorio-03s7.onrender.com, verificado con los 3 roles el 26/09/2026.
 - [x] **Bitácora de IA** actualizada (`docs/entrega-3/Bitacora-IA.md`).
 - [ ] **Los 8 casos de prueba fueron ejecutados por el equipo** con capturas de evidencia (`docs/casos-prueba/casos-prueba-entrega-3.md`).
 - [ ] **Participación visible de ambos integrantes** en los commits de esta entrega (R4).

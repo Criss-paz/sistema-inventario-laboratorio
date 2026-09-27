@@ -1,7 +1,9 @@
 # Avance de la aplicación web — Entrega 3
 
 **Meta de la rúbrica para esta entrega:** 70% (módulos principales y control de acceso por rol).
-**Avance declarado:** los 39 requerimientos funcionales de la Entrega 1 tienen pantalla o están cubiertos por la base de datos. Queda para la Entrega 4: despliegue en internet (S5), respaldos (RNF-11) y pulido final.
+**Avance declarado:** los 39 requerimientos funcionales de la Entrega 1 tienen pantalla o están cubiertos por la base de datos.
+**En línea:** https://inventario-laboratorio-03s7.onrender.com (Render + Neon, desplegada el 26/09/2026).
+Queda para la Entrega 4: respaldos (RNF-11) y pulido final.
 **Stack:** Python 3.14 + Flask 3 + PostgreSQL 18 (driver `psycopg` v3). Sin frameworks de interfaz: HTML, CSS y JavaScript propios.
 
 ## Módulos
@@ -75,8 +77,11 @@ cd web
 .venv\Scripts\python.exe app.py      # http://localhost:8080
 ```
 
+## Despliegue
+
+La aplicación está publicada en Render y la base de datos en Neon (PostgreSQL 17), ambas en US East (Ohio). Se verificó en producción con los 3 usuarios: 48 comprobaciones de páginas, permisos por rol, cookie de sesión solo por HTTPS, rechazo de las contraseñas de desarrollo y valor del inventario idéntico al local (Q524,714.36). Procedimiento en `INSTALL.md`, paso 8.
+
 ## Pendiente (Entrega 4)
 
-- Despliegue en internet (estándar S5).
 - Respaldo y restauración de la base (RNF-11).
 - Pulido final a partir de la ejecución de los casos de prueba y la revisión del catedrático.

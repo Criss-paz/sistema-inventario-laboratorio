@@ -12,12 +12,12 @@ Actualiza `docs/entrega-2/estandares-cumplimiento.md` con lo construido en esta 
 | **S2** | Un script, un propósito | ✅ Cumple | 10 scripts en 6 carpetas: `ddl/` (estructura), `dml/` (4 scripts de datos), `triggers/`, `procedures/`, `views/` (2) y `security/`. Ninguno mezcla propósitos: por ejemplo, los permisos de las vistas nuevas se otorgan en `security/001_roles.sql`. |
 | **S3** | Encabezado con archivo, autor, descripción y dependencias | ✅ Cumple | Los **10 de 10** scripts SQL abren con el bloque *Archivo, Propósito, Proyecto, Autor, Descripción, Dependencias, SGBD, Ejecutar*. Los dos scripts generados (`002_carga_catalogo.sql`, `004_carga_movimientos.sql`) indican además que no se editan a mano y cuál es su generador. |
 | **S4** | Integridad referencial con `ON DELETE` / `ON UPDATE` | ✅ Cumple | Sin cambios desde la Entrega 2: 11 de 11 FK con ambas cláusulas. |
-| **S5** | Instalación: desplegado en internet | ❌ **No cumple** | La aplicación corre en local (`INSTALL.md`). El despliegue público queda para la Entrega 4. |
+| **S5** | Instalación: desplegado en internet | ✅ Cumple | Desplegado el 26/09/2026 en **https://inventario-laboratorio-03s7.onrender.com**: la app en Render (gunicorn) y la base en Neon (PostgreSQL 17), ambas en US East (Ohio). La base de producción se instaló con los mismos scripts del repositorio y quedó idéntica a la local (806 productos, 5,839 movimientos, 0 inconsistencias, Q524,714.36). Procedimiento reproducible en `INSTALL.md`, paso 8. |
 | **S6** | Triggers y procedimientos con la regla de negocio explicada | ✅ Cumple | Cada trigger y procedimiento documenta en su encabezado y en comentarios la regla que aplica (RN-01 a RN-04, RN-07, RN-08, RN-09) y por qué se implementa así. La función de valorización explica el método del costo promedio ponderado con su fórmula. |
 | **S7** | Sin redundancia | ✅ Cumple | Ninguna tabla guarda existencias por producto, faltantes, días para vencer ni costos promedio: todo se calcula en vistas y funciones (`vw_existencia_producto`, `vw_inventario_bajo`, `vw_lotes_por_vencer`, `fn_kardex_promedio`). La única cifra almacenada es `lote.cantidad_disponible`, que mantiene el trigger y se verifica contra el historial (0 diferencias en los 1,188 lotes). |
 | **S8** | SQL generado por IA revisado y probado | ✅ Cumple | Cada objeto se probó en `BEGIN … ROLLBACK` contra la base real antes del commit (triggers, procedimientos, roles, vistas, kardex). La carga de datos se probó en un esquema aislado, y durante esa prueba el trigger de existencia detectó un error del propio generador, que se corrigió. Registro en `docs/entrega-3/Bitacora-IA.md`. |
 
-**Resultado: 7 cumplen, 1 no cumple (S5).** Respecto a la Entrega 2, S6 pasó de "no aplica" a "cumple".
+**Resultado: los 8 estándares SQL se cumplen.** Respecto a la Entrega 2, S6 pasó de "no aplica" a "cumple" y S5 de "no cumple" a "cumple" con el despliegue en internet.
 
 ---
 
