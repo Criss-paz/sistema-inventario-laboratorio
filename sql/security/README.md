@@ -6,7 +6,7 @@ Roles y privilegios a nivel de motor de base de datos. Son distintos de la tabla
 
 | Rol de BD | Rol en la app (`rol.nombre`) | Puede | No puede |
 |---|---|---|---|
-| `rol_consulta` | Usuario de consulta | Leer catálogos, lotes y las 4 vistas | Modificar nada, ver la tabla `usuario`, registrar movimientos |
+| `rol_consulta` | Usuario de consulta | Leer catálogos, lotes, las 5 vistas y el kardex (`fn_kardex_promedio`) | Modificar nada, ver la tabla `usuario`, registrar movimientos |
 | `rol_encargado` | Encargado de inventario | Todo lo de consulta + `CALL` a `sp_registrar_entrada` / `sp_registrar_salida` | Escribir directo en tablas, editar catálogos |
 | `rol_administrador` | Administrador | Todo lo del encargado + alta/edición de catálogos, usuarios y datos de lote; `DELETE` solo en tablas puente | Leer `password_hash`, editar `cantidad_disponible`, insertar movimientos sin procedimiento, `DELETE` físico de catálogos |
 
@@ -17,7 +17,7 @@ Los roles se heredan en cadena: `consulta ⊂ encargado ⊂ administrador`. Cada
 - `GRANT UPDATE` por columna en `lote`: la existencia solo la cambia el trigger.
 - `GRANT SELECT` por columna en `usuario`: ningún rol lee los hashes de contraseña.
 
-**Prueba** (16 casos, ver `docs/casos-prueba/`):
+**Prueba** (caso CP3-07 en `docs/casos-prueba/casos-prueba-entrega-3.md`):
 ```sql
 -- conectado como usuario_app
 SET ROLE rol_consulta;

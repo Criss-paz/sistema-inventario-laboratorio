@@ -75,12 +75,23 @@ python app.py
 Abrir `http://localhost:8080` (o el valor de `APP_PORT` en `.env`) e iniciar sesión con uno de los usuarios impresos en el paso 5.
 
 ## 7. Verificación rápida
-- [ ] `psql` conecta a `inventario_laboratorio` sin error.
-- [ ] `\dt` en `psql` muestra las 11 tablas.
+Base de datos (en `psql`, conectado como `usuario_app`):
+- [ ] `\dt` muestra las 11 tablas y `\dv` las 5 vistas.
+- [ ] `SELECT count(*) FROM producto;` → 806 y `SELECT count(*) FROM movimiento;` → 5839.
+- [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 4 triggers.
+- [ ] `\df sp_*` muestra `sp_registrar_entrada` y `sp_registrar_salida`.
+- [ ] `\du rol_*` muestra `rol_administrador`, `rol_encargado` y `rol_consulta`.
+- [ ] `SET ROLE rol_consulta; UPDATE producto SET stock_minimo = 1 WHERE id_producto = 1;` → *permiso denegado*. Después, `RESET ROLE;`.
+- [ ] La consulta de coherencia de `sql/dml/README.md` devuelve 0.
+
+Aplicación web:
 - [ ] El login funciona con `admin.dev` y rechaza una contraseña incorrecta.
-- [ ] El módulo Categorías lista, crea, edita y desactiva un registro.
-- [ ] El módulo Productos lista, crea, edita y desactiva un registro, y su categoría viene de la tabla `categoria` (no texto libre).
+- [ ] `consulta.dev` no ve "Registrar entrada/salida" y recibe 403 en `/movimientos/entrada`.
+- [ ] `encargado.dev` registra una entrada y una salida; la salida se reparte por FEFO.
+- [ ] Reportes → Inventario muestra el valor total del inventario (Q524,714.36 con los datos iniciales).
 - [ ] Cerrar sesión redirige al login y bloquea el acceso directo a `/productos` sin sesión.
+
+Los 8 casos de prueba completos están en `docs/casos-prueba/casos-prueba-entrega-3.md`.
 
 ## 8. Despliegue en internet (Render + Neon)
 

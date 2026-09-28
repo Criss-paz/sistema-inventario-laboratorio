@@ -2,7 +2,7 @@
 
 Relaciona cada requerimiento de la Entrega 1 con dónde se implementa en la base de datos y en la aplicación web, y con la prueba que lo demuestra. Reemplaza a la versión 1 (`docs/entrega-2/matriz-trazabilidad.md`), que marcaba como pendientes casi todos los requerimientos de operación.
 
-**Estado general:** 39 de 39 requerimientos funcionales implementados. Pendientes: RNF-11 (respaldos, Entrega 4) y el despliegue en internet (estándar S5).
+**Estado general:** 39 de 39 requerimientos funcionales implementados. Único pendiente: RNF-11 (respaldos, Entrega 4). El despliegue en internet (estándar S5) se completó el 26/09/2026.
 
 Convenciones de la columna *Evidencia*:
 - `CP3-xx`: caso de prueba de esta entrega (`docs/casos-prueba/casos-prueba-entrega-3.md`).
