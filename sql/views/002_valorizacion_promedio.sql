@@ -7,7 +7,7 @@
 --               Privado Quetzaltenango
 -- Autor:        Equipo (Cristopher Alexis Castellanos Paz, José Eduardo Escobar)
 --               — generado con apoyo de IA (Claude Code); ver
---               docs/entrega-3/Bitacora-IA.md para el registro de uso.
+--               docs/bitacora-ia/ENTREGA3_BITACORA_IA.md para el registro de uso.
 -- Descripción:  Método del promedio ponderado móvil (kardex):
 --                 - Cada ENTRADA recalcula el costo promedio del producto:
 --                     promedio = (valor del saldo + valor de la compra)

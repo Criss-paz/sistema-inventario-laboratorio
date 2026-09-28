@@ -4,13 +4,13 @@
 Sistema Web de Gestión y Control de Inventario para el Laboratorio Privado Quetzaltenango
 
 ## Índice de bitácoras por entrega
-La bitácora se lleva por entrega. Este archivo corresponde a la Entrega 1; las siguientes viven junto a su documentación:
+La bitácora se lleva por entrega. Este archivo corresponde a la Entrega 1; la de la Entrega 2 quedó junto a su documentación (así se cerró con su tag) y desde la Entrega 3 se guardan en esta carpeta con el nombre de la entrega:
 
 | Entrega | Archivo | Estado |
 |---|---|---|
 | Entrega 1 — Análisis, propuesta y diseño conceptual | este archivo | Cerrada |
 | Entrega 2 — Diseño lógico, diccionario e implementación base | [`docs/entrega-2/Bitacora-IA.md`](../entrega-2/Bitacora-IA.md) | Cerrada (13 registros) |
-| Entrega 3 — Implementación avanzada, seguridad y pruebas | [`docs/entrega-3/Bitacora-IA.md`](../entrega-3/Bitacora-IA.md) | Cerrada (9 registros) |
+| Entrega 3 — Implementación avanzada, seguridad y pruebas | [`docs/bitacora-ia/ENTREGA3_BITACORA_IA.md`](ENTREGA3_BITACORA_IA.md) | Cerrada (9 registros) |
 | Entrega 4 — Integración, documentación y defensa | `docs/entrega-4/` | Pendiente |
 
 ## Entrega

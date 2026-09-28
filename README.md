@@ -94,13 +94,13 @@ sistema-inventario-laboratorio/
 - `sql/views/002_valorizacion_promedio.sql` — kardex y valorización por costo promedio ponderado
 - `sql/security/001_roles.sql` — 3 roles de base de datos con privilegios diferenciados
 - `sql/dml/` + `sql/dml/generar_carga.py` — inventario real del laboratorio (806 productos, 1,188 lotes, 5,839 movimientos)
-- `docs/entrega-3/reporte-carga-datos.md` — errores encontrados en los registros en papel
+- `docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md` — errores encontrados en los registros en papel
 - `web/` — movimientos, lotes, productos, exámenes, proveedores, categorías, reportes y usuarios, con control de acceso por rol
 - `AVANCE_WEB.md` — estado de la app web
-- `docs/entrega-3/matriz-trazabilidad.md` — trazabilidad v2 (RF, RN y RNF)
+- `docs/entrega-3/ENTREGA3_MATRIZ_TRAZABILIDAD.md` — trazabilidad v2 (RF, RN y RNF)
 - `docs/casos-prueba/casos-prueba-entrega-3.md` — 8 casos de prueba
-- `docs/entrega-3/estandares-cumplimiento.md` — estándares SQL y web actualizados
-- `docs/entrega-3/Bitacora-IA.md` — bitácora de IA de esta entrega
+- `docs/entrega-3/ENTREGA3_ESTANDARES_CUMPLIMIENTO.md` — estándares SQL y web actualizados
+- `docs/bitacora-ia/ENTREGA3_BITACORA_IA.md` — bitácora de IA de esta entrega
 - `docs/certificaciones/CERTIFICACION_ENTREGA_3.md`
 
 ### SGBD

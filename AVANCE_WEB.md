@@ -51,7 +51,7 @@ Comprobación contable con los datos reales (marzo a septiembre de 2026): compra
 
 ## Datos
 
-La base se carga con el inventario real del laboratorio (registros en papel transcritos a Excel): 806 productos, 1,188 lotes y 5,839 movimientos. Los errores que tenía el papel y cómo se trataron están en `docs/entrega-3/reporte-carga-datos.md`.
+La base se carga con el inventario real del laboratorio (registros en papel transcritos a Excel): 806 productos, 1,188 lotes y 5,839 movimientos. Los errores que tenía el papel y cómo se trataron están en `docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md`.
 
 ## Interfaz
 

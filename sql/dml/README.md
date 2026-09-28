@@ -32,7 +32,7 @@ pip install openpyxl
 python sql/dml/generar_carga.py "ruta/al/inventario.xlsx"
 ```
 
-Cada registro del papel pasó por las mismas reglas que aplica la base (CHECK, triggers, FEFO). Lo que no las cumplía y qué se hizo con cada caso está en [`docs/entrega-3/reporte-carga-datos.md`](../../docs/entrega-3/reporte-carga-datos.md): 65 salidas anotadas antes que su entrada, una salida que dejaba existencia negativa, una entrada que llegó ya vencida, entre otros.
+Cada registro del papel pasó por las mismas reglas que aplica la base (CHECK, triggers, FEFO). Lo que no las cumplía y qué se hizo con cada caso está en [`docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md`](../../docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md): 65 salidas anotadas antes que su entrada, una salida que dejaba existencia negativa, una entrada que llegó ya vencida, entre otros.
 
 Privacidad: los proveedores que son personas individuales se publican anonimizados, y los proveedores reales llevan un NIT provisional (`SIN-NIT-##`) porque el papel no lo registra.
 

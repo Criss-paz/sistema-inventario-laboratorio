@@ -23,9 +23,11 @@ Módulos principales con control de acceso por rol: detalle en `AVANCE_WEB.md`.
 
 | Archivo | Contenido |
 |---|---|
-| `matriz-trazabilidad.md` | Versión 2: cada RF, RN y RNF con su objeto en la base, su módulo web y la prueba que lo demuestra |
-| `reporte-carga-datos.md` | Errores encontrados en los registros en papel y cómo se trató cada uno |
-| `Bitacora-IA.md` | Uso de IA en esta entrega |
+| [`ENTREGA3_MATRIZ_TRAZABILIDAD.md`](ENTREGA3_MATRIZ_TRAZABILIDAD.md) | Versión 2: cada RF, RN y RNF con su objeto en la base, su módulo web y la prueba que lo demuestra |
+| [`ENTREGA3_ESTANDARES_CUMPLIMIENTO.md`](ENTREGA3_ESTANDARES_CUMPLIMIENTO.md) | Cumplimiento de los estándares SQL (6.2) y de aplicación (6.3), con evidencia |
+| [`ENTREGA3_REPORTE_CARGA_DATOS.md`](ENTREGA3_REPORTE_CARGA_DATOS.md) | Errores encontrados en los registros en papel y cómo se trató cada uno |
+
+La bitácora de IA de esta entrega está en [`docs/bitacora-ia/ENTREGA3_BITACORA_IA.md`](../bitacora-ia/ENTREGA3_BITACORA_IA.md).
 
 ### Pruebas
 

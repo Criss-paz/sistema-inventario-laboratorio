@@ -12,7 +12,7 @@ Genera:
   sql/dml/002_carga_catalogo.sql       categorías, productos, proveedores y
                                         proveedor_producto
   sql/dml/004_carga_movimientos.sql    lotes, entradas y salidas
-  docs/entrega-3/reporte-carga-datos.md hallazgos de calidad de datos
+  docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md hallazgos de calidad de datos
 
 Uso (el Excel NO está en el repositorio: son datos internos del laboratorio):
   pip install openpyxl
@@ -45,7 +45,7 @@ import openpyxl
 RAIZ = Path(__file__).resolve().parents[2]
 SALIDA_CATALOGO = RAIZ / "sql" / "dml" / "002_carga_catalogo.sql"
 SALIDA_MOVIMIENTOS = RAIZ / "sql" / "dml" / "004_carga_movimientos.sql"
-SALIDA_REPORTE = RAIZ / "docs" / "entrega-3" / "reporte-carga-datos.md"
+SALIDA_REPORTE = RAIZ / "docs" / "entrega-3" / "ENTREGA3_REPORTE_CARGA_DATOS.md"
 
 # sha256 del nombre en mayúsculas de los proveedores que son personas.
 PERSONAS = {
@@ -349,7 +349,7 @@ ENCABEZADO = """-- =============================================================
 -- ARCHIVO GENERADO por sql/dml/generar_carga.py a partir del inventario real
 -- del laboratorio (registros en papel, marzo a septiembre de 2026, transcritos
 -- a Excel). No editar a mano: corregir el generador y volver a ejecutarlo.
--- Hallazgos y decisiones de la carga: docs/entrega-3/reporte-carga-datos.md
+-- Hallazgos y decisiones de la carga: docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md
 -- Descripción:  {descripcion}
 -- Dependencias: {dependencias}
 -- SGBD:         PostgreSQL 14+

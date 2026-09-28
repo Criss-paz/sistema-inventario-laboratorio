@@ -10,7 +10,7 @@
 -- ARCHIVO GENERADO por sql/dml/generar_carga.py a partir del inventario real
 -- del laboratorio (registros en papel, marzo a septiembre de 2026, transcritos
 -- a Excel). No editar a mano: corregir el generador y volver a ejecutarlo.
--- Hallazgos y decisiones de la carga: docs/entrega-3/reporte-carga-datos.md
+-- Hallazgos y decisiones de la carga: docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md
 -- Descripción:  806 productos, 26 proveedores reales + 24 de
 --               prueba inactivos (consigna: 50 por tabla principal).
 --               Las FK se resuelven por nombre/código, nunca por id.

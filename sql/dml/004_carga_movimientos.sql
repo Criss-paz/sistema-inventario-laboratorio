@@ -10,7 +10,7 @@
 -- ARCHIVO GENERADO por sql/dml/generar_carga.py a partir del inventario real
 -- del laboratorio (registros en papel, marzo a septiembre de 2026, transcritos
 -- a Excel). No editar a mano: corregir el generador y volver a ejecutarlo.
--- Hallazgos y decisiones de la carga: docs/entrega-3/reporte-carga-datos.md
+-- Hallazgos y decisiones de la carga: docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md
 -- Descripción:  1188 lotes y 5839 movimientos (1575 entradas, 4264 salidas).
 --               Cómo se garantiza la coherencia:
 --               1. Todo lote se inserta con cantidad_disponible = 0.
