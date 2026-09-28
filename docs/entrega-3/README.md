@@ -1,8 +1,7 @@
 # docs/entrega-3
 
 **Entrega 3 — Implementación avanzada, seguridad y pruebas.**
-**Estado:** implementada (26/09/2026). Base de datos, aplicación web y documentación completas.
-**Cierre formal pendiente** (antes del 29/09): ejecución manual de los 8 casos de prueba con capturas, firma de Cristopher Alexis Castellanos Paz en la certificación (José Eduardo Escobar ya firmó) y tag `entrega-3`.
+**Estado:** implementada (26/09/2026) y verificada (28/09/2026). Base de datos, aplicación web y documentación completas; instalación desde cero comprobada en un segundo equipo y los 8 casos de prueba ejecutados con capturas.
 
 ## Qué se entrega
 
@@ -30,7 +29,7 @@ Módulos principales con control de acceso por rol: detalle en `AVANCE_WEB.md`.
 
 ### Pruebas
 
-`docs/casos-prueba/casos-prueba-entrega-3.md`: 8 casos (FEFO, reglas de existencia, historial inmutable, roles en la app y en la base, costo promedio ponderado).
+`docs/casos-prueba/casos-prueba-entrega-3.md`: 8 casos (FEFO, reglas de existencia, historial inmutable, roles en la app y en la base, costo promedio ponderado). **8 de 8 pasaron** (28/09/2026); capturas en `docs/casos-prueba/evidencias-entrega-3/`.
 
 ### Certificación
 

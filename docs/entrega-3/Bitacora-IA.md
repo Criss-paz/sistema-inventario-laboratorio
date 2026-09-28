@@ -159,5 +159,20 @@ Continúa el registro de `docs/entrega-2/Bitacora-IA.md`. La IA se utiliza como 
 
 ---
 
+### Registro de Bitácora IA — Revisión de cierre y ejecución de los casos de prueba
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 28/09/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Auditar el repositorio contra la consigna de la Entrega 3 antes del tag, instalar el sistema desde cero en un segundo equipo y ejecutar los 8 casos de prueba con evidencia. |
+| **Prompt utilizado** | Se compartió la consigna (PDF) y se pidió: "quiero que seas un analista y examines el repositorio con absoluto detalle… aparte de firmar la certificación, qué otras cosas me harían falta actualizar o arreglar… edita, arregla y mejora lo que haga falta". |
+| **Resultado obtenido** | 1) Revisión de cada producto de la Entrega 3 contra la rúbrica (sección 11) y los estándares R, S, A y D. 2) Instalación de PostgreSQL 18.6 y ejecución de `INSTALL.md` paso a paso: los 11 scripts SQL corrieron sin errores. 3) Ejecución de los 8 casos en Chromium (conducido con Playwright) y en `psql`, con 16 capturas en `docs/casos-prueba/evidencias-entrega-3/`. 4) Correcciones: plural de la ayuda de existencia en Registrar salida ("5 unidad" → "5 unidades"), botón "Activar" que se mostraba en rojo, matriz de trazabilidad que aún marcaba S5 como pendiente, README de seguridad con conteos desactualizados, y verificación rápida de `INSTALL.md` ampliada a triggers, procedimientos y roles. |
+| **Validación del grupo** | La base instalada desde cero se comparó con los números declarados en la documentación: 806 productos, 50 proveedores, 50 exámenes, 1,188 lotes, 5,839 movimientos, 4 triggers, 5 vistas, 3 roles, 0 lotes incoherentes con el historial y Q524,714.36 de inventario valorizado; todo coincidió. Cada una de las 16 capturas se revisó contra el resultado esperado del caso: 8 de 8 pasaron. Durante la ejecución, la IA cometió dos errores en su propio script de prueba (pulsaba el botón de cerrar sesión en lugar del botón del formulario, y usó una subconsulta dentro de `CALL`, que PostgreSQL no admite); se detectaron al revisar las capturas y se repitieron esos pasos. No eran fallas del sistema. |
+| **Estándares aplicados** | R4 (participación visible), R6 (el `.env` local no se versiona), S2, S8, A2, D1, D4; consigna, sección 9.2 (revisión funcional de la Entrega 3). |
+| **Responsable** | Cristopher Alexis Castellanos Paz |
+
+---
+
 ## Declaración
 La IA se utilizó como apoyo de implementación y documentación, no como sustituto de las decisiones del equipo. Las decisiones sobre los datos reales (qué corregir, qué rechazar, qué anonimizar) las tomó el equipo con la justificación presentada por la IA.

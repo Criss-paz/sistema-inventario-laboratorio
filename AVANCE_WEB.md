@@ -65,7 +65,7 @@ Rediseñada como herramienta de trabajo: tipografía Atkinson Hyperlegible (dist
 
 ## Evidencia de pruebas
 
-- **Casos de la Entrega 3:** `docs/casos-prueba/casos-prueba-entrega-3.md`. Los 8 verificados contra la base real en una transacción revertida; la ejecución manual con capturas está pendiente.
+- **Casos de la Entrega 3:** `docs/casos-prueba/casos-prueba-entrega-3.md`. 8 de 8 pasaron el 28/09/2026 en el navegador, sobre una instalación desde cero en otro equipo, con capturas en `docs/casos-prueba/evidencias-entrega-3/`.
 - **Pruebas automatizadas de la app (26/09/2026):** 142 verificaciones con los 3 usuarios (páginas, permisos por rol, formularios, mensajes de la base, reportes y CSV) y 19 del módulo de usuarios. 0 fallos. Las escrituras se revierten para no alterar el inventario.
 
 ## Cómo ejecutar
