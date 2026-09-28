@@ -1,0 +1,22 @@
+SET ROLE rol_consulta; UPDATE producto SET stock_minimo = 1 WHERE codigo = 'PRUEBA-CP3';
+SET
+ERROR:  permiso denegado a la tabla producto
+
+SET ROLE rol_consulta; CALL sp_registrar_salida(2, 807, 1, 'Prueba CP3-07', NULL);
+SET
+ERROR:  permiso denegado al procedimiento sp_registrar_salida
+
+SET ROLE rol_administrador; SELECT password_hash FROM usuario;
+SET
+ERROR:  permiso denegado a la tabla usuario
+
+SET ROLE rol_administrador; UPDATE lote SET cantidad_disponible = 999 WHERE numero_lote = 'CP3-A';
+SET
+ERROR:  permiso denegado a la tabla lote
+
+SELECT numero_lote, cantidad_disponible FROM lote WHERE numero_lote LIKE 'CP3-%' ORDER BY 1;
+ numero_lote | cantidad_disponible 
+-------------+---------------------
+ CP3-A       |                5.00
+ CP3-B       |                0.00
+(2 filas)

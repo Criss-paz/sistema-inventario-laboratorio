@@ -1,0 +1,13 @@
+UPDATE movimiento SET observacion = 'x' WHERE id_movimiento = 5840;
+ERROR:  Los movimientos de inventario no se pueden modificar ni eliminar (tabla movimiento). Registre un movimiento inverso para corregir.
+CONTEXTO:  función PL/pgSQL fn_historial_inmutable() en la línea 3 en RAISE
+
+DELETE FROM detalle_movimiento WHERE id_movimiento = 5840;
+ERROR:  Los movimientos de inventario no se pueden modificar ni eliminar (tabla detalle_movimiento). Registre un movimiento inverso para corregir.
+CONTEXTO:  función PL/pgSQL fn_historial_inmutable() en la línea 3 en RAISE
+
+SELECT id_movimiento, tipo_movimiento, observacion FROM movimiento WHERE id_movimiento = 5840;
+ id_movimiento | tipo_movimiento |  observacion  
+---------------+-----------------+---------------
+          5840 | ENTRADA         | Prueba CP3-01
+(1 fila)
