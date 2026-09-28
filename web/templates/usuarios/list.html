@@ -26,7 +26,7 @@
           {% if u.id_usuario != session.get('id_usuario') %}
           <form method="post" action="{{ url_for('usuarios.alternar_estado', id_usuario=u.id_usuario) }}"
                 onsubmit="return confirm({{ ('¿Desactivar a ' if u.estado else '¿Activar a ')|tojson }} + {{ u.usuario|tojson }} + '?');">
-            <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if u.estado else 'Activar' }}</button>
+            <button type="submit" class="btn btn-sm {{ 'btn-danger' if u.estado else '' }}">{{ 'Desactivar' if u.estado else 'Activar' }}</button>
           </form>
           {% endif %}
         </td>

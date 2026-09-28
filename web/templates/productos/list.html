@@ -70,7 +70,7 @@
           <a class="btn btn-sm" href="{{ url_for('productos.editar', id_producto=p.id_producto) }}">Editar</a>
           <form method="post" action="{{ url_for('productos.alternar_estado', id_producto=p.id_producto) }}"
                 onsubmit="return confirm({{ ('¿Desactivar el producto ' if p.estado else '¿Activar el producto ')|tojson }} + {{ p.nombre|tojson }} + '?');">
-            <button type="submit" class="btn btn-sm btn-danger">{{ 'Desactivar' if p.estado else 'Activar' }}</button>
+            <button type="submit" class="btn btn-sm {{ 'btn-danger' if p.estado else '' }}">{{ 'Desactivar' if p.estado else 'Activar' }}</button>
           </form>
         </td>
         {% endif %}

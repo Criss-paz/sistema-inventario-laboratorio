@@ -33,12 +33,18 @@
   (function () {
     var campo = document.getElementById('producto');
     var aviso = document.getElementById('existencia');
+    // Misma regla que la macro con_unidad: "1 unidad", "5 unidades", "2 cajas".
+    function conUnidad(valor, unidad) {
+      var u = (unidad || '').toLowerCase();
+      if (valor !== 1 && u) { u += 'aeiou'.includes(u.slice(-1)) ? 's' : 'es'; }
+      return valor + ' ' + u;
+    }
     function consultar() {
       if (!campo.value.includes(' — ')) { aviso.textContent = ''; return; }
       fetch({{ url_for('movimientos.existencia')|tojson }} + '?producto=' + encodeURIComponent(campo.value))
         .then(function (r) { return r.json(); })
         .then(function (d) {
-          aviso.textContent = d.ok ? 'Existencia utilizable: ' + d.existencia + ' ' + d.unidad.toLowerCase() : '';
+          aviso.textContent = d.ok ? 'Existencia utilizable: ' + conUnidad(d.existencia, d.unidad) : '';
         })
         .catch(function () { aviso.textContent = ''; });
     }
