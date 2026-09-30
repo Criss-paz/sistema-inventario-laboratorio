@@ -95,6 +95,22 @@ def listar():
         """,
         params, pagina,
     )
+    # El producto no guarda precio: el costo es el promedio ponderado móvil que
+    # calcula el kardex (S7, dato calculable). Se pide solo para los productos
+    # de esta página, no para los 806 del catálogo.
+    valores = {}
+    ids = [p["id_producto"] for p in productos]
+    if ids:
+        for fila in query_all(
+            """
+            SELECT id_producto, costo_promedio, valor_inventario
+              FROM vw_valorizacion_inventario
+             WHERE id_producto = ANY(%s)
+            """,
+            (ids,),
+        ):
+            valores[fila["id_producto"]] = fila
+
     resumen = query_one(
         """
         SELECT count(*) AS total,
@@ -107,6 +123,7 @@ def listar():
     return render_template(
         "productos/list.html", productos=productos, total=total, pagina=pagina,
         resumen=resumen, categorias=_categorias_activas(), q=q, id_categoria=id_categoria,
+        valores=valores,
     )
 
 
