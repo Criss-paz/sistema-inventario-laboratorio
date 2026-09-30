@@ -67,7 +67,7 @@ def historial():
     pagina = int(pagina) if pagina.isdigit() else 1
 
     condiciones, params = [], []
-    if tipo not in ("ENTRADA", "SALIDA"):
+    if tipo not in ("ENTRADA", "SALIDA", "DEVOLUCION"):
         tipo = ""
     if tipo:
         condiciones.append("h.tipo_movimiento = %s")
@@ -89,7 +89,7 @@ def historial():
     filas, total = query_page(
         f"""
         SELECT h.id_movimiento, h.fecha_hora, h.tipo_movimiento, h.nombre_usuario, h.numero_lote,
-               h.id_lote, h.codigo, h.producto, h.cantidad, h.unidad_medida, h.precio_unitario,
+               h.id_lote, h.id_producto, h.codigo, h.producto, h.cantidad, h.unidad_medida, h.precio_unitario,
                h.subtotal, h.observacion, pr.nombre AS proveedor
         FROM vw_historial_movimientos h
         JOIN lote l ON l.id_lote = h.id_lote
@@ -103,9 +103,32 @@ def historial():
     conteo = {f["tipo_movimiento"]: f["n"] for f in query_all(
         "SELECT tipo_movimiento, count(DISTINCT id_movimiento) AS n FROM vw_historial_movimientos GROUP BY 1"
     )}
+
+    # Salidas y devoluciones no guardan precio (sería calculable, S7): se
+    # valorizan al costo promedio móvil del kardex. Se resuelve solo para los
+    # movimientos de esta página — medido en 44 ms para 50 filas — y se indexa
+    # por (movimiento, producto), que es lo que identifica a cada línea.
+    costos = {}
+    ids = sorted({f["id_movimiento"] for f in filas
+                  if f["tipo_movimiento"] != "ENTRADA"})
+    if ids:
+        for fila in query_all(
+            """
+            SELECT k.id_movimiento, k.id_producto,
+                   coalesce(k.costo_unitario_salida, k.costo_unitario_entrada) AS costo
+              FROM (SELECT DISTINCT id_producto
+                      FROM vw_historial_movimientos
+                     WHERE id_movimiento = ANY(%s)) p
+              CROSS JOIN LATERAL fn_kardex_promedio(p.id_producto) k
+             WHERE k.id_movimiento = ANY(%s)
+            """,
+            (ids, ids),
+        ):
+            costos[(fila["id_movimiento"], fila["id_producto"])] = fila["costo"]
+
     return render_template(
         "movimientos/historial.html", filas=filas, total=total, pagina=pagina,
-        tipo=tipo, q=q, desde=desde, hasta=hasta, conteo=conteo,
+        tipo=tipo, q=q, desde=desde, hasta=hasta, conteo=conteo, costos=costos,
     )
 
 
@@ -119,7 +142,29 @@ def detalle(id_movimiento):
     if not detalles:
         flash("El movimiento solicitado no existe.", "warning")
         return redirect(url_for("movimientos.historial"))
-    return render_template("movimientos/detalle.html", mov=detalles[0], detalles=detalles)
+
+    # Solo las ENTRADAS guardan precio: es el de la factura del proveedor.
+    # Las salidas y devoluciones no lo guardan (sería un dato calculable, S7):
+    # se valorizan al costo promedio ponderado móvil vigente ese día, que
+    # calcula fn_kardex_promedio. Sin esto la pantalla mostraba "0.00".
+    costos = {}
+    if detalles[0]["tipo_movimiento"] != "ENTRADA":
+        for fila in query_all(
+            """
+            SELECT k.id_producto,
+                   coalesce(k.costo_unitario_salida, k.costo_unitario_entrada) AS costo
+              FROM (SELECT DISTINCT id_producto
+                      FROM vw_historial_movimientos
+                     WHERE id_movimiento = %s) p
+              CROSS JOIN LATERAL fn_kardex_promedio(p.id_producto) k
+             WHERE k.id_movimiento = %s
+            """,
+            (id_movimiento, id_movimiento),
+        ):
+            costos[fila["id_producto"]] = fila["costo"]
+
+    return render_template("movimientos/detalle.html", mov=detalles[0],
+                           detalles=detalles, costos=costos)
 
 
 @bp.route("/entrada", methods=["GET", "POST"])

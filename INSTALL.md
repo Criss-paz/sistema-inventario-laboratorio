@@ -42,6 +42,7 @@ psql -U usuario_app -d inventario_laboratorio -f sql/ddl/002_devolucion.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/triggers/002_devolucion.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/procedures/002_devolucion.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/views/003_devolucion.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/views/004_kardex_devolucion.sql
 psql -U postgres    -d inventario_laboratorio -f sql/security/002_devolucion.sql
 ```
 Por qué este orden:

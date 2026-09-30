@@ -1,27 +1,29 @@
 {% extends "base.html" %}
 {% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
-{% set titulos = {'': 'Movimientos', 'ENTRADA': 'Entradas', 'SALIDA': 'Salidas'} %}
+{% set titulos = {'': 'Movimientos', 'ENTRADA': 'Entradas', 'SALIDA': 'Salidas', 'DEVOLUCION': 'Devoluciones'} %}
 {% block title %}{{ titulos[tipo] }} — Inventario Laboratorio{% endblock %}
 {% block content %}
 <div class="top-actions">
   <h1>{{ titulos[tipo] }}<span class="subtitle">
     {% if tipo == 'ENTRADA' %}Compras y recepciones: cada entrada crea o alimenta un lote.
     {% elif tipo == 'SALIDA' %}Consumo de insumos. Cada salida descuenta de los lotes que vencen primero (FEFO).
+    {% elif tipo == 'DEVOLUCION' %}Salidas corregidas: cada devolución repone la existencia del lote y deja escrito su motivo.
     {% else %}Historial completo de entradas y salidas. No se puede modificar ni borrar (RN-09).{% endif %}
   </span></h1>
   {% if tiene_rol(ADMIN, ENCARGADO) %}
   <div class="actions">
-    {% if tipo != 'SALIDA' %}<a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">{{ i.icono('mas') }}Registrar entrada</a>{% endif %}
-    {% if tipo != 'ENTRADA' %}<a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">{{ i.icono('menos') }}Registrar salida</a>{% endif %}
+    {% if tipo in ['', 'ENTRADA'] %}<a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">{{ i.icono('mas') }}Registrar entrada</a>{% endif %}
+    {% if tipo in ['', 'SALIDA'] %}<a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">{{ i.icono('menos') }}Registrar salida</a>{% endif %}
   </div>
   {% endif %}
 </div>
 
 <nav class="pestanas" aria-label="Tipo de movimiento">
-  {% for clave, texto, n in [('', 'Todos', (conteo.get('ENTRADA', 0) + conteo.get('SALIDA', 0))),
+  {% for clave, texto, n in [('', 'Todos', (conteo.get('ENTRADA', 0) + conteo.get('SALIDA', 0) + conteo.get('DEVOLUCION', 0))),
                             ('ENTRADA', 'Entradas', conteo.get('ENTRADA', 0)),
-                            ('SALIDA', 'Salidas', conteo.get('SALIDA', 0))] %}
+                            ('SALIDA', 'Salidas', conteo.get('SALIDA', 0)),
+                            ('DEVOLUCION', 'Devoluciones', conteo.get('DEVOLUCION', 0))] %}
   <a href="{{ url_for('movimientos.historial', tipo=clave or None, q=q or None, desde=desde or None, hasta=hasta or None) }}"
      {% if tipo == clave %}class="active" aria-current="page"{% endif %}>{{ texto }} <span class="conteo">{{ '{:,}'.format(n) }}</span></a>
   {% endfor %}
@@ -47,7 +49,7 @@
         {% if tipo == 'ENTRADA' %}
           <th>Proveedor</th><th class="num">Precio (Q)</th><th class="num">Total (Q)</th>
         {% elif tipo == 'SALIDA' %}
-          <th>Área o motivo</th>
+          <th class="num">Costo (Q)</th><th>Área o motivo</th>
         {% else %}
           <th class="num">Precio (Q)</th><th>Observación</th>
         {% endif %}
@@ -58,7 +60,7 @@
       {% for f in filas %}
       <tr>
         <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=f.id_movimiento) }}">{{ f.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</a></td>
-        {% if not tipo %}<td><span class="badge {{ 'badge-on' if f.tipo_movimiento == 'ENTRADA' else 'badge-out' }}">{{ f.tipo_movimiento|capitalize }}</span></td>{% endif %}
+        {% if not tipo %}<td><span class="badge {{ 'badge-out' if f.tipo_movimiento == 'SALIDA' else 'badge-on' }}">{{ f.tipo_movimiento|capitalize }}</span></td>{% endif %}
         <td><code>{{ f.codigo }}</code> {{ f.producto }}</td>
         <td><a href="{{ url_for('lotes.detalle', id_lote=f.id_lote) }}"><span class="lote">{{ f.numero_lote }}</span></a></td>
         <td class="num">{{ m.con_unidad(f.cantidad, f.unidad_medida) }}</td>
@@ -67,9 +69,13 @@
           <td class="num">{{ '{:,.2f}'.format(f.precio_unitario) }}</td>
           <td class="num"><strong>{{ '{:,.2f}'.format(f.subtotal) }}</strong></td>
         {% elif tipo == 'SALIDA' %}
+          {% set precio = costos.get((f.id_movimiento, f.id_producto)) %}
+          <td class="num">{{ '{:,.2f}'.format(precio) if precio is not none else '—' }}</td>
           <td class="obs">{{ f.observacion or '—' }}</td>
         {% else %}
-          <td class="num">{{ '%.2f'|format(f.precio_unitario) if f.tipo_movimiento == 'ENTRADA' else '—' }}</td>
+          {# Entradas: precio de factura. Salidas y devoluciones: costo promedio del kardex. #}
+          {% set precio = f.precio_unitario if f.tipo_movimiento == 'ENTRADA' else costos.get((f.id_movimiento, f.id_producto)) %}
+          <td class="num">{{ '{:,.2f}'.format(precio) if precio is not none else '—' }}</td>
           <td class="obs">{{ f.observacion or '—' }}</td>
         {% endif %}
         <td>{{ f.nombre_usuario }}</td>

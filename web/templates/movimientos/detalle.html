@@ -27,20 +27,28 @@
 
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Lote</th><th>Producto</th><th class="num">Cantidad</th><th class="num">Precio (Q)</th><th class="num">Subtotal (Q)</th></tr></thead>
+    <thead><tr><th>Lote</th><th>Producto</th><th class="num">Cantidad</th>
+      <th class="num">{% if mov.tipo_movimiento == 'ENTRADA' %}Precio de compra (Q){% else %}Costo promedio (Q){% endif %}</th>
+      <th class="num">Subtotal (Q)</th></tr></thead>
     <tbody>
       {% for d in detalles %}
+      {# Entradas: precio de la factura. Salidas y devoluciones: costo promedio
+         vigente, calculado por el kardex (no se guarda: es calculable, S7). #}
+      {% set precio = d.precio_unitario if mov.tipo_movimiento == 'ENTRADA' else costos.get(d.id_producto) %}
       <tr>
         <td><a href="{{ url_for('lotes.detalle', id_lote=d.id_lote) }}"><span class="lote">{{ d.numero_lote }}</span></a></td>
         <td><code>{{ d.codigo }}</code> {{ d.producto }}</td>
         <td class="num">{{ m.con_unidad(d.cantidad, d.unidad_medida) }}</td>
-        <td class="num">{{ '%.2f'|format(d.precio_unitario) }}</td>
-        <td class="num">{{ '%.2f'|format(d.subtotal) }}</td>
+        <td class="num">{% if precio is not none %}{{ '%.2f'|format(precio) }}{% else %}—{% endif %}</td>
+        <td class="num">{% if precio is not none %}{{ '%.2f'|format(d.cantidad * precio) }}{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+{% if mov.tipo_movimiento != 'ENTRADA' %}
+<p class="hint">El costo se valoriza al <strong>promedio ponderado móvil</strong> vigente el día del movimiento, no al precio de compra de cada lote. Solo las entradas guardan un precio propio: el de la factura del proveedor.</p>
+{% endif %}
 {% if mov.tipo_movimiento == 'SALIDA' and detalles|length > 1 %}
 <p class="hint">La salida se repartió en {{ detalles|length }} lotes: primero el que vence antes (FEFO).</p>
 {% endif %}
