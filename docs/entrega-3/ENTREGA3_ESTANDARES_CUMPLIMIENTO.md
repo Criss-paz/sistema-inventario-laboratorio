@@ -33,3 +33,19 @@ Actualiza `docs/entrega-2/estandares-cumplimiento.md` con lo construido en esta 
 | **A6** | Documentación de las funciones que acceden a la BD | ✅ Cumple | Los 14 módulos Python abren con un docstring que explica su responsabilidad, los requerimientos que cubren y qué rol puede usarlos. Las decisiones no obvias llevan comentario (por qué `SET ROLE` se confirma con `commit` inmediato, por qué las salidas se valorizan con el kardex). |
 
 **Resultado: los 6 estándares de aplicación se cumplen.**
+
+---
+
+## Anexo — devolución de salidas (29/09/2026)
+
+Los seis archivos añadidos siguen los mismos estándares verificados arriba:
+
+| Estándar | Cómo se cumple en los archivos nuevos |
+|---|---|
+| **S2** un script, un propósito | Un archivo por capa: `ddl/002`, `triggers/002`, `procedures/002`, `views/003`, `views/004`, `security/002`. Ninguno mezcla propósitos. |
+| **S3** encabezado | Los seis abren con archivo, propósito, autor, descripción, reglas de negocio, dependencias, SGBD y modo de ejecución. |
+| **S4** integridad referencial | `fk_movimiento_origen` lleva `ON DELETE RESTRICT ON UPDATE CASCADE`, con su justificación: el historial no se borra. |
+| **S6** regla de negocio explicada | Cada trigger y procedimiento cita las reglas que aplica (RN-19 a RN-23) y explica por qué. `004_kardex_devolucion.sql` documenta además la regresión que corrige y cómo se midió. |
+| **S7** sin redundancia | La devolución no guarda precio: se valoriza con el kardex, igual que las salidas. |
+| **S8** validación IA | Probado con 6 casos ejecutados contra la base real antes del commit (CP3-09 a CP3-12b). |
+| **A2, A3, A4** | La pantalla valida en el servidor (motivo de 10 caracteres mínimo, cantidad por lote contra el saldo devolvible), usa consultas parametrizadas y traduce los mensajes del trigger sin exponer SQL crudo. |

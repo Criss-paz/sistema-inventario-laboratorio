@@ -47,3 +47,30 @@ Los movimientos de prueba quedan en el historial, porque el historial no se pued
 ---
 
 **Ejecutado por:** Cristopher Alexis Castellanos Paz  **Fecha:** 28/09/2026  **Navegador:** Chromium 153 (Playwright 1.63), Windows 11
+
+---
+
+## Casos añadidos el 29/09/2026 — devolución de salidas
+
+La devolución no estaba en los 39 requerimientos: el equipo la propuso al notar que una salida mal registrada no se podía corregir, porque el historial es inmutable (RN-09). Se implementó como el *movimiento inverso* que el propio trigger `fn_historial_inmutable` indica en su mensaje de error.
+
+**Cómo se probaron.** En `psql` como `usuario_app`, sobre la instalación local reconstruida desde cero siguiendo `INSTALL.md` (PostgreSQL 18.4, 29/09/2026): los 13 scripts corrieron sin errores y la base quedó con los mismos números de la corrida del 28/09 (806 productos, 1,188 lotes, 5,839 movimientos, inventario valorizado en **Q524,714.36**). No hay capturas de pantalla: la evidencia es la transcripción literal de la sesión, igual que en CP3-05 y CP3-07.
+
+**Producto de prueba:** `PRUEBA-CP3D` — *REACTIVO DE PRUEBA DEVOLUCION*, categoría REACTIVOS, presentación UNIDAD. Se le registró una entrada de **20 unidades a Q100** y una salida de **12**. Al terminar se dio de baja.
+
+| ID | Caso | Requerimientos | Pasos | Resultado esperado | Resultado obtenido (29/09/2026) | Estado |
+|---|---|---|---|---|---|---|
+| **CP3-09** | Una devolución repone la existencia del lote y deja constancia de por qué | RN-19, RN-20, RN-21 | Tras la salida de 12 (existencia 8), llamar a `sp_registrar_devolucion` con el motivo escrito | La existencia sube, el movimiento queda de tipo `DEVOLUCION` con su motivo y el vínculo a la salida corregida. La salida original no se altera. | Existencia tras la salida: **8.00**. Registrada la devolución, el movimiento queda con `tipo_movimiento = DEVOLUCION`, `id_movimiento_origen = 5841` y el motivo guardado. La salida #5841 permanece intacta en el historial. | ✅ Pasó |
+| **CP3-10** | No se puede devolver más de lo que esa salida sacó | RN-22 | Intentar devolver 99 unidades de una salida que retiró 12 | El trigger `fn_devolucion_tope` rechaza la operación completa y la existencia no cambia | Rechazado: *"No se puede devolver 99.00 del lote CP3D-A: la salida #5841 retiró 12.00 y ya se habían devuelto 0.00. **Máximo devolvible: 12.00**."* | ✅ Pasó |
+| **CP3-10b** | Una devolución sin motivo se rechaza | RN-20 | Llamar al procedimiento con el motivo en blanco | Se rechaza antes de tocar el inventario | Rechazado: *"Debe indicar el motivo de la devolución."* El `CHECK ck_movimiento_devolucion` lo impide también si alguien insertara a mano. | ✅ Pasó |
+| **CP3-11** | Devolución parcial: se devuelve una parte y queda saldo pendiente | RN-19, RN-22 | Devolver 5 de las 12 que salieron y consultar `fn_devolvible` | La existencia sube solo 5 y el saldo devolvible baja a 7 | Existencia: 8.00 → **13.00**. `fn_devolvible` informa: sacado **12.00**, devuelto **5.00**, devolvible **7.00**. | ✅ Pasó |
+| **CP3-12** | El kardex valoriza la devolución al costo promedio vigente | RN-23, RF-33, RF-34 | Consultar `fn_kardex_promedio` del producto de prueba | La devolución entra como reingreso al promedio vigente, sin alterarlo | Las tres líneas del kardex: ENTRADA 20 @ Q100 → saldo 20 / **Q2,000**; SALIDA 12 @ Q100 → saldo 8 / **Q800**; DEVOLUCION 5 @ Q100 → saldo 13 / **Q1,300**. El costo promedio se mantiene en **Q100.0000**. | ✅ Pasó |
+| **CP3-12b** | El rol de solo consulta no puede devolver | RF-05, RNF-06 | `SET ROLE rol_consulta` y llamar al procedimiento | PostgreSQL lo niega aunque la aplicación fallara | Rechazado: *"permiso denegado a la tabla movimiento"*. En la aplicación, `consulta.dev` recibe **403** al abrir la pantalla de devolución. | ✅ Pasó |
+
+**Resultado: 6 de 6 casos pasaron.** Transcripción completa en [CP3-09-a-12.txt](evidencias-entrega-3/CP3-09-a-12.txt). Al terminar, el producto `PRUEBA-CP3D` quedó dado de baja.
+
+**Hallazgo corregido durante estas pruebas.** Al añadir el tipo `DEVOLUCION`, `fn_kardex_promedio` lo trataba como salida, porque decidía con `IF tipo = 'ENTRADA' … ELSE` y ese `ELSE` capturaba cualquier tipo nuevo: **restaba** la devolución en vez de sumarla. Se detectó comparando el saldo del kardex (2.00) con la existencia real (4.00) del producto 393. Corregido en `sql/views/004_kardex_devolucion.sql`; verificado después que los **425 productos con movimiento** cuadran con su existencia real y que el inventario sigue valorizado en Q524,714.36.
+
+---
+
+**Ejecutado por:** Cristopher Alexis Castellanos Paz  **Fecha:** 29/09/2026  **Entorno:** PostgreSQL 18.4 + Python 3.14, Windows 11

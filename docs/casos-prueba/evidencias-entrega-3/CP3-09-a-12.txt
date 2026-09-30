@@ -1,0 +1,109 @@
+Transcripcion de psql - casos CP3-09 a CP3-12 (devolucion de salidas)
+Ejecutado el 29/09/2026 sobre la instalacion local reconstruida desde INSTALL.md
+PostgreSQL 18.4 - usuario_app - base inventario_laboratorio
+========================================================================
+-- Producto de prueba, para no tocar el inventario real
+INSERT INTO producto (id_categoria, codigo, nombre, unidad_medida, stock_minimo, requiere_vencimiento)
+SELECT id_categoria, 'PRUEBA-CP3D', 'REACTIVO DE PRUEBA DEVOLUCION', 'UNIDAD', 5, FALSE
+  FROM categoria WHERE nombre='REACTIVOS' LIMIT 1;
+INSERT 0 1
+-- Entrada de 20 unidades a Q100
+DO $$ DECLARE v INT; p INT; pv INT;
+BEGIN
+  SELECT id_producto INTO p FROM producto WHERE codigo='PRUEBA-CP3D';
+  SELECT id_proveedor INTO pv FROM proveedor ORDER BY id_proveedor LIMIT 1;
+  CALL sp_registrar_entrada(1, p, pv, 'CP3D-A', NULL, 20, 100, 'Prueba CP3-09 entrada', v);
+  RAISE NOTICE 'entrada #% : 20 unidades a Q100', v;
+END $$;
+NOTICE:  entrada #5840 : 20 unidades a Q100
+DO
+-- Salida de 12 unidades
+DO $$ DECLARE v INT; p INT;
+BEGIN
+  SELECT id_producto INTO p FROM producto WHERE codigo='PRUEBA-CP3D';
+  CALL sp_registrar_salida(1, p, 12, 'Prueba CP3-09 salida equivocada', v);
+  RAISE NOTICE 'salida #% : 12 unidades', v;
+END $$;
+NOTICE:  salida #5841 : 12 unidades
+DO
+SELECT 'CP3-09 existencia tras la salida' AS caso, sum(cantidad_disponible) AS existencia
+  FROM lote l JOIN producto p USING (id_producto) WHERE p.codigo='PRUEBA-CP3D';
+               caso               | existencia 
+----------------------------------+------------
+ CP3-09 existencia tras la salida |       8.00
+(1 fila)
+
+-- ===== CP3-10: no se puede devolver mas de lo que salio (RN-22) =====
+DO $$ DECLARE v INT; s INT; l INT;
+BEGIN
+  SELECT id_movimiento INTO s FROM movimiento WHERE observacion='Prueba CP3-09 salida equivocada';
+  SELECT id_lote INTO l FROM detalle_movimiento WHERE id_movimiento=s LIMIT 1;
+  CALL sp_registrar_devolucion(1, s, 'Intento de devolver 99 de las 12 que salieron', ARRAY[l], ARRAY[99::numeric], v);
+EXCEPTION WHEN OTHERS THEN RAISE NOTICE 'CP3-10 RECHAZADO: %', SQLERRM;
+END $$;
+NOTICE:  CP3-10 RECHAZADO: No se puede devolver 99.00 del lote CP3D-A: la salida #5841 retiró 12.00 y ya se habían devuelto 0.00. Máximo devolvible: 12.00.
+DO
+-- ===== CP3-10b: devolucion sin motivo (RN-20) =====
+DO $$ DECLARE v INT; s INT;
+BEGIN
+  SELECT id_movimiento INTO s FROM movimiento WHERE observacion='Prueba CP3-09 salida equivocada';
+  CALL sp_registrar_devolucion(1, s, '   ', NULL, NULL, v);
+EXCEPTION WHEN OTHERS THEN RAISE NOTICE 'CP3-10b RECHAZADO: %', SQLERRM;
+END $$;
+NOTICE:  CP3-10b RECHAZADO: Debe indicar el motivo de la devolución.
+DO
+-- ===== CP3-11: devolucion PARCIAL de 5 de las 12 =====
+DO $$ DECLARE v INT; s INT; l INT;
+BEGIN
+  SELECT id_movimiento INTO s FROM movimiento WHERE observacion='Prueba CP3-09 salida equivocada';
+  SELECT id_lote INTO l FROM detalle_movimiento WHERE id_movimiento=s LIMIT 1;
+  CALL sp_registrar_devolucion(1, s, 'El area uso solo 7 de las 12 unidades; se devuelven 5.', ARRAY[l], ARRAY[5::numeric], v);
+  RAISE NOTICE 'CP3-11 devolucion parcial #% registrada', v;
+END $$;
+NOTICE:  CP3-11 devolucion parcial #5843 registrada
+DO
+SELECT 'CP3-11 existencia tras devolver 5' AS caso, sum(cantidad_disponible) AS existencia
+  FROM lote l JOIN producto p USING (id_producto) WHERE p.codigo='PRUEBA-CP3D';
+               caso                | existencia 
+-----------------------------------+------------
+ CP3-11 existencia tras devolver 5 |      13.00
+(1 fila)
+
+SELECT 'CP3-11 saldo devolvible' AS caso, numero_lote, sacado, devuelto, devolvible
+  FROM fn_devolvible((SELECT id_movimiento FROM movimiento WHERE observacion='Prueba CP3-09 salida equivocada'));
+          caso           | numero_lote | sacado | devuelto | devolvible 
+-------------------------+-------------+--------+----------+------------
+ CP3-11 saldo devolvible | CP3D-A      |  12.00 |     5.00 |       7.00
+(1 fila)
+
+-- ===== CP3-12: el kardex valoriza la devolucion al promedio vigente (RN-23) =====
+SELECT tipo_movimiento, cantidad_entrada, costo_unitario_entrada, cantidad_salida,
+       costo_unitario_salida, saldo_cantidad, costo_promedio, saldo_valor
+  FROM fn_kardex_promedio((SELECT id_producto FROM producto WHERE codigo='PRUEBA-CP3D'))
+ ORDER BY fecha_hora, id_movimiento;
+ tipo_movimiento | cantidad_entrada | costo_unitario_entrada | cantidad_salida | costo_unitario_salida | saldo_cantidad | costo_promedio | saldo_valor 
+-----------------+------------------+------------------------+-----------------+-----------------------+----------------+----------------+-------------
+ ENTRADA         |            20.00 |               100.0000 |                 |                       |          20.00 |       100.0000 |     2000.00
+ SALIDA          |                  |                        |           12.00 |              100.0000 |           8.00 |       100.0000 |      800.00
+ DEVOLUCION      |             5.00 |               100.0000 |                 |                       |          13.00 |       100.0000 |     1300.00
+(3 filas)
+
+-- ===== CP3-12b: el rol de consulta NO puede devolver =====
+DO $$ DECLARE v INT; s INT;
+BEGIN
+  SET LOCAL ROLE rol_consulta;
+  SELECT id_movimiento INTO s FROM movimiento WHERE observacion='Prueba CP3-09 salida equivocada';
+  CALL sp_registrar_devolucion(1, s, 'Intento desde el rol de solo consulta', NULL, NULL, v);
+EXCEPTION WHEN OTHERS THEN RAISE NOTICE 'CP3-12b RECHAZADO: %', SQLERRM;
+END $$;
+NOTICE:  CP3-12b RECHAZADO: permiso denegado a la tabla movimiento
+DO
+-- ===== Cierre: el producto de prueba se da de baja =====
+UPDATE producto SET estado = FALSE WHERE codigo='PRUEBA-CP3D';
+UPDATE 1
+SELECT 'cierre' AS paso, codigo, estado FROM producto WHERE codigo='PRUEBA-CP3D';
+  paso  |   codigo    | estado 
+--------+-------------+--------
+ cierre | PRUEBA-CP3D | f
+(1 fila)
+

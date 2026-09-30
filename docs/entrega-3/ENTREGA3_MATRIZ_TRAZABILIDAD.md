@@ -115,3 +115,23 @@ Convenciones de la columna *Evidencia*:
 | RNF-16 Información para trazabilidad | Historial inmutable con usuario, fecha y lote | ✅ |
 | RNF-17 Evitar accesos no autorizados | Rutas protegidas, 403, `SET ROLE`, redirección de login solo a rutas internas | ✅ |
 | RNF-18 Interfaz adaptable | Diseño responsivo verificado a 1440 px y 390 px | ✅ |
+
+---
+
+## Anexo — devolución de salidas (29/09/2026)
+
+Reglas de negocio nuevas, propuestas por el equipo. No provienen de los 39 RF: nacen de una carencia detectada al usar el sistema, que una salida mal registrada no se podía corregir porque el historial es inmutable (RN-09).
+
+| Regla | Qué exige | Dónde se implementa | Prueba |
+|---|---|---|---|
+| **RN-19** | Toda devolución corrige exactamente una salida y conserva el vínculo | `movimiento.id_movimiento_origen` + `fk_movimiento_origen` y el `CHECK ck_movimiento_devolucion` | CP3-09 |
+| **RN-20** | Toda devolución declara por escrito su motivo | `movimiento.motivo`, exigido por el mismo CHECK y por `sp_registrar_devolucion` | CP3-10b |
+| **RN-21** | La devolución repone la existencia del lote del que salió | `fn_detalle_movimiento_existencia`, rama `DEVOLUCION` | CP3-09, CP3-11 |
+| **RN-22** | No se devuelve más de lo que salió, descontando lo ya devuelto | `fn_devolucion_tope` (trigger) y `fn_devolvible` (saldo por lote) | CP3-10, CP3-11 |
+| **RN-23** | La devolución reingresa al costo promedio vigente, sin alterarlo | `fn_kardex_promedio`, rama `DEVOLUCION` (`views/004`) | CP3-12 |
+
+| Requerimiento afectado | Cómo lo amplía la devolución |
+|---|---|
+| RF-28, RF-35 Historial y trazabilidad | La corrección de un error queda en el historial como movimiento propio, con su responsable, su motivo y el vínculo a lo corregido |
+| RF-05 Control por rol | Registrar una devolución es escritura: solo Administrador y Encargado, en la app y en la base (CP3-12b) |
+| RF-33, RF-34 Reportes | `vw_devoluciones` resume qué se devolvió, de qué salida y por qué |

@@ -1,0 +1,4 @@
+# Unifica las variantes de nombre de un mismo autor (R4: participacion visible).
+# Jose Eduardo aparecia como 'Eduardo Escobr' en 6 commits por un error de
+# configuracion de git; es el mismo correo institucional.
+Eduardo Escobar <jescobarj3@miumg.edu.gt> Eduardo Escobr <jescobarj3@miumg.edu.gt>

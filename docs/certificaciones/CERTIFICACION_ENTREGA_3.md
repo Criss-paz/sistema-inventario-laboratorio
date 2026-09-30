@@ -28,6 +28,19 @@ Por medio de la presente, los integrantes del equipo hacemos constar que la docu
 
 ---
 
+## Añadido el 29/09/2026, después de la verificación del 28/09
+
+A petición del equipo se implementó la **devolución de salidas**, que no figura entre los 39 requerimientos: surgió al constatar que una salida mal registrada no podía corregirse, porque el historial es inmutable (RN-09). Se resolvió como el *movimiento inverso* que el propio trigger indica en su mensaje.
+
+- [x] Base de datos: tipo `DEVOLUCION`, vínculo con la salida corregida y motivo obligatorio (`sql/ddl/002_devolucion.sql`), un trigger de tope devolvible (`sql/triggers/002_devolucion.sql`), el procedimiento atómico `sp_registrar_devolucion` (`sql/procedures/002_devolucion.sql`), dos vistas (`sql/views/003_devolucion.sql`) y sus privilegios (`sql/security/002_devolucion.sql`).
+- [x] Aplicación: pantalla de devolución con motivo obligatorio, restringida a Administrador y Encargado.
+- [x] **Probado:** 6 casos nuevos, CP3-09 a CP3-12b, ejecutados el 29/09/2026 sobre una instalación reconstruida desde cero. 6 de 6 pasaron. Transcripción en `docs/casos-prueba/evidencias-entrega-3/CP3-09-a-12.txt`.
+- [x] **Regresión detectada y corregida durante esas pruebas:** el kardex trataba la devolución como salida y restaba en vez de sumar. Corregido en `sql/views/004_kardex_devolucion.sql` y verificado que los 425 productos con movimiento cuadran con su existencia real.
+
+Declaramos que esta funcionalidad se agregó después de firmar los puntos anteriores y que se probó con el mismo rigor que el resto de la entrega.
+
+---
+
 ## Firmas
 Se dio el visto bueno para la entrega de este proyecto; ambos integrantes revisamos el contenido listado arriba.
 

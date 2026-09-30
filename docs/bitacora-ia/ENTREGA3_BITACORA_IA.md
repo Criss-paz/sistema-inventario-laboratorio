@@ -172,6 +172,20 @@ Continúa el registro de `docs/entrega-2/Bitacora-IA.md`. La IA se utiliza como 
 | **Estándares aplicados** | R4 (participación visible), R6 (el `.env` local no se versiona), S2, S8, A2, D1, D4; consigna, sección 9.2 (revisión funcional de la Entrega 3). |
 | **Responsable** | Cristopher Alexis Castellanos Paz |
 
+### Registro de Bitácora IA — Devolución de salidas y corrección del kardex
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 29/09/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | El equipo pidió una opción para corregir una salida registrada por error —una venta o un consumo equivocado— que explicara el motivo y quedara en la base de datos. Después pidió buscar y corregir errores del sistema, señalando que el precio no aparecía en varias pantallas. |
+| **Prompt utilizado** | "Puedes editar y agregar una opción dentro del sistema para hacer una devolución… que explique el detalle del porqué se está haciendo, también que se registre dentro de la base de datos" y, más tarde, "ejecuta y haz pruebas al sistema ya que veo varios errores como el precio que no aparece en algunas pestañas". |
+| **Resultado obtenido** | Se implementó la devolución en seis archivos SQL y una pantalla web, apoyándose en algo que ya estaba en el diseño: el mensaje de `fn_historial_inmutable` indica "Registre un movimiento inverso para corregir". Sobre los errores reportados: el precio en cero **no era un fallo de datos** —solo las entradas guardan precio, las salidas se valorizan al promedio móvil, que por S7 no se duplica— sino de presentación; se corrigió mostrando el costo del kardex en el detalle, el historial y el listado de productos. Se detectaron además tres fallos por no haber propagado el tipo nuevo: el filtro `tipo=DEVOLUCION` se ignoraba, faltaba su pestaña y se pintaban con la insignia de salida. |
+| **Validación del grupo** | La IA detectó y reportó **una regresión que ella misma había introducido**: `fn_kardex_promedio` decidía con `IF tipo='ENTRADA' … ELSE`, y ese `ELSE` capturaba el tipo nuevo, de modo que la devolución **restaba** en vez de sumar. Se midió comparando el saldo del kardex (2.00) con la existencia real (4.00) del producto 393. El equipo verificó la corrección: los 425 productos con movimiento cuadran con su existencia y el inventario sigue valorizado en Q524,714.36, con el mismo descuadre de Q0.06 por redondeo que ya estaba documentado. Se ejecutaron 6 casos de prueba nuevos (CP3-09 a CP3-12b) sobre una instalación reconstruida desde cero, y 130 páginas con cada uno de los 3 roles sin errores. |
+| **Estándares aplicados** | S2, S3, S4, S6, S7, S8 en los seis archivos nuevos (ver el anexo de `ENTREGA3_ESTANDARES_CUMPLIMIENTO.md`); A2, A3, A4 en la pantalla; R3 commits descriptivos; R4 se reforzó con un `.mailmap` que unifica las dos variantes del nombre de José Eduardo. |
+| **Responsable** | Cristopher Alexis Castellanos Paz |
+
+
 ---
 
 ## Declaración
