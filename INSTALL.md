@@ -37,6 +37,12 @@ psql -U usuario_app -d inventario_laboratorio -f sql/dml/003_seed_examenes.sql
 python web/seed_usuarios.py          # requiere el paso 4 (.env) y las dependencias del paso 5
 psql -U usuario_app -d inventario_laboratorio -f sql/dml/004_carga_movimientos.sql
 psql -U postgres    -d inventario_laboratorio -f sql/security/001_roles.sql
+# Devolución de salidas (RN-19 a RN-22):
+psql -U usuario_app -d inventario_laboratorio -f sql/ddl/002_devolucion.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/triggers/002_devolucion.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/procedures/002_devolucion.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/views/003_devolucion.sql
+psql -U postgres    -d inventario_laboratorio -f sql/security/002_devolucion.sql
 ```
 Por qué este orden:
 1. `ddl/` — tablas y restricciones.

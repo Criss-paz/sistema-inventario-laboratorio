@@ -63,6 +63,28 @@ Rediseñada como herramienta de trabajo: tipografía Atkinson Hyperlegible (dist
 - Consultas 100% parametrizadas (A4); los filtros de tipo "lista fija" salen de diccionarios del código, nunca del texto del usuario.
 - Duplicados (código, NIT, número de lote, usuario) se informan con un mensaje claro.
 
+## Devolución de salidas (añadido el 29/09/2026)
+
+Pedido del equipo tras la Entrega 3: poder corregir una salida registrada por error
+sin romper el historial.
+
+| Pieza | Archivo | Qué hace |
+|---|---|---|
+| DDL | `sql/ddl/002_devolucion.sql` | Tipo `DEVOLUCION`, columnas `id_movimiento_origen` y `motivo`, y un CHECK que las hace obligatorias solo en devoluciones |
+| Triggers | `sql/triggers/002_devolucion.sql` | La devolución repone existencia (RN-21) y nunca devuelve más de lo que salió, descontando lo ya devuelto (RN-22) |
+| Procedimiento | `sql/procedures/002_devolucion.sql` | `sp_registrar_devolucion` (atómico) y `fn_devolvible` (saldo por lote) |
+| Vistas | `sql/views/003_devolucion.sql` | `vw_historial_movimientos` amplía dos columnas; `vw_devoluciones` para auditoría |
+| Seguridad | `sql/security/002_devolucion.sql` | `SECURITY DEFINER` y permisos: registrar solo Administrador y Encargado |
+| Web | `web/routes/movimientos.py::devolucion` + `templates/movimientos/devolucion.html` | Pantalla con motivo obligatorio y cantidad editable por lote |
+
+**Por qué un movimiento inverso y no un UPDATE:** el trigger `trg_historial_inmutable`
+prohíbe modificar o borrar un movimiento (RN-09), y su propio mensaje indica
+"Registre un movimiento inverso para corregir". La devolución es ese movimiento,
+con dos datos que una entrada común no tiene: a qué salida corrige y por qué.
+
+Admite devolución **total** (el caso habitual) y **parcial** por lote. La salida
+original queda intacta y ambos movimientos permanecen en el historial.
+
 ## Evidencia de pruebas
 
 - **Casos de la Entrega 3:** `docs/casos-prueba/casos-prueba-entrega-3.md`. 8 de 8 pasaron el 28/09/2026 en el navegador, sobre una instalación desde cero en otro equipo, con capturas en `docs/casos-prueba/evidencias-entrega-3/`.

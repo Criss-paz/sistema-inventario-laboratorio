@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Devolver salida #{{ mov.id_movimiento }}{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Devolver salida #{{ mov.id_movimiento }}<span class="subtitle">Reponga al inventario lo que salió por error. La salida original no se borra: ambos movimientos quedan en el historial (RN-09).</span></h1>
+</div>
+
+<div class="card">
+  <p class="hint" style="margin-top:0;">
+    Salida registrada por <strong>{{ mov.nombre_usuario }}</strong>
+    el {{ mov.fecha_hora.strftime('%d/%m/%Y a las %H:%M') }}.
+    {% if mov.observacion %}Observación: «{{ mov.observacion }}».{% endif %}
+  </p>
+</div>
+
+<form class="card" method="post">
+  <label for="motivo">Motivo de la devolución <span class="hint">(obligatorio, queda guardado en la base de datos)</span></label>
+  <textarea id="motivo" name="motivo" rows="3" maxlength="255" required minlength="10" autofocus
+            placeholder="Ejemplo: la salida se registró en el área equivocada, o el examen se canceló y el reactivo no se usó.">{{ form.get('motivo', '') }}</textarea>
+
+  <label style="margin-top:1rem;">Cuánto devolver de cada lote</label>
+  <p class="hint" style="margin-top:0;">
+    Viene propuesto el total pendiente de cada lote. Baje la cantidad si solo devuelve una parte,
+    o déjela en cero si de ese lote no devuelve nada.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Lote</th>
+          <th scope="col">Producto</th>
+          <th scope="col" class="num">Salió</th>
+          <th scope="col" class="num">Ya devuelto</th>
+          <th scope="col" class="num">Devolver ahora</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in pendientes %}
+        <tr>
+          <td>{{ p.numero_lote }}</td>
+          <td>{{ p.producto }}</td>
+          <td class="num">{{ p.sacado.normalize() }}</td>
+          <td class="num">{{ p.devuelto.normalize() }}</td>
+          <td class="num">
+            <input type="number" name="cantidad_{{ p.id_lote }}"
+                   min="0" max="{{ p.devolvible }}" step="0.01"
+                   style="width:8rem; text-align:right;"
+                   value="{{ form.get('cantidad_' ~ p.id_lote, p.devolvible.normalize()) }}">
+            <span class="hint">de {{ p.devolvible.normalize() }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Registrar devolución</button>
+    <a class="btn" href="{{ url_for('movimientos.detalle', id_movimiento=mov.id_movimiento) }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

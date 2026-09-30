@@ -6,10 +6,24 @@
 <div class="top-actions">
   <h1>{{ mov.tipo_movimiento|capitalize }} #{{ mov.id_movimiento }}
     <span class="subtitle">Registrada el {{ mov.fecha_hora.strftime('%d/%m/%Y a las %H:%M') }} por {{ mov.nombre_usuario }}</span></h1>
+  {% if mov.tipo_movimiento == 'SALIDA' and session.get('nombre_rol') in ['Administrador', 'Encargado de inventario'] %}
+  <a class="btn btn-sm btn-primary" href="{{ url_for('movimientos.devolucion', id_movimiento=mov.id_movimiento) }}">Devolver esta salida</a>
+  {% endif %}
   <a class="btn btn-sm" href="{{ url_for('movimientos.historial') }}">{{ i.icono('volver') }}Historial</a>
 </div>
 
 {% if mov.observacion %}<p class="nota">{{ mov.observacion }}</p>{% endif %}
+
+{% if mov.tipo_movimiento == 'DEVOLUCION' %}
+<div class="card">
+  <p style="margin:0 0 .5rem;"><strong>Motivo de la devolución</strong></p>
+  <p style="margin:0 0 .75rem;">{{ mov.motivo }}</p>
+  <p class="hint" style="margin:0;">
+    Corrige la <a href="{{ url_for('movimientos.detalle', id_movimiento=mov.id_movimiento_origen) }}">salida #{{ mov.id_movimiento_origen }}</a>,
+    que permanece en el historial sin alterarse (RN-09).
+  </p>
+</div>
+{% endif %}
 
 <div class="table-wrap">
   <table>

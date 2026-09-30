@@ -2,6 +2,8 @@
 routes/movimientos.py — Entradas, salidas e historial de inventario.
 RF-20 a RF-25 (entradas, salidas con FEFO y validación de existencia),
 RF-26 a RF-28 (historial con responsable y fecha), RN-01, RN-04, RN-08.
+Devolución de una salida equivocada: RN-19 a RN-22 (vínculo con la salida
+corregida, motivo obligatorio, reposición de existencia y tope devolvible).
 
 Las entradas y salidas NO se insertan desde aquí: se llama a los
 procedimientos sp_registrar_entrada / sp_registrar_salida, que validan las
@@ -202,6 +204,90 @@ def salida():
 
     flash(f"Salida registrada: {cantidad.normalize():f} de {producto['nombre']}. "
           "Los lotes se eligieron por FEFO (primero el que vence antes).", "success")
+    return redirect(url_for("movimientos.detalle", id_movimiento=fila["p_id_movimiento"]))
+
+
+@bp.route("/<int:id_movimiento>/devolucion", methods=["GET", "POST"])
+@rol_requerido(ADMIN, ENCARGADO)
+def devolucion(id_movimiento):
+    """Devuelve al inventario lo que sacó una salida equivocada (RN-19 a RN-22).
+
+    No inserta nada por su cuenta: llama a sp_registrar_devolucion, que es
+    quien valida el tope por lote y deja el vínculo con la salida corregida.
+    Igual que entrada() y salida(), ningún rol tiene INSERT sobre movimiento.
+    """
+    mov = query_one(
+        "SELECT id_movimiento, tipo_movimiento, fecha_hora, nombre_usuario, observacion "
+        "FROM vw_historial_movimientos WHERE id_movimiento = %s LIMIT 1",
+        (id_movimiento,),
+    )
+    if mov is None:
+        flash("El movimiento solicitado no existe.", "warning")
+        return redirect(url_for("movimientos.historial"))
+
+    if mov["tipo_movimiento"] != "SALIDA":
+        flash(f"Solo se puede devolver una salida. El movimiento #{id_movimiento} "
+              f"es de tipo {mov['tipo_movimiento'].lower()}.", "warning")
+        return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
+
+    pendientes = query_all("SELECT * FROM fn_devolvible(%s)", (id_movimiento,))
+    if not pendientes:
+        flash(f"La salida #{id_movimiento} ya fue devuelta por completo.", "info")
+        return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
+
+    contexto = {"mov": mov, "pendientes": pendientes, "form": request.form}
+    if request.method == "GET":
+        return render_template("movimientos/devolucion.html", **contexto)
+
+    # A3: validación en el servidor antes de tocar la base.
+    errores = []
+    motivo = (request.form.get("motivo") or "").strip()
+    if len(motivo) < 10:
+        errores.append("Explique el motivo de la devolución (al menos 10 caracteres).")
+    motivo = motivo[:255]
+
+    id_lotes, cantidades = [], []
+    for fila in pendientes:
+        bruto = (request.form.get(f"cantidad_{fila['id_lote']}") or "").strip()
+        if not bruto:
+            continue
+        # Nombre en masculino a propósito: _decimal redacta "... no puede ser
+        # negativo", que con "La cantidad" quedaría mal concordado.
+        cantidad = _decimal(bruto, f"El total a devolver del lote {fila['numero_lote']}",
+                            errores, minimo=0)
+        if cantidad is None or cantidad == 0:
+            continue
+        if cantidad > fila["devolvible"]:
+            errores.append(
+                f"Del lote {fila['numero_lote']} solo quedan "
+                f"{fila['devolvible'].normalize():f} por devolver.")
+            continue
+        id_lotes.append(fila["id_lote"])
+        cantidades.append(cantidad)
+
+    if not id_lotes and not errores:
+        errores.append("Indique cuánto devolver de al menos un lote.")
+
+    if errores:
+        for e in errores:
+            flash(e, "danger")
+        return render_template("movimientos/devolucion.html", **contexto), 400
+
+    try:
+        fila = call_procedure(
+            "CALL sp_registrar_devolucion(%s, %s, %s, %s::integer[], %s::numeric[], NULL)",
+            (session["id_usuario"], id_movimiento, motivo, id_lotes, cantidades),
+        )
+    except Exception as exc:
+        # El tope por lote (RN-22) y el resto de reglas vienen del trigger
+        # o del procedimiento con su mensaje ya redactado.
+        flash(mensaje_error(exc, "No se pudo registrar la devolución. Intente más tarde."), "danger")
+        return render_template("movimientos/devolucion.html", **contexto), 400
+
+    total = sum(cantidades)
+    flash(f"Devolución registrada: {total.normalize():f} devuelto a "
+          f"{len(id_lotes)} lote(s). La salida #{id_movimiento} queda corregida "
+          "y ambos movimientos permanecen en el historial.", "success")
     return redirect(url_for("movimientos.detalle", id_movimiento=fila["p_id_movimiento"]))
 
 
