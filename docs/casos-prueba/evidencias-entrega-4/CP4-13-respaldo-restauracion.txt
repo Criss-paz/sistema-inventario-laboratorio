@@ -1,0 +1,29 @@
+-- CP4-13: respaldo (RNF-11) y restauración en una base con el esquema instalado
+-- Fecha: 20/10/2026 19:24 · PostgreSQL 18.6 · ejecutado con apoyo de Claude Code (ver bitácora IA)
+-- 1. Generar el respaldo (la pantalla Respaldo usa la misma función, respaldo.generar)
+Respaldo guardado en <carpeta temporal>/respaldo_cp4.sql: 14,421 filas en 11 tablas.
+-- 2. Esquema vacío con tablas y triggers (como una base recién instalada, sin dml/)
+OK    sql/ddl/001_schema.sql
+OK    sql/ddl/002_devolucion.sql
+OK    sql/ddl/003_examen_estado.sql
+OK    sql/triggers/001_triggers.sql
+OK    sql/triggers/002_devolucion.sql
+-- 3. Restaurar: psql -v ON_ERROR_STOP=1 -f respaldo_inventario_....sql
+OK    restauración sin errores en 0 s
+-- 4. Comparar cada tabla restaurada contra la original (cantidad de filas y hash md5 de todas las filas)
+rol                      3 filas  idéntica
+usuario                  4 filas  idéntica
+categoria               10 filas  idéntica
+producto               807 filas  idéntica
+proveedor               51 filas  idéntica
+lote                  1189 filas  idéntica
+movimiento            5842 filas  idéntica
+detalle_movimiento    5923 filas  idéntica
+examen_laboratorio      51 filas  idéntica
+proveedor_producto     426 filas  idéntica
+examen_producto        115 filas  idéntica
+Tablas diferentes: 0
+DO
+Triggers que quedaron apagados: 0
+Siguiente id_movimiento en la copia: 5883 (máximo original 5882)
+-- esquema de prueba eliminado

@@ -6,5 +6,6 @@ Casos de prueba funcionales del sistema (formato: ID, Caso, Requerimientos, Prec
 |---|---|---|---|
 | `casos-prueba-entrega-2.md` | 2 | Login, CRUD de categorías y productos, persistencia | 18/18 ejecutados |
 | `casos-prueba-entrega-3.md` | 3 | Triggers, FEFO, reglas de existencia, historial inmutable, roles en la app y en la base, costo promedio ponderado | 8/8 ejecutados con capturas (28/09/2026) |
+| `casos-prueba-entrega-4.md` | 4 | Flujos del manual de usuario (U-01 a U-12) con los 3 roles, respaldo y restauración, instalación desde cero | 14/14 ejecutados con capturas (20/10/2026) |
 
-Las capturas de evidencia van en `evidencias-entrega-3/`.
+Las capturas de evidencia van en `evidencias-entrega-3/` y `evidencias-entrega-4/`.

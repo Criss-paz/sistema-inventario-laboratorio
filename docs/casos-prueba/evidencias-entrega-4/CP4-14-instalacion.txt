@@ -1,0 +1,36 @@
+-- CP4-14: instalación desde cero (orden de INSTALL.md, paso 3) en un esquema vacío
+-- Fecha: 20/10/2026 19:23 · PostgreSQL 18.6 · Windows 11 · ejecutado con apoyo de Claude Code (ver bitácora IA)
+-- Los dos scripts de security/ no se incluyen: crean roles (requiere superusuario) y los roles ya existen en el servidor.
+OK    sql/ddl/001_schema.sql
+OK    sql/triggers/001_triggers.sql
+OK    sql/procedures/001_procedures.sql
+OK    sql/views/001_views.sql
+OK    sql/views/002_valorizacion_promedio.sql
+OK    sql/dml/001_seed.sql
+OK    sql/dml/002_carga_catalogo.sql
+OK    sql/dml/003_seed_examenes.sql
+OK    python web/seed_usuarios.py
+OK    sql/dml/004_carga_movimientos.sql
+OK    sql/ddl/002_devolucion.sql
+OK    sql/triggers/002_devolucion.sql
+OK    sql/procedures/002_devolucion.sql
+OK    sql/views/003_devolucion.sql
+OK    sql/views/004_kardex_devolucion.sql
+OK    sql/ddl/003_examen_estado.sql
+-- 16 pasos en 12 s
+tablas
+11
+(1 fila)
+productos | proveedores | examenes | lotes | movimientos | detalles | usuarios
+806 | 50 | 50 | 1188 | 5839 | 5920 | 3
+(1 fila)
+lotes_incoherentes_con_historial
+0
+(1 fila)
+inventario_valorizado_q
+524,714.36
+(1 fila)
+examenes_activos
+50
+(1 fila)
+-- esquema de prueba eliminado
