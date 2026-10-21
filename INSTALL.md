@@ -85,10 +85,10 @@ Abrir `http://localhost:8080` (o el valor de `APP_PORT` en `.env`) e iniciar ses
 
 ## 7. Verificación rápida
 Base de datos (en `psql`, conectado como `usuario_app`):
-- [ ] `\dt` muestra las 11 tablas y `\dv` las 5 vistas.
+- [ ] `\dt` muestra las 11 tablas y `\dv` las 6 vistas.
 - [ ] `SELECT count(*) FROM producto;` → 806 y `SELECT count(*) FROM movimiento;` → 5839.
-- [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 4 triggers.
-- [ ] `\df sp_*` muestra `sp_registrar_entrada` y `sp_registrar_salida`.
+- [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 5 triggers.
+- [ ] `\df sp_*` muestra `sp_registrar_entrada`, `sp_registrar_salida` y `sp_registrar_devolucion`.
 - [ ] `\du rol_*` muestra `rol_administrador`, `rol_encargado` y `rol_consulta`.
 - [ ] `SET ROLE rol_consulta; UPDATE producto SET stock_minimo = 1 WHERE id_producto = 1;` → *permiso denegado*. Después, `RESET ROLE;`.
 - [ ] La consulta de coherencia de `sql/dml/README.md` devuelve 0.
@@ -99,8 +99,9 @@ Aplicación web:
 - [ ] `encargado.dev` registra una entrada y una salida; la salida se reparte por FEFO.
 - [ ] Reportes → Inventario muestra el valor total del inventario (Q524,714.36 con los datos iniciales).
 - [ ] Cerrar sesión redirige al login y bloquea el acceso directo a `/productos` sin sesión.
+- [ ] `admin.dev` ve **Administración → Respaldo** y descarga el archivo `.sql`.
 
-Los 8 casos de prueba completos están en `docs/casos-prueba/casos-prueba-entrega-3.md`.
+Los casos de prueba completos están en `docs/casos-prueba/` (los de la Entrega 4 recorren los flujos del manual de usuario e incluyen esta instalación desde cero, CP4-14).
 
 ## 8. Despliegue en internet (Render + Neon)
 
@@ -146,6 +147,22 @@ La versión pública corre en **https://inventario-laboratorio-03s7.onrender.com
 - Neon suspende el cómputo sin actividad y lo reanuda en la primera consulta (menos de un segundo).
 - Si una credencial se expone (por ejemplo, en un chat o una captura), rotarla: en Neon, **Connect → Reset password**, y actualizar `DATABASE_URL` en Render.
 
+## 9. Actualizar una instalación existente
+
+Si la base ya estaba instalada con una versión anterior del repositorio, no se reinstala: se aplican solo las migraciones nuevas, **después de descargar un respaldo**. Por ejemplo, para pasar de la Entrega 3 a la 4 basta `sql/ddl/003_examen_estado.sql`, y las de devolución (`*/002_devolucion.sql`, `views/003` y `views/004`) si la base es anterior al 29/09/2026. Lista completa y cómo saber cuáles faltan: `docs/entrega-4/ENTREGA4_MANUAL_TECNICO.md`, sección 6.3.
+
+En producción, después de aplicar las migraciones en Neon: **Manual Deploy → Deploy latest commit** en Render.
+
+## 10. Respaldo y restauración
+
+- **Respaldar:** Administración → Respaldo → Descargar respaldo (solo Administrador), o `cd web && python respaldo.py archivo.sql`.
+- **Restaurar** sobre una base con el esquema instalado (paso 3 sin `dml/`); reemplaza todos los datos, en una sola transacción:
+  ```bash
+  psql -U usuario_app -d inventario_laboratorio -v ON_ERROR_STOP=1 -f respaldo_inventario_AAAAMMDD_HHMM.sql
+  ```
+
+Detalle en `docs/entrega-4/ENTREGA4_MANUAL_TECNICO.md`, sección 7.
+
 ## Solución de errores frecuentes
 | Síntoma | Causa probable | Solución |
 |---|---|---|
@@ -155,5 +172,6 @@ La versión pública corre en **https://inventario-laboratorio-03s7.onrender.com
 | `role "rol_consulta" does not exist` o `permiso denegado` al usar la app | No se ejecutó `sql/security/001_roles.sql` como `postgres` | Repetir el último comando del paso 3 con `-U postgres` |
 | `carácter con secuencia de bytes ... «WIN1252»`, o tildes que aparecen como `Ã­` | psql en Windows leyó los scripts como WIN1252 | `$env:PGCLIENTENCODING = "UTF8"` y repetir el paso 3 desde el DDL (los datos ya cargados quedaron corruptos) |
 | `relation "categoria" does not exist` | No se ejecutó `001_schema.sql` | Repetir el paso 3 |
+| Error 500 en Exámenes o "columna motivo no existe" al devolver | Faltan migraciones (`ddl/003_examen_estado.sql` o las de devolución) | Paso 9 |
 | Login siempre dice "Usuario o contraseña incorrectos" | No se ejecutó `seed_usuarios.py`, o se insertó un usuario a mano con un hash inválido | Ejecutar `python seed_usuarios.py`; nunca escribir `password_hash` a mano |
 | `ModuleNotFoundError: No module named 'flask'` | No se instalaron dependencias en el entorno activo | `pip install -r web/requirements.txt` dentro del entorno correcto |
