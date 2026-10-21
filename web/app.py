@@ -85,6 +85,11 @@ def create_app():
     def quetzales(valor):
         return "—" if valor is None else f"{valor:,.2f}"
 
+    # Tipo de movimiento para mostrar, con tilde (la base guarda DEVOLUCION).
+    @app.template_filter("tipo_mov")
+    def tipo_movimiento(valor):
+        return {"ENTRADA": "Entrada", "SALIDA": "Salida", "DEVOLUCION": "Devolución"}.get(valor, valor)
+
     @app.route("/")
     @login_required
     def index():

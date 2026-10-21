@@ -60,7 +60,7 @@
       {% for f in filas %}
       <tr>
         <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=f.id_movimiento) }}">{{ f.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</a></td>
-        {% if not tipo %}<td><span class="badge {{ 'badge-out' if f.tipo_movimiento == 'SALIDA' else 'badge-on' }}">{{ f.tipo_movimiento|capitalize }}</span></td>{% endif %}
+        {% if not tipo %}<td><span class="badge {{ 'badge-out' if f.tipo_movimiento == 'SALIDA' else 'badge-on' }}">{{ f.tipo_movimiento|tipo_mov }}</span></td>{% endif %}
         <td><code>{{ f.codigo }}</code> {{ f.producto }}</td>
         <td><a href="{{ url_for('lotes.detalle', id_lote=f.id_lote) }}"><span class="lote">{{ f.numero_lote }}</span></a></td>
         <td class="num">{{ m.con_unidad(f.cantidad, f.unidad_medida) }}</td>
