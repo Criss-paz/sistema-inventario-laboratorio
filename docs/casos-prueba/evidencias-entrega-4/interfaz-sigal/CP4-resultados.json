@@ -1,0 +1,70 @@
+{
+  "CP4-01": {
+    "login_incorrecto": "Usuario o contraseña incorrectos.",
+    "menu_admin": "Operación /  / Panel / Movimientos / Lotes / Reportes /  / Catálogos /  / Productos / Exámenes / Proveedores / Categorías /  / Administración /  / Usuarios y roles / Respaldo",
+    "logout": "Sesión cerrada.",
+    "menu_consulta": "Operación /  / Panel / Movimientos / Lotes / Reportes /  / Catálogos /  / Productos / Exámenes / Proveedores / Categorías",
+    "consulta_en_usuarios": "Acceso no permitido"
+  },
+  "CP4-02": {
+    "confirmacion_distinta": "La confirmación no coincide con la nueva contraseña.",
+    "cambio": "Contraseña cambiada. Úsela la próxima vez que inicie sesión.",
+    "clave_vieja": "Usuario o contraseña incorrectos.",
+    "clave_nueva_entra": true,
+    "restaurada": "Contraseña cambiada. Úsela la próxima vez que inicie sesión."
+  },
+  "CP4-03": {
+    "crear": "Producto creado correctamente.",
+    "fila": "PRUEBA-CP4B |  REACTIVO DE PRUEBA CP4B Reactivos, unidad, con vencimiento  |  0  | — | — | Agotado | Editar  Desactivar",
+    "duplicado": "Ya existe un producto con el código \"PRUEBA-CP4B\"."
+  },
+  "CP4-04": {
+    "crear": "Proveedor creado correctamente.",
+    "asignar": "Producto y precio guardados para este proveedor.",
+    "cambiar_precio": "Producto y precio guardados para este proveedor.",
+    "fila": "PRUEBA-CP4B | REACTIVO DE PRUEBA CP4B | UNIDAD | 50.00 |  Quitar"
+  },
+  "CP4-05": {
+    "entrada": "Entrada registrada: 20 de REACTIVO DE PRUEBA CP4B en el lote CP4B-A.",
+    "url": "http://127.0.0.1:8080/movimientos/5883",
+    "lote": "CP4B-A | PRUEBA-CP4B REACTIVO DE PRUEBA CP4B | PROVEEDOR DE PRUEBA CP4B | 21/10/2026 | 30/04/2027 | 20 unidades | Activo"
+  },
+  "CP4-06": {
+    "existencia_mostrada": "Existencia utilizable: 20 unidades",
+    "salida": "Salida registrada: 8 de REACTIVO DE PRUEBA CP4B. Los lotes se eligieron por FEFO (primero el que vence antes).",
+    "id_salida": "5884",
+    "motivo_corto": "",
+    "devolucion": "Devolución registrada: 3 devuelto a 1 lote(s). La salida #5884 queda corregida y ambos movimientos permanecen en el historial.",
+    "lote_final": "CP4B-A | PRUEBA-CP4B REACTIVO DE PRUEBA CP4B | PROVEEDOR DE PRUEBA CP4B | 21/10/2026 | 30/04/2027 | 15 unidades | Activo"
+  },
+  "CP4-07": {
+    "crear": "Examen creado. Agregue los insumos que requiere.",
+    "insumo": "Insumo agregado al examen.",
+    "alcanza": "Con la existencia actual alcanza para 30 exámenes. El insumo que limita es REACTIVO DE PRUEBA CP4B.",
+    "en_informe_antes": true,
+    "baja": "Examen dado de baja. Ya no aparece en el informe de pruebas.",
+    "en_informe_despues": false
+  },
+  "CP4-08": {
+    "kardex": "01/10/2026 | Saldo inicial |  | 0 | 0.00 | 0.00 || 21/10/2026 | Prueba CP4B-05 | 20 | 50.00 | 1,000.00 |  |  |  | 20 | 50.00 | 1,000.00 || 21/10/2026 | Prueba CP4B-06 |  |  |  | 8 | 50.00 | 400.00 | 12 | 50.00 | 600.00 || 21/10/2026 | Devolución de la salida #5884 | 3 | 50.00 | 150.00 |  |  |  | 15 | 50.00 | 750.00",
+    "csv": "kardex-PRUEBA-CP4B-20261021.csv: 4 líneas",
+    "inventario_tiene_producto": true
+  },
+  "CP4-09": {
+    "crear": "Usuario \"prueba.cp4b\" creado. Ya puede iniciar sesión.",
+    "nuevo_entra_como": "Usuario de consulta",
+    "desactivar": "Usuario \"prueba.cp4b\" desactivado: ya no puede iniciar sesión. Su historial se conserva.",
+    "desactivado_no_entra": "Usuario o contraseña incorrectos."
+  },
+  "CP4-10": {
+    "archivo": "respaldo_inventario_20261021_1556.sql",
+    "encabezado": "-- Generado:   21/10/2026 15:56 (hora de Guatemala) por Administrador de Prueba / -- Base:       inventario_laboratorio — PostgreSQL 18.6 on x86_64-windows / -- Contenido:  14,434 filas en 11 tablas (solo datos)",
+    "copy_bloques": 11,
+    "encargado": "Acceso no permitido"
+  },
+  "CP4-11": {
+    "producto": "Producto desactivado.",
+    "proveedor": "Proveedor desactivado."
+  },
+  "_fecha": "21/10/2026 15:57"
+}

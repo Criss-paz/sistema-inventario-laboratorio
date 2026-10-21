@@ -18,7 +18,7 @@ Preparación para la defensa grupal (base de datos y aplicación web) y la indiv
 
 | Min. | Qué se muestra | Qué se dice | Quién |
 |---|---|---|---|
-| 0–1 | Inicio como administrador | El problema: bodega en papel; ahora existencias, vencimientos y valor del inventario en un vistazo, con los datos reales | Cristopher |
+| 0–1 | Panel "Bodega hoy" como administrador: indicadores y calendario de vencimientos (pasar el cursor por un punto rojo) | El problema: bodega en papel; ahora existencias, vencimientos y valor del inventario en un vistazo, con los datos reales. La interfaz sigue el diseño de SIGAL, proyecto nacido de este | Cristopher |
 | 1–3 | Diagrama ER y relacional | 9 entidades; el **lote** como unidad de existencia; 3 relaciones N:M resueltas; 3FN | José |
 | 3–5 | Como encargado: registrar una entrada y luego una salida mayor a lo que hay en un solo lote | La salida se reparte por **FEFO**, lo hace el procedimiento `sp_registrar_salida`, no la aplicación | Cristopher |
 | 5–6 | Intentar sacar más de lo que hay | El rechazo viene de la base de datos (trigger y procedimiento); la aplicación solo muestra el mensaje | Cristopher |

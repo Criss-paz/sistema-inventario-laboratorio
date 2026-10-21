@@ -56,7 +56,20 @@ La base se carga con el inventario real del laboratorio (registros en papel tran
 
 ## Interfaz
 
-Rediseñada como herramienta de trabajo: tipografía Atkinson Hyperlegible (distingue 0/O y 1/l/I al leer códigos y lotes), alojada en la app para funcionar sin internet; menú lateral por tarea; íconos SVG propios; un solo color de acento y colores de estado para vencido, por vencer y disponible. Verificada a 1440 px y a 390 px (celular), con foco visible para teclado.
+Desde el 21/10/2026 sigue el diseño de **SIGAL** (Sistema de Gestión y Almacenaje de Laboratorio), proyecto nacido de este sistema:
+
+- **Apariencia:** menú lateral oscuro por tarea; tinta y ámbar como colores de estructura y acción; rojo, naranja y verde solo para estados del inventario. Tipografías Schibsted Grotesk y JetBrains Mono, alojadas en la app (licencia SIL OFL) para funcionar sin internet.
+- **Tema claro y oscuro:** se recuerda en cada navegador.
+- **Barra superior:** búsqueda rápida `Ctrl K` de pantallas y productos (ruta `reportes.buscar`, JSON) y menú de usuario con *Cambiar mi contraseña* y *Cerrar sesión*.
+- **Avisos:** notificaciones flotantes; las de error se quedan hasta que se cierran.
+- **Panel "Bodega hoy":**
+  - indicadores: con existencias, valor en bodega, vencen en 90 días, bajo el mínimo y agotados;
+  - calendario de vencimientos con un punto por lote;
+  - *Reponer primero*, por el consumo de 60 días;
+  - actividad reciente.
+- **Listas:** etiquetas de estado de color, filtros tipo chip y, en Productos, medidor de existencia contra el mínimo.
+
+El comportamiento vive en `web/static/app.js`, sin librerías y como mejora progresiva: si no carga, todo sigue funcionando con enlaces y formularios. Se verificó a 1440 px y a 390 px (celular), en tema claro y oscuro, con foco visible para teclado. El rediseño no tocó la base, las rutas ni los permisos: después del cambio, las 183 verificaciones de regresión y los 12 flujos del manual (CP4) volvieron a pasar.
 
 ## Validaciones
 

@@ -11,9 +11,10 @@ Aplicación web del sistema: Flask 3 + PostgreSQL 18 (driver `psycopg` v3).
 | `app.py` | Arma la aplicación: registra los módulos, los permisos para las plantillas y las páginas de error 403, 404 y 500 |
 | `config.py` | Lee la configuración desde `.env` (nunca credenciales en el código) |
 | `db.py` | Único acceso a PostgreSQL: adopta el rol de BD del usuario (`SET ROLE`), consultas parametrizadas, paginación, llamadas a procedimientos y mensajes de error para el usuario |
-| `routes/` | Un módulo por área: `auth`, `movimientos`, `lotes`, `productos`, `examenes`, `proveedores`, `categorias`, `informes` (reportes), `reportes` (inicio y alertas), `usuarios` |
-| `templates/` | Plantillas por módulo, más `base.html` (menú lateral), `_macros.html` y `_iconos.html` |
-| `static/` | Estilos, fuentes Atkinson Hyperlegible (licencia OFL) y favicon |
+| `respaldo.py` | Servicio de respaldo de la base (también por línea de comandos) |
+| `routes/` | Un módulo por área: `auth`, `movimientos`, `lotes`, `productos`, `examenes`, `proveedores`, `categorias`, `informes` (reportes), `reportes` (Panel, alertas y búsqueda rápida), `usuarios`, `respaldo` |
+| `templates/` | Plantillas por módulo, más `base.html` (menú lateral y barra superior), `_macros.html` y `_iconos.html` |
+| `static/` | `style.css` (diseño de SIGAL, tema claro y oscuro), `app.js` (tema, menús, avisos, búsqueda Ctrl K), fuentes Schibsted Grotesk y JetBrains Mono (licencia OFL) y favicon |
 | `seed_usuarios.py` | Crea los 3 usuarios de prueba con contraseña con hash |
 
 ## Ejecutar

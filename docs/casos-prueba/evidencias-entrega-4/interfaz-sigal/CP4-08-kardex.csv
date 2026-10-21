@@ -1,0 +1,4 @@
+﻿Fecha,Movimiento,Detalle,Entrada cantidad,Entrada costo unitario (Q),Entrada total (Q),Salida cantidad,Salida costo unitario (Q),Salida total (Q),Saldo cantidad,Costo promedio (Q),Saldo valor (Q)
+21/10/2026 15:55,ENTRADA,Prueba CP4B-05,20.00,50.0000,1000.00,,,,20.00,50.0000,1000.00
+21/10/2026 15:56,SALIDA,Prueba CP4B-06,,,,8.00,50.0000,400.00,12.00,50.0000,600.00
+21/10/2026 15:56,DEVOLUCION,Devolución de la salida #5884,3.00,50.0000,150.00,,,,15.00,50.0000,750.00

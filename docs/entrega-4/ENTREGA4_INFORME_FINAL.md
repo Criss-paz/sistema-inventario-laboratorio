@@ -83,8 +83,9 @@ Diseñar, implementar y documentar un sistema de base de datos relacional que co
 
 | Módulo | Funciones |
 |---|---|
+| Interfaz | Diseño de SIGAL: menú oscuro, búsqueda rápida `Ctrl K`, tema claro y oscuro, avisos flotantes |
 | Acceso | Login, logout, cambio de contraseña propio, menú y permisos por rol |
-| Inicio | Indicadores del día: existencia, inventario bajo, vencidos, por vencer, actividad |
+| Panel | "Bodega hoy": indicadores, calendario de vencimientos por lote, qué reponer primero y actividad reciente |
 | Movimientos | Entradas, salidas por FEFO, devolución de salidas, historial con filtros |
 | Lotes | Existencia por lote, vencidos, por vencer, ficha con historial, corrección de datos |
 | Productos, Categorías, Proveedores, Exámenes | CRUD completo con baja lógica; productos y precios por proveedor; insumos por examen y "alcanza para N pruebas" |
@@ -101,7 +102,7 @@ El CRUD por tabla, con la justificación de las operaciones que no se ofrecen a 
 | 1 | 18/08/2026 | Propuesta, requerimientos, ER en notación Chen, Gantt |
 | 2 | 01/09/2026 | Modelo relacional, 3FN, diccionario, DDL; web al 30% (login, 2 CRUD) |
 | 3 | 29/09/2026 | Datos reales, triggers, procedimientos, vistas, roles, 8 casos de prueba, despliegue; web al 70%; devolución de salidas |
-| 4 | 03/11/2026 | Web al 100%: CRUD de proveedor–producto, baja de exámenes, respaldo, seguridad; manuales, informe y diagramas actualizados |
+| 4 | 03/11/2026 | Web al 100%: CRUD de proveedor–producto, baja de exámenes, respaldo, seguridad e interfaz con el diseño de SIGAL; manuales, informe y diagramas actualizados |
 
 ---
 

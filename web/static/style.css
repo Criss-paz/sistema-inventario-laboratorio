@@ -413,6 +413,7 @@ h1 .lote { font-size: 17px; vertical-align: .15em; }
 
 /* ============ Formularios ============ */
 form.card { max-width: 620px; padding: 22px 24px 24px; }
+div.card { max-width: 620px; padding: 14px 20px; margin-bottom: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-l); box-shadow: var(--shadow-1); }
 .table-wrap + form.card, .table-wrap + .card { margin-top: 22px; }
 form.card h2 { margin: 0 0 14px; font-size: 18px; }
 form.card label { display: block; margin: 16px 0 6px; font-size: 13.5px; font-weight: 600; color: var(--text); }

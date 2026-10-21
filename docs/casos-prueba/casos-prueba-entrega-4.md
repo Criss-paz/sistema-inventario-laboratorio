@@ -55,6 +55,28 @@ Sobre CP4-14: los dos scripts de `sql/security/` no se incluyeron, porque crean 
 
 ---
 
+## Segunda ejecución con la interfaz nueva (21/10/2026)
+
+El 21/10/2026 la interfaz adoptó el diseño de SIGAL: menú oscuro, barra superior con búsqueda `Ctrl K` y menú de usuario, Panel "Bodega hoy" y tema claro u oscuro. La lógica, las rutas y la base no cambiaron. Para que los flujos del manual queden verificados sobre la interfaz que se entrega, **se volvieron a ejecutar CP4-01 a CP4-12** en Edge, con datos de prueba nuevos ("CP4B": producto `PRUEBA-CP4B`, proveedor NIT `CP4-0002`, lote `CP4B-A`, examen `EX-CP4B`, usuario `prueba.cp4b`), porque los de la primera corrida ya existen.
+
+| Caso | Resultado obtenido (21/10/2026) | Estado |
+|---|---|---|
+| CP4-01 | Mensaje genérico ante contraseña incorrecta; menú del administrador con Panel … Respaldo; *"Sesión cerrada."* (ahora desde el menú de usuario); `consulta.dev` en `/usuarios/` → **"Acceso no permitido"** | ✅ |
+| CP4-02 | Confirmación distinta rechazada; contraseña cambiada desde el menú de usuario; la vieja ya no entra y la nueva sí; se restauró la original | ✅ |
+| CP4-03 | *"Producto creado correctamente."*; la lista lo muestra con su categoría y su medidor de existencia en 0 (Agotado); código duplicado rechazado | ✅ |
+| CP4-04 | Producto asignado al proveedor y precio cambiado a 50.00, una sola fila | ✅ |
+| CP4-05 | *"Entrada registrada: 20 de REACTIVO DE PRUEBA CP4B en el lote CP4B-A."* (movimiento n.º 5883) | ✅ |
+| CP4-06 | Existencia mostrada 20; salida de 8 por FEFO (n.º 5884); motivo corto bloqueado; devolución de 3; la ficha del lote termina en **15** | ✅ |
+| CP4-07 | Examen con insumo "alcanza para 30 exámenes"; dado de baja, deja de aparecer en el reporte de pruebas | ✅ |
+| CP4-08 | Kardex: 20 / Q1,000.00 → 12 / Q600.00 → **15 / Q750.00**, con la devolución en Entradas; CSV de 4 líneas | ✅ |
+| CP4-09 | Usuario `prueba.cp4b` creado, entra como Usuario de consulta; desactivado, ya no entra | ✅ |
+| CP4-10 | Respaldo de 14,434 filas en 11 tablas con 11 bloques COPY; el encargado recibe 403 | ✅ |
+| CP4-11 | Producto y proveedor de prueba desactivados | ✅ |
+| CP4-12 | Panel en 390 px con el menú plegado y los indicadores en dos columnas | ✅ |
+| Interfaz | `Ctrl K` encuentra el producto y `Enter` abre su kardex; el tema oscuro se recuerda al recargar; el menú de usuario se cierra al hacer clic fuera; los puntos del calendario muestran su ficha | ✅ |
+
+**12 de 12 casos aprobados también con la interfaz nueva.** Capturas en `evidencias-entrega-4/interfaz-sigal/` (son las que ilustran el manual de usuario) y respuestas del sistema en `interfaz-sigal/CP4-resultados.json`. La regresión automatizada se repitió después del cambio: 183 verificaciones, 0 fallas.
+
 ## Defectos encontrados al ejecutar los casos
 
 Las pruebas encontraron tres defectos, que se corrigieron antes de cerrar estos resultados:

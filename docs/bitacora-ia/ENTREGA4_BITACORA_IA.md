@@ -107,6 +107,21 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 
 ---
 
+### Registro de Bitácora IA — Interfaz con el diseño de SIGAL
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 21/10/2026 |
+| **Herramienta** | Claude Code (Opus) + Playwright con Edge para verificar |
+| **Objetivo** | Que la aplicación tenga el diseño y la experiencia de SIGAL, proyecto del integrante José Eduardo Escobar que nació de este sistema, sin cambiar la base de datos ni la lógica. |
+| **Prompt utilizado** | "Yo necesitaba que lo dejaras similar a SIGAL, ya que SIGAL fue una idea nacida de este proyecto … tomando en cuenta todo lo que tienes ya trabajado en este sistema". Antes de empezar, la IA preguntó el alcance; el equipo eligió **diseño y experiencia** (no los módulos de SIGAL, que habrían cambiado el modelo de datos a días de la entrega) y **conservar el nombre** del sistema. |
+| **Resultado obtenido** | Nueva `style.css` a partir del sistema visual de SIGAL, conservando los nombres de clase de las 40 plantillas: tinta y ámbar, Schibsted Grotesk y JetBrains Mono, tema claro y oscuro. `base.html` con menú oscuro, barra superior con búsqueda `Ctrl K` y menú de usuario. `app.js`, sin librerías: tema, menús, avisos flotantes, búsqueda y fichas emergentes. Panel "Bodega hoy" con indicadores, calendario de vencimientos, *Reponer primero* y actividad reciente, todo desde las vistas de la base. Inicio de sesión dividido; productos con medidor de existencia; ruta `reportes.buscar` (JSON). |
+| **Validación del grupo** | Capturas de cada pantalla en claro, oscuro y celular, revisadas una por una. Se corrigió:<br>• un desfase entre las columnas del Panel;<br>• la tabla de productos, demasiado ancha (de 11 a 7 columnas);<br>• un bloque informativo sin estilo en la devolución;<br>• un plural ("0 unidad").<br>Regresión: 183 verificaciones, 0 fallas. `Ctrl K` (incluido `Enter` hacia el kardex), el tema que se recuerda, el menú y las fichas del calendario se probaron en Edge. Los 12 flujos del manual se ejecutaron otra vez con la interfaz nueva (12 de 12) y sus capturas reemplazaron las del manual. Dos fallas de los guiones de prueba (un clic que cayó en un punto del calendario y una lectura de dirección antes de terminar la navegación) se identificaron como errores del guion, no de la aplicación. |
+| **Estándares aplicados** | A1 (estilos y comportamiento en `static/`, sin lógica de negocio), A2 (avisos sin texto técnico), A4 (búsqueda parametrizada), A6; S7 (las cifras del Panel salen de vistas); D1, D3; R6 (la búsqueda exige sesión). La declaración de integridad indica qué se tomó de SIGAL. |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
 ### Pendiente de registrar por el equipo
 
 | Acción | Responsable |
@@ -123,7 +138,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | 1 — Análisis, propuesta y diseño conceptual | `docs/bitacora-ia/Bitacora-IA.md` | 5 actividades | IA como apoyo de análisis y redacción | Equipo |
 | 2 — Diseño lógico e implementación base | `docs/entrega-2/Bitacora-IA.md` | 13 | Claude Code (Opus) | José Eduardo Escobar, Cristopher Alexis Castellanos Paz |
 | 3 — Implementación avanzada, seguridad y pruebas | `docs/bitacora-ia/ENTREGA3_BITACORA_IA.md` | 10 | Claude, Claude Code (Opus) | José Eduardo Escobar (8), Cristopher Alexis Castellanos Paz (2) |
-| 4 — Integración, documentación y defensa | este archivo | 6 | Claude Code (Opus), Playwright | José Eduardo Escobar |
+| 4 — Integración, documentación y defensa | este archivo | 7 | Claude Code (Opus), Playwright | José Eduardo Escobar |
 
 ### Para qué se usó la IA en cada etapa
 

@@ -1,6 +1,9 @@
 # Evidencias — Entrega 4
 
-Capturas y transcripciones de la ejecución de los casos de `../casos-prueba-entrega-4.md`, tomadas el 20/10/2026 (Windows 11, PostgreSQL 18.6, Microsoft Edge conducido con Playwright 1.64). Las mismas capturas ilustran el manual de usuario.
+Capturas y transcripciones de la ejecución de los casos de `../casos-prueba-entrega-4.md` (Windows 11, PostgreSQL 18.6, Microsoft Edge conducido con Playwright 1.64).
+
+- **Esta carpeta:** primera ejecución, 20/10/2026, con la interfaz anterior.
+- **`interfaz-sigal/`:** segunda ejecución de CP4-01 a CP4-12, 21/10/2026, con la interfaz que adoptó el diseño de SIGAL, más `CP4-13-tema-oscuro.png` y `CP4-14-busqueda.png`. Son las capturas que ilustran el manual de usuario.
 
 | Archivo | Caso | Qué muestra |
 |---|---|---|

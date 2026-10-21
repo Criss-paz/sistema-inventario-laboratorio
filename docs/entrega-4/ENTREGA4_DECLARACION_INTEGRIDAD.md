@@ -18,7 +18,13 @@ Los integrantes del equipo declaramos que:
 
 6. **No publicamos credenciales.** El repositorio no contiene contraseñas reales ni el archivo `.env`, y las credenciales de producción se entregan por un canal privado.
 
-7. **Las fuentes externas se reconocen.** Las librerías usadas (Flask, psycopg, python-dotenv, gunicorn y Werkzeug) son de código abierto y figuran en `web/requirements.txt`. La tipografía Atkinson Hyperlegible es del Braille Institute, con licencia SIL Open Font License. El sistema SIGAL, del mismo integrante José Eduardo Escobar, se consultó como referencia de ideas: el respaldo descargable y las protecciones de seguridad. Su código no se copió, porque usa otra arquitectura (FastAPI y SQLAlchemy).
+7. **Las fuentes externas se reconocen.** Las librerías usadas (Flask, psycopg, python-dotenv, gunicorn y Werkzeug) son de código abierto y figuran en `web/requirements.txt`. Las tipografías Schibsted Grotesk y JetBrains Mono tienen licencia SIL Open Font License (`web/static/fonts/OFL.txt`).
+
+**SIGAL** (Sistema de Gestión y Almacenaje de Laboratorio) es un proyecto del mismo integrante José Eduardo Escobar que nació de este sistema. De él se tomó:
+- **El diseño de la interfaz:** colores, tipografías, estructura de pantallas, Panel, búsqueda rápida y tema oscuro. Se adaptó a las plantillas de esta aplicación.
+- **Las ideas** del respaldo descargable y de las protecciones de seguridad.
+
+Concretamente, `web/static/style.css` adapta la hoja de estilos de SIGAL (variables de color, componentes y tema oscuro) y algunos íconos de `_iconos.html` (menú, sol, luna, ojo) vienen de su juego de íconos. La lógica, las rutas, la base de datos y sus reglas de negocio son las de este proyecto. SIGAL usa otra arquitectura (FastAPI, SQLAlchemy y una página única en JavaScript), así que su código de aplicación no se reutilizó: `web/static/app.js` se escribió para estas plantillas.
 
 ---
 

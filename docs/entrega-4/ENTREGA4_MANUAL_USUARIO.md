@@ -1,7 +1,7 @@
 # Manual de usuario
 
 **Sistema Web de Gestión y Control de Inventario — Laboratorio Privado Quetzaltenango**
-Versión 1.0 · Entrega 4 · octubre de 2026
+Versión 1.1 · Entrega 4 · octubre de 2026 (interfaz con el diseño de SIGAL)
 
 Este manual explica cómo usar el sistema en el trabajo diario del laboratorio: registrar lo que entra y sale de bodega, saber qué hay, qué se está acabando y qué está por vencer, y sacar reportes. Está escrito para el personal del laboratorio; no hace falta saber de computación ni de bases de datos.
 
@@ -13,7 +13,7 @@ Cada procedimiento tiene un código (**U-01**, **U-02**…). El mismo código ap
 
 1. [Antes de empezar](#1-antes-de-empezar)
 2. [Entrar, salir y cambiar la contraseña](#2-entrar-salir-y-cambiar-la-contraseña) — U-01, U-02
-3. [La pantalla de inicio](#3-la-pantalla-de-inicio)
+3. [El Panel y la búsqueda rápida](#3-el-panel-y-la-búsqueda-rápida)
 4. [Registrar una entrada (compra o recepción)](#4-registrar-una-entrada) — U-03
 5. [Registrar una salida (consumo)](#5-registrar-una-salida) — U-04
 6. [Corregir una salida mal registrada (devolución)](#6-corregir-una-salida-mal-registrada-devolución) — U-05
@@ -54,15 +54,25 @@ Cada usuario tiene un rol, y el rol decide qué puede hacer. El menú solo muest
 
 ### Cómo está organizada la pantalla
 
-A la izquierda está el **menú**, agrupado por tarea:
+A la izquierda está el **menú**, sobre fondo oscuro y agrupado por tarea:
 
-- **Operación:** Inicio, Movimientos, Lotes y Reportes. Es lo que se usa todos los días.
+- **Operación:** Panel, Movimientos, Lotes y Reportes. Es lo que se usa todos los días.
 - **Catálogos:** Productos, Exámenes, Proveedores y Categorías.
 - **Administración** (solo el administrador): Usuarios y roles, y Respaldo.
 
-Abajo del menú aparecen el nombre y el rol de quien está conectado, el botón de la **llave** (cambiar contraseña) y el de **salir**. En el celular, el menú se muestra arriba como una franja que se desliza de lado.
+La opción en la que está aparece resaltada, con su ícono en ámbar. Abajo del menú, el punto verde **Conectado** indica que el sistema responde.
 
-Los avisos del sistema aparecen en la parte superior: en **verde** cuando algo se guardó, en **rojo** cuando algo no se pudo hacer y por qué.
+Arriba está la **barra superior**:
+
+| Elemento | Para qué sirve |
+|---|---|
+| **Buscar producto o pantalla** (o las teclas `Ctrl` + `K`) | Ir directo a una pantalla o al kardex de un producto escribiendo parte de su nombre o código (sección 3) |
+| **Sol / luna** | Cambiar entre tema claro y oscuro. El navegador lo recuerda |
+| **Su nombre y rol** (con sus iniciales en un círculo) | Abre el menú de usuario: **Cambiar mi contraseña** y **Cerrar sesión** |
+
+Los avisos del sistema aparecen como **notificaciones flotantes** en la esquina inferior derecha. Un punto **verde** indica que algo se guardó (el aviso se retira solo); uno **rojo**, que algo no se pudo hacer y por qué (se queda hasta que lo cierre con la **×**).
+
+En el celular, el menú se esconde: se abre con el botón de las tres rayas, arriba a la izquierda.
 
 ---
 
@@ -72,10 +82,10 @@ Los avisos del sistema aparecen en la parte superior: en **verde** cuando algo s
 
 1. Abra la dirección del sistema. Aparece la pantalla de ingreso.
 2. Escriba su **usuario** y su **contraseña** y presione **Entrar**.
-3. Si los datos son correctos, entra a la pantalla de **Inicio**. Si no, aparece *"Usuario o contraseña incorrectos."* El mensaje es el mismo si el usuario no existe o si la contraseña está mal: así nadie puede averiguar qué usuarios existen.
-4. Para terminar, presione el botón de **salir** (la flecha junto a su nombre, abajo del menú). Aparece *"Sesión cerrada."*
+3. Si los datos son correctos, entra al **Panel**. Si no, aparece *"Usuario o contraseña incorrectos."* El mensaje es el mismo si el usuario no existe o si la contraseña está mal: así nadie puede averiguar qué usuarios existen.
+4. Para terminar, abra el **menú de usuario** (su nombre, arriba a la derecha) y elija **Cerrar sesión**. Aparece *"Sesión cerrada."*
 
-![Pantalla de ingreso](../casos-prueba/evidencias-entrega-4/CP4-01a-login.png)
+![Pantalla de ingreso](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-01a-login.png)
 
 Cierre la sesión siempre que deje la computadora, sobre todo si es compartida.
 
@@ -83,32 +93,58 @@ Cierre la sesión siempre que deje la computadora, sobre todo si es compartida.
 
 Cualquier usuario puede cambiar su contraseña cuando quiera. Se recomienda hacerlo la primera vez que entra con la contraseña que le dio el administrador.
 
-1. Presione el botón de la **llave**, abajo del menú, junto a su nombre.
+1. Abra el **menú de usuario** (su nombre, arriba a la derecha) y elija **Cambiar mi contraseña**.
 2. Escriba su **contraseña actual**.
 3. Escriba la **nueva contraseña** (mínimo 8 caracteres) y repítala.
 4. Presione **Cambiar contraseña**. Aparece *"Contraseña cambiada. Úsela la próxima vez que inicie sesión."*
 
-![Cambiar mi contraseña](../casos-prueba/evidencias-entrega-4/CP4-02a-formulario.png)
+![Cambiar mi contraseña](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-02a-formulario.png)
 
 El sistema no acepta el cambio si la contraseña actual es incorrecta, si la nueva tiene menos de 8 caracteres, si la confirmación no coincide o si la nueva es igual a la anterior. Si olvidó su contraseña, pida al administrador que le asigne una nueva (sección 12).
 
 ---
 
-## 3. La pantalla de inicio
+## 3. El Panel y la búsqueda rápida
 
-Muestra en un vistazo el estado del inventario hoy:
+### El Panel ("Bodega hoy")
 
-| Indicador | Qué significa | Al hacer clic |
-|---|---|---|
-| **Productos con existencia** | Cuántos productos activos tienen algo en bodega | Lista de productos |
-| **En inventario bajo** | Productos que están en su stock mínimo o por debajo | Reporte de inventario bajo |
-| **Lotes vencidos con existencia** | Lotes que ya vencieron y todavía tienen unidades: hay que retirarlos | Reporte de vencimientos |
-| **Lotes que vencen en 90 días** | Lo que conviene usar primero | Reporte de vencimientos |
-| **Movimientos en 30 días** | Actividad reciente de la bodega | Historial de movimientos |
+Es la primera pantalla después de entrar. Muestra en un vistazo el estado del inventario hoy.
 
-Debajo están los lotes más próximos a vencer y los últimos movimientos registrados. El encargado y el administrador ven además los botones **Registrar entrada** y **Registrar salida**.
+**Franja de indicadores** (cada uno lleva a su detalle al hacer clic):
 
-![Inicio del administrador](../casos-prueba/evidencias-entrega-4/CP4-01c-inicio-admin.png)
+| Indicador | Qué significa |
+|---|---|
+| **Con existencias** | Cuántos productos activos tienen algo en bodega, de cuántos hay en el catálogo |
+| **Valor en bodega** | Valor del inventario a costo promedio ponderado |
+| **Vencen en 90 días** | Lotes con existencia que vencen pronto: conviene usarlos primero |
+| **Bajo el mínimo** | Productos con existencia, pero en su stock mínimo o por debajo |
+| **Agotados** | Productos que se usaban (tienen historial) y ya no tienen existencia |
+
+**Calendario de vencimientos.** Cada punto es un lote con existencia, ubicado en el mes en que vence:
+- **rojo:** ya venció; está en la columna *Vencidos* y hay que retirarlo;
+- **naranja:** vence en 30 días;
+- **ámbar:** vence en 90 días;
+- **gris:** vence más adelante.
+
+La columna del mes actual dice **hoy**. Al pasar el cursor sobre un punto (o tocarlo en el celular) aparece el producto, el lote, la fecha y la existencia. Al hacer clic, se abre la ficha del lote.
+
+**Reponer primero.** Los productos bajo su mínimo, primero los agotados y luego los que más se consumieron en los últimos 60 días, con un cálculo de para cuántos días alcanza lo que queda.
+
+**Actividad reciente.** Las entradas (↓), salidas (↑) y devoluciones (↩) de los últimos 14 días. Clic en una para ver su detalle.
+
+El encargado y el administrador ven además los botones **Registrar salida** y **Registrar entrada**.
+
+![Panel del administrador](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-01c-inicio-admin.png)
+
+### Búsqueda rápida
+
+Presione `Ctrl` + `K` (o haga clic en **Buscar producto o pantalla**) y escriba parte de un nombre o código:
+- **Pantallas:** lleva a esa sección del menú.
+- **Productos:** muestra su existencia y abre su kardex.
+
+Muévase con las flechas, abra con `Enter` y cierre con `Esc`.
+
+![Búsqueda rápida](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-14-busqueda.png)
 
 ---
 
@@ -120,16 +156,16 @@ Una **entrada** es todo lo que llega a la bodega: una compra, una donación, una
 
 ### U-03 Registrar una entrada
 
-1. En **Inicio** presione **Registrar entrada** (o en **Movimientos**, el mismo botón).
+1. En el **Panel** presione **Registrar entrada** (o en **Movimientos**, el mismo botón).
 2. **Producto:** empiece a escribir el nombre o el código y elíjalo de la lista que aparece.
 3. **Proveedor:** elija quién lo entregó.
 4. **Número de lote:** el que trae impreso el empaque. Si el producto ya tiene un lote con ese número, la cantidad se suma a ese lote.
 5. **Fecha de vencimiento:** la del empaque. Es **obligatoria** para los productos marcados como "requiere vencimiento" (reactivos, por ejemplo); el sistema no deja registrar la entrada sin ella.
 6. **Cantidad** y **precio unitario** de compra (en quetzales, hasta 2 decimales).
 7. **Observación** (opcional): número de factura, quién recibió, etc.
-8. Presione **Registrar entrada**. Aparece, por ejemplo, *"Entrada registrada: 20 de REACTIVO DE PRUEBA CP4 en el lote CP4-A."* y se abre el detalle del movimiento.
+8. Presione **Registrar entrada**. Aparece, por ejemplo, *"Entrada registrada: 20 de REACTIVO DE PRUEBA CP4B en el lote CP4B-A."* y se abre el detalle del movimiento.
 
-![Formulario de entrada](../casos-prueba/evidencias-entrega-4/CP4-05a-entrada.png)
+![Formulario de entrada](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-05a-entrada.png)
 
 La existencia del lote sube automáticamente. La fecha, la hora y el nombre de quien registró quedan guardados y no se pueden cambiar después.
 
@@ -143,13 +179,13 @@ Una **salida** es lo que se saca de bodega para usarse: reactivos para un examen
 
 ### U-04 Registrar una salida
 
-1. En **Inicio** presione **Registrar salida**.
+1. En el **Panel** presione **Registrar salida**.
 2. **Producto:** escríbalo y elíjalo de la lista. Debajo aparece la **existencia utilizable** (lo que hay en lotes no vencidos), para que sepa cuánto puede sacar.
 3. **Cantidad** que sale.
 4. **Observación** (opcional): para qué área o examen.
 5. Presione **Registrar salida**.
 
-![Formulario de salida](../casos-prueba/evidencias-entrega-4/CP4-06a-salida.png)
+![Formulario de salida](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-06a-salida.png)
 
 **Usted no elige el lote.** El sistema descuenta solo, empezando por el lote que **vence primero** (método FEFO: *first expired, first out*), y nunca toma unidades de lotes ya vencidos. Si la cantidad no alcanza en un lote, completa con el siguiente; el detalle de la salida muestra de qué lotes salió cada parte.
 
@@ -165,13 +201,13 @@ Los movimientos **no se pueden editar ni borrar**: es lo que garantiza que el hi
 
 ### U-05 Devolver una salida
 
-1. Abra la salida: **Movimientos → pestaña Salidas** → haga clic en la fecha de la salida (o ábrala desde el aviso verde justo después de registrarla).
+1. Abra la salida: **Movimientos → pestaña Salidas** → haga clic en la fecha de la salida (o desde *Actividad reciente* en el Panel).
 2. Presione **Devolver esta salida**.
 3. **Motivo:** explique por qué se devuelve (mínimo 10 caracteres). Es obligatorio y queda guardado.
 4. **Cuánto devolver de cada lote:** viene propuesto el total que salió de cada lote. Bájelo si solo devuelve una parte, o déjelo en cero en los lotes que no devuelve.
-5. Presione **Registrar devolución**. Aparece *"Devolución registrada: 3 devuelto a 1 lote(s). La salida #5881 queda corregida y ambos movimientos permanecen en el historial."*
+5. Presione **Registrar devolución**. Aparece *"Devolución registrada: 3 devuelto a 1 lote(s). La salida #5884 queda corregida y ambos movimientos permanecen en el historial."*
 
-![Devolución de una salida](../casos-prueba/evidencias-entrega-4/CP4-06c-devolucion.png)
+![Devolución de una salida](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-06c-devolucion.png)
 
 No se puede devolver más de lo que salió, ni devolver dos veces lo mismo: el sistema descuenta lo que ya se devolvió antes.
 
@@ -187,7 +223,7 @@ No se puede devolver más de lo que salió, ni devolver dos veces lo mismo: el s
 2. Busque por producto, código o número de lote.
 3. Haga clic en el número de lote para ver su ficha: existencia, vencimiento, proveedor, fecha de ingreso y **todos sus movimientos**, con el signo **+** para lo que entró o se devolvió y **−** para lo que salió.
 
-![Ficha de un lote](../casos-prueba/evidencias-entrega-4/CP4-06e-ficha-lote.png)
+![Ficha de un lote](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-06e-ficha-lote.png)
 
 La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de sus entradas, salidas y devoluciones. Por eso la ficha dice "la existencia es entradas – salidas de esta lista".
 
@@ -206,7 +242,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 3. Presione **Generar reporte**.
 4. En el reporte puede **Descargar CSV** (se abre en Excel con tildes correctas), **Imprimir** (sale sin menú ni botones, con el título y el período) o elegir **Otro reporte**.
 
-![Pantalla de reportes](../casos-prueba/evidencias-entrega-4/CP4-08a-reportes.png)
+![Pantalla de reportes](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-08a-reportes.png)
 
 | Reporte | Para qué sirve |
 |---|---|
@@ -222,7 +258,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 
 **Cómo se valoriza el inventario.** El sistema usa el **costo promedio ponderado**: cada compra recalcula el costo promedio del producto, y cada salida se valora al promedio vigente ese día. Las devoluciones reingresan al mismo promedio al que salieron, así que no lo alteran. El kardex muestra este cálculo línea por línea.
 
-![Kardex de un producto](../casos-prueba/evidencias-entrega-4/CP4-08b-kardex.png)
+![Kardex de un producto](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-08b-kardex.png)
 
 ---
 
@@ -242,7 +278,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
    - **Requiere vencimiento:** márquelo para reactivos y todo lo que caduca. Así el sistema exigirá la fecha en cada entrada.
 3. Presione **Guardar**. Aparece *"Producto creado correctamente."*
 
-![Nuevo producto](../casos-prueba/evidencias-entrega-4/CP4-03a-nuevo-producto.png)
+![Nuevo producto](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-03a-nuevo-producto.png)
 
 **Editar:** botón **Editar** en la fila del producto.
 **Dar de baja:** botón **Desactivar**. El producto deja de ofrecerse en entradas y salidas, pero **conserva todo su historial**. Se puede volver a activar en cualquier momento. Los productos no se borran porque sus movimientos deben seguir siendo consultables.
@@ -263,7 +299,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 4. Para **cambiar el precio** de un producto que ya está asignado, repita el paso 3 con el precio nuevo: reemplaza el anterior.
 5. Para **quitar** un producto del proveedor, presione **Quitar** en su fila y confirme. Esto no afecta los lotes ni los movimientos ya registrados.
 
-![Ficha del proveedor con sus productos](../casos-prueba/evidencias-entrega-4/CP4-04-proveedor-producto.png)
+![Ficha del proveedor con sus productos](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-04-proveedor-producto.png)
 
 **Dar de baja un proveedor:** **Desactivar** en la lista. Deja de ofrecerse en las entradas nuevas y conserva su historial.
 
@@ -280,7 +316,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 3. Presione **Agregar**. La ficha calcula **para cuántos exámenes alcanza** la existencia actual y qué insumo es el que limita.
 4. Para quitar un insumo, **Quitar** en su fila.
 
-![Ficha del examen con insumos](../casos-prueba/evidencias-entrega-4/CP4-07a-examen-insumos.png)
+![Ficha del examen con insumos](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-07a-examen-insumos.png)
 
 **Dar de baja un examen** que el laboratorio ya no ofrece: en la lista de exámenes, **Dar de baja**. El examen conserva su ficha y sus insumos, pero ya no aparece en el reporte *Pruebas de laboratorio*. **Activar** lo devuelve.
 
@@ -296,7 +332,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 2. Escriba el **nombre completo**, el **usuario** con el que entrará (minúsculas, números, punto o guion), el **rol** y una **contraseña** de al menos 8 caracteres (dos veces).
 3. Presione **Crear usuario**. Entregue la contraseña a la persona por un medio privado y pídale que la cambie al entrar (U-02).
 
-![Nuevo usuario](../casos-prueba/evidencias-entrega-4/CP4-09a-nuevo-usuario.png)
+![Nuevo usuario](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-09a-nuevo-usuario.png)
 
 - **Cambiar el rol o asignar una contraseña nueva** (por ejemplo, si alguien la olvidó): **Editar** en la fila del usuario. Si deja la contraseña vacía, no se cambia.
 - **Desactivar:** el usuario ya no puede entrar, pero sus movimientos siguen mostrando su nombre. No se puede desactivar a sí mismo ni cambiar su propio rol, y el sistema no permite dejar el sistema sin ningún administrador activo.
@@ -315,7 +351,7 @@ La misma pantalla muestra la tabla de permisos de cada rol.
 2. Presione **Descargar respaldo**. El navegador guarda un archivo `respaldo_inventario_AAAAMMDD_HHMM.sql` con **todos** los datos: catálogos, lotes, el historial completo, exámenes y usuarios (las contraseñas van protegidas, nunca legibles).
 3. Guarde el archivo **fuera del servidor**: una memoria USB, una unidad de red o la nube del laboratorio.
 
-![Pantalla de respaldo](../casos-prueba/evidencias-entrega-4/CP4-10a-respaldo.png)
+![Pantalla de respaldo](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-10a-respaldo.png)
 
 **Cada cuánto:** al menos una vez por semana y siempre antes de un cambio importante. Conserve varios respaldos (por ejemplo, los de las últimas cuatro semanas).
 
@@ -358,6 +394,11 @@ No; se **desactivan**. Así sus movimientos pasados siguen mostrando a quién o 
 Cada movimiento se guarda completo o no se guarda: nunca queda a medias. Revise el historial de Movimientos para saber si quedó registrado antes de volver a intentarlo.
 
 **¿Puedo usar el sistema en el celular?**
-Sí. La pantalla se adapta y el menú pasa a la parte superior.
+Sí. La pantalla se adapta: el menú se abre con el botón de las tres rayas y los indicadores se ordenan en dos columnas.
 
-![Inicio en un celular](../casos-prueba/evidencias-entrega-4/CP4-12-celular.png)
+![Panel en un celular](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-12-celular.png)
+
+**¿Se puede usar con fondo oscuro?**
+Sí. El botón del sol o la luna, en la barra superior, cambia entre tema claro y oscuro, y el navegador lo recuerda.
+
+![Panel en tema oscuro](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-13-tema-oscuro.png)

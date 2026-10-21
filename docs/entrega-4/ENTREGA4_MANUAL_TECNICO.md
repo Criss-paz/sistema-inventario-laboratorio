@@ -34,7 +34,7 @@ Este manual es para quien instala, administra o modifica el sistema: el administ
 
 | Capa | Tecnología | Responsabilidad |
 |---|---|---|
-| Presentación | Plantillas Jinja2, CSS y JavaScript propios, sin frameworks de interfaz | Mostrar datos y formularios; ocultar lo que el rol no puede usar |
+| Presentación | Plantillas Jinja2, CSS y JavaScript propios, sin frameworks de interfaz; sistema visual de SIGAL | Mostrar datos y formularios; ocultar lo que el rol no puede usar |
 | Aplicación | Python 3.12+ (probado con 3.12 en Render y 3.14 en desarrollo), Flask 3.0 | Sesión, validación de entrada, control de acceso por ruta, traducción de errores |
 | Acceso a datos | `web/db.py` con psycopg 3 | Única puerta a PostgreSQL: conexión por petición, `SET ROLE`, consultas parametrizadas |
 | Datos y reglas de negocio | PostgreSQL 14+ (18 en desarrollo, 17 en Neon) | Integridad, existencias, FEFO, inmutabilidad del historial, valorización, permisos |
@@ -70,7 +70,8 @@ Este manual es para quien instala, administra o modifica el sistema: el administ
     ├── seed_usuarios.py  usuarios de desarrollo
     ├── routes/         un módulo por área (11)
     ├── templates/      40 plantillas
-    └── static/         CSS, fuentes (Atkinson Hyperlegible, alojadas en la app), favicon
+    └── static/         style.css (diseño de SIGAL, tema claro/oscuro), app.js (tema, menús, avisos,
+                        búsqueda Ctrl K), fuentes Schibsted Grotesk y JetBrains Mono, favicon
 ```
 
 Cada script SQL abre con un encabezado: archivo, propósito, autor, descripción, reglas de negocio, dependencias, SGBD y forma de ejecutarlo (estándar S3). Los scripts `002` y `003` son **migraciones aditivas**: se aplican sobre una base existente sin borrar datos.
@@ -168,7 +169,7 @@ Con los datos iniciales, el inventario vale **Q524,714.36**. Esta cifra sirve pa
 | Módulo (`web/routes/`) | Pantallas | Roles |
 |---|---|---|
 | `auth.py` | Login, logout, cambiar mi contraseña; `login_required`, `rol_requerido`, `tiene_rol` | Todos |
-| `reportes.py` | Inicio (indicadores), inventario bajo, por vencer | Todos |
+| `reportes.py` | Panel "Bodega hoy" (indicadores, calendario de vencimientos, reponer primero, actividad), inventario bajo, por vencer y `buscar` (JSON para la búsqueda `Ctrl K`) | Todos |
 | `movimientos.py` | Historial (todos/entradas/salidas), detalle, entrada, salida, devolución | Consultar: todos · Registrar: Administrador y Encargado |
 | `lotes.py` | Lista por estado, ficha, corrección de datos | Consultar: todos · Corregir: Administrador |
 | `productos.py`, `categorias.py` | CRUD con baja lógica | Consultar: todos · Editar: Administrador |
