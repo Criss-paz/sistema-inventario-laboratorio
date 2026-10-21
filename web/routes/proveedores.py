@@ -1,20 +1,22 @@
 """
 routes/proveedores.py — CRUD 3: Proveedores.
 RF-11 (registrar), RF-12 (modificar), RF-13 (consultar), RN-16 (un
-proveedor suministra varios productos: se muestran sus precios).
+proveedor suministra varios productos con su precio: tabla puente
+proveedor_producto, que se administra desde la ficha del proveedor).
 
 Consultar: todos los roles. Registrar/modificar/dar de baja: Administrador.
 "Eliminar" es baja lógica vía `estado`, igual que Categorías y Productos
 (lote.id_proveedor tiene ON DELETE RESTRICT).
 """
 import re
+from decimal import Decimal, InvalidOperation
 
 import psycopg
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from db import query_all, query_one, query_page, execute, mensaje_error
-from routes.auth import login_required, rol_requerido, ADMIN
+from routes.auth import login_required, rol_requerido, tiene_rol, ADMIN
 
 bp = Blueprint("proveedores", __name__, url_prefix="/proveedores")
 
@@ -74,7 +76,7 @@ def detalle(id_proveedor):
         return redirect(url_for("proveedores.listar"))
     productos = query_all(
         """
-        SELECT p.codigo, p.nombre, p.unidad_medida, pp.precio_compra
+        SELECT pp.id_producto, p.codigo, p.nombre, p.unidad_medida, pp.precio_compra
         FROM proveedor_producto pp
         JOIN producto p ON p.id_producto = pp.id_producto
         WHERE pp.id_proveedor = %s
@@ -82,7 +84,9 @@ def detalle(id_proveedor):
         """,
         (id_proveedor,),
     )
-    return render_template("proveedores/detalle.html", proveedor=proveedor, productos=productos)
+    # Solo el administrador ve el formulario para asignar productos.
+    catalogo = query_all("SELECT codigo, nombre FROM producto WHERE estado ORDER BY nombre") if tiene_rol(ADMIN) else []
+    return render_template("proveedores/detalle.html", proveedor=proveedor, productos=productos, catalogo=catalogo)
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
@@ -172,3 +176,48 @@ def alternar_estado(id_proveedor):
 
     flash("Proveedor activado." if nuevo_estado else "Proveedor desactivado.", "success")
     return redirect(url_for("proveedores.listar"))
+
+
+@bp.route("/<int:id_proveedor>/productos", methods=["POST"])
+@rol_requerido(ADMIN)
+def guardar_producto(id_proveedor):
+    """Asigna un producto al proveedor o, si ya lo tenía, actualiza su precio (RN-16)."""
+    codigo = (request.form.get("producto") or "").split(" — ")[0].strip()
+    producto = query_one("SELECT id_producto FROM producto WHERE codigo = %s AND estado", (codigo,)) if codigo else None
+    try:
+        precio = Decimal((request.form.get("precio_compra") or "").replace(",", "."))
+    except InvalidOperation:
+        precio = None
+    if producto is None:
+        flash("Seleccione un producto activo de la lista.", "danger")
+    elif precio is None or precio < 0 or precio.as_tuple().exponent < -2:
+        flash("El precio de compra debe ser cero o mayor (hasta 2 decimales).", "danger")
+    else:
+        try:
+            execute(
+                """
+                INSERT INTO proveedor_producto (id_proveedor, id_producto, precio_compra)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (id_proveedor, id_producto) DO UPDATE SET precio_compra = EXCLUDED.precio_compra
+                """,
+                (id_proveedor, producto["id_producto"], precio),
+            )
+            flash("Producto y precio guardados para este proveedor.", "success")
+        except psycopg.errors.ForeignKeyViolation:
+            flash("El proveedor solicitado no existe.", "warning")
+            return redirect(url_for("proveedores.listar"))
+        except Exception as exc:
+            flash(mensaje_error(exc, "No se pudo guardar el producto. Intente más tarde."), "danger")
+    return redirect(url_for("proveedores.detalle", id_proveedor=id_proveedor))
+
+
+@bp.route("/<int:id_proveedor>/productos/<int:id_producto>/quitar", methods=["POST"])
+@rol_requerido(ADMIN)
+def quitar_producto(id_proveedor, id_producto):
+    """Quita el vínculo proveedor-producto. No afecta lotes ni movimientos ya registrados."""
+    try:
+        execute("DELETE FROM proveedor_producto WHERE id_proveedor = %s AND id_producto = %s", (id_proveedor, id_producto))
+        flash("Producto quitado del proveedor.", "success")
+    except Exception as exc:
+        flash(mensaje_error(exc, "No se pudo quitar el producto. Intente más tarde."), "danger")
+    return redirect(url_for("proveedores.detalle", id_proveedor=id_proveedor))

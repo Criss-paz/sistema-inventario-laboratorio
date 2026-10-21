@@ -18,10 +18,13 @@
   <dt>Dirección</dt><dd>{{ proveedor.direccion or '—' }}</dd>
 </dl>
 
-<h2>Productos que suministra <span class="subtitle">último precio de compra (RN-16)</span></h2>
+<h2>Productos que suministra <span class="subtitle">precio de compra acordado (RN-16)</span></h2>
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Código</th><th>Producto</th><th>Unidad</th><th class="num">Precio (Q)</th></tr></thead>
+    <thead>
+      <tr><th>Código</th><th>Producto</th><th>Unidad</th><th class="num">Precio (Q)</th>
+        {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
+    </thead>
     <tbody>
       {% for p in productos %}
       <tr>
@@ -29,11 +32,36 @@
         <td>{{ p.nombre }}</td>
         <td>{{ p.unidad_medida }}</td>
         <td class="num">{{ '%.2f'|format(p.precio_compra) }}</td>
+        {% if tiene_rol(ADMIN) %}
+        <td class="actions">
+          <form method="post"
+                action="{{ url_for('proveedores.quitar_producto', id_proveedor=proveedor.id_proveedor, id_producto=p.id_producto) }}"
+                onsubmit="return confirm('¿Quitar ' + {{ p.nombre|tojson }} + ' de este proveedor?');">
+            <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
+          </form>
+        </td>
+        {% endif %}
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="4">{{ i.vacio('Este proveedor no tiene productos con precio registrado. Los precios se registran con cada entrada.', 'productos') }}</td></tr>
+      <tr class="empty-row"><td colspan="5">{{ i.vacio('Este proveedor todavía no tiene productos asignados.', 'productos') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+{% if tiene_rol(ADMIN) %}
+<form class="card" method="post" action="{{ url_for('proveedores.guardar_producto', id_proveedor=proveedor.id_proveedor) }}">
+  <h2>Asignar producto o cambiar precio</h2>
+  <label for="producto">Producto</label>
+  <input list="lista-productos" id="producto" name="producto" required autocomplete="off" placeholder="Escriba el nombre o el código">
+  <datalist id="lista-productos">
+    {% for p in catalogo %}<option value="{{ p.codigo }} — {{ p.nombre }}">{% endfor %}
+  </datalist>
+  <label for="precio_compra">Precio de compra (Q) <span class="hint">(si el producto ya está asignado, se reemplaza su precio)</span></label>
+  <input type="number" id="precio_compra" name="precio_compra" required min="0" step="0.01">
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Guardar</button>
+  </div>
+</form>
+{% endif %}
 {% endblock %}
