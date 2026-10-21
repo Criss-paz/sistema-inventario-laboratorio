@@ -70,7 +70,7 @@
           {% for mv in ultimos %}
           <tr>
             <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">{{ mv.fecha_hora.strftime('%d/%m %H:%M') }}</a></td>
-            <td><span class="badge {{ 'badge-on' if mv.tipo_movimiento == 'ENTRADA' else 'badge-out' }}">{{ mv.tipo_movimiento|capitalize }}</span></td>
+            <td><span class="badge {{ 'badge-out' if mv.tipo_movimiento == 'SALIDA' else 'badge-on' }}">{{ mv.tipo_movimiento|capitalize }}</span></td>
             <td>{{ mv.producto }}</td>
             <td class="num">{{ m.cantidad(mv.cantidad) }}</td>
           </tr>

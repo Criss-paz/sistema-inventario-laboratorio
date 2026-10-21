@@ -49,7 +49,8 @@
       <tr>
         <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=f.id_movimiento) }}">{{ f.fecha_hora.strftime('%d/%m/%Y') }}</a></td>
         <td class="obs">{{ f.observacion or f.tipo_movimiento|capitalize }}</td>
-        {% if f.tipo_movimiento == 'ENTRADA' %}
+        {# La devolución suma al saldo: va en Entradas, al costo promedio vigente (RN-23). #}
+        {% if f.tipo_movimiento in ('ENTRADA', 'DEVOLUCION') %}
           <td class="num">{{ m.cantidad(f.cantidad_entrada) }}</td><td class="num">{{ f.costo_unitario_entrada|q }}</td><td class="num">{{ f.total_entrada|q }}</td>
           <td class="num vacio-celda"></td><td class="num vacio-celda"></td><td class="num vacio-celda"></td>
         {% else %}
