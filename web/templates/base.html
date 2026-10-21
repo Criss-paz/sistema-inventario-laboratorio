@@ -3,20 +3,26 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Control de inventario del Laboratorio Privado Quetzaltenango: lotes, vencimientos, entradas y salidas.">
-  <meta name="theme-color" content="#123247">
+  <meta name="theme-color" content="#14181d">
   <title>{% block title %}Inventario Laboratorio{% endblock %}</title>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-  <link rel="preload" href="{{ url_for('static', filename='fonts/atkinson-next-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/schibsted-grotesk.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {# Tema guardado antes de pintar, para que no parpadee al cargar. #}
+  <script>try { var t = localStorage.getItem('inventario-tema'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 </head>
-<body class="{% block body_class %}{% endblock %}">
+{% set con_menu = session.get('id_usuario') %}
+<body class="{{ 'con-menu' if con_menu else '' }} {% block body_class %}{% endblock %}">
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
-  {% if session.get('id_usuario') %}
+  {% if con_menu %}
+  {% set nombre = session.get('nombre_usuario') or '' %}
+  {% set partes = nombre.split() %}
+  {% set iniciales = ((partes[0][0] if partes else '') ~ (partes[1][0] if partes|length > 1 else ''))|upper %}
   <div class="app">
-    <aside class="sidebar" aria-label="Menú principal">
+    <aside class="sidebar" id="sidebar" aria-label="Menú principal">
       <a class="brand" href="{{ url_for('index') }}">
         <span class="brand-mark">{{ i.icono('marca') }}</span>
         <span class="brand-text">
@@ -25,10 +31,10 @@
         </span>
       </a>
 
-      <nav class="menu">
+      <nav class="menu" id="menu-principal">
         {% set actual = request.endpoint or '' %}
         {% set grupos = [
-             ('Operación', [('reportes.inicio', 'Inicio', 'inicio'),
+             ('Operación', [('reportes.inicio', 'Panel', 'inicio'),
                             ('movimientos.historial', 'Movimientos', 'movimientos'),
                             ('lotes.listar', 'Lotes', 'lotes'),
                             ('informes.index', 'Reportes', 'reporte')]),
@@ -49,58 +55,82 @@
           {% set activo = actual == endpoint
                 or (modulo not in ('reportes', 'informes') and actual.startswith(modulo ~ '.'))
                 or (endpoint == 'informes.index' and (actual.startswith('informes.') or actual in ('reportes.inventario_bajo', 'reportes.por_vencer'))) %}
-          <li><a href="{{ url_for(endpoint) }}" {% if activo %}class="active" aria-current="page"{% endif %}>{{ i.icono(icono) }}{{ texto }}</a></li>
+          <li><a href="{{ url_for(endpoint) }}" data-pantalla="{{ texto }}" data-icono="{{ icono }}" {% if activo %}class="active" aria-current="page"{% endif %}>{{ i.icono(icono) }}{{ texto }}</a></li>
           {% endfor %}
         </ul>
         {% endfor %}
       </nav>
 
-      <div class="user-box">
-        <div class="user-info">
-          <span class="user-name">{{ session.get('nombre_usuario') }}</span>
-          <span class="user-role">{{ session.get('nombre_rol') }}</span>
-        </div>
-        <a class="icon-btn icon-btn-neutro" href="{{ url_for('auth.cambiar_contrasena') }}" title="Cambiar mi contraseña" aria-label="Cambiar mi contraseña">{{ i.icono('clave') }}</a>
-        <form action="{{ url_for('auth.logout') }}" method="post">
-          <button type="submit" class="icon-btn" title="Cerrar sesión" aria-label="Cerrar sesión">{{ i.icono('salir') }}</button>
-        </form>
+      <div class="side-foot">
+        <span class="live"><i></i><span>Conectado</span></span>
+        <span>Universidad Mariano Gálvez</span>
       </div>
     </aside>
+    <div class="side-scrim" id="side-scrim"></div>
 
-    <main id="contenido" tabindex="-1">
-      <div id="flash-stack" role="status" aria-live="polite">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% for category, message in messages %}
-            <div class="flash flash-{{ category }}">{{ message }}</div>
-          {% endfor %}
-        {% endwith %}
-      </div>
-      {% block content %}{% endblock %}
-    </main>
-  </div>
-  {% else %}
-  <main id="contenido" tabindex="-1">
-    <div id="flash-stack" role="status" aria-live="polite">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endwith %}
+    <div class="principal">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menu-btn" type="button" aria-label="Abrir menú" aria-controls="sidebar">{{ i.icono('menu') }}</button>
+        <button class="search-trigger" id="search-trigger" type="button" data-buscar="{{ url_for('reportes.buscar') }}">
+          {{ i.icono('buscar') }}
+          <span class="search-trigger-text">Buscar producto o pantalla</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+        <div class="top-right">
+          <button class="icon-btn" id="theme-btn" type="button" aria-label="Cambiar entre tema claro y oscuro" title="Tema claro u oscuro">
+            <span class="tema-claro">{{ i.icono('sol') }}</span><span class="tema-oscuro" hidden>{{ i.icono('luna') }}</span>
+          </button>
+          <div class="user-menu">
+            <button id="user-menu-btn" class="user-chip" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="user-dropdown">
+              <span class="avatar" aria-hidden="true">{{ iniciales }}</span>
+              <span class="user-chip-text"><b>{{ nombre }}</b><small>{{ session.get('nombre_rol') }}</small></span>
+              <span class="user-chev">{{ i.icono('abajo') }}</span>
+            </button>
+            <div id="user-dropdown" class="desplegable" role="menu" hidden>
+              <a class="menu-item" role="menuitem" href="{{ url_for('auth.cambiar_contrasena') }}">{{ i.icono('clave') }}Cambiar mi contraseña</a>
+              <form action="{{ url_for('auth.logout') }}" method="post">
+                <button type="submit" class="menu-item menu-item-danger" role="menuitem">{{ i.icono('salir') }}Cerrar sesión</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main id="contenido" class="contenido" tabindex="-1">
+        <div class="vista">
+          {% block content %}{% endblock %}
+        </div>
+      </main>
     </div>
+  </div>
+
+  <div class="palette-backdrop" id="palette" hidden>
+    <div class="palette" role="dialog" aria-modal="true" aria-label="Buscar">
+      <div class="palette-input">
+        {{ i.icono('buscar') }}
+        <input id="palette-q" placeholder="Busca un producto por nombre o código, o una pantalla" autocomplete="off" spellcheck="false"
+               role="combobox" aria-expanded="true" aria-controls="palette-list">
+        <kbd>Esc</kbd>
+      </div>
+      <ul id="palette-list" class="palette-list" role="listbox"></ul>
+    </div>
+  </div>
+  <div class="tip" id="tip" role="tooltip"></div>
+  {% else %}
+  <main id="contenido" class="contenido" tabindex="-1">
     {{ self.content() }}
   </main>
   {% endif %}
 
-  <script>
-    // Los avisos de éxito e información se retiran solos; los de error se
-    // quedan hasta que el usuario los lea (no desaparece lo que hay que corregir).
-    document.querySelectorAll('#flash-stack .flash-success, #flash-stack .flash-info').forEach(function (el, n) {
-      setTimeout(function () {
-        el.classList.add('saliendo');
-        setTimeout(function () { el.remove(); }, 250);
-      }, 5000 + n * 300);
-    });
-  </script>
+  <div id="flash-stack" role="status" aria-live="polite">
+    {%- with messages = get_flashed_messages(with_categories=true) -%}
+      {%- for category, message in messages -%}
+        <div class="flash flash-{{ category }}"><span>{{ message }}</span><button type="button" class="flash-cerrar" aria-label="Cerrar aviso">×</button></div>
+      {%- endfor -%}
+    {%- endwith -%}
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

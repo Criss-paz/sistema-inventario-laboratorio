@@ -20,7 +20,7 @@
     <span class="stat-label">Activos</span>
   </div>
   <div class="stat-card">
-    <span class="stat-value stat-info">{{ resumen.con_existencia }}</span>
+    <span class="stat-value">{{ resumen.con_existencia }}</span>
     <span class="stat-label">Con existencia</span>
   </div>
   <div class="stat-card">
@@ -40,37 +40,38 @@
   <table>
     <thead>
       <tr>
-        <th>Código</th><th>Nombre</th><th>Categoría</th><th>Presentación</th>
-        <th class="num">Existencia</th><th class="num">Mínimo</th>
-        <th class="num">Costo unitario (Q)</th><th class="num">Valor en existencia (Q)</th>
-        <th>Vence</th><th>Estado</th>
-        {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}
+        <th>Código</th><th>Producto</th><th class="num">Existencia</th>
+        <th class="num">Costo unitario (Q)</th><th class="num">Valor (Q)</th><th>Estado</th>
+        {% if tiene_rol(ADMIN) %}<th></th>{% endif %}
       </tr>
     </thead>
     <tbody>
       {% for p in productos %}
+      {% set ex = p.existencia_utilizable %}
+      {% set tope = [ex, p.stock_minimo * 2, 1]|max %}
       <tr class="{{ '' if p.estado else 'inactivo' }}">
-        <td><code>{{ p.codigo }}</code></td>
-        <td><strong>{{ p.nombre }}</strong></td>
-        <td>{{ p.nombre_categoria }}</td>
-        <td>{{ p.unidad_medida }}</td>
-        <td class="num {{ 'alerta' if p.estado and p.existencia_utilizable <= p.stock_minimo else '' }}">
-          {{ m.cantidad(p.existencia_utilizable) }}
-          {% if p.existencia_vencida > 0 %}<span class="hint" title="Existencia en lotes vencidos">(+{{ m.cantidad(p.existencia_vencida) }} vencida)</span>{% endif %}
+        <td class="code"><code>{{ p.codigo }}</code></td>
+        <td class="prod">
+          <b>{{ p.nombre }}</b>
+          <span>{{ p.nombre_categoria|capitalize }}, {{ p.unidad_medida|lower }}{{ ', con vencimiento' if p.requiere_vencimiento else '' }}</span>
         </td>
-        <td class="num">{{ m.cantidad(p.stock_minimo) }}</td>
+        <td class="num">
+          <div class="stock" title="Mínimo {{ m.cantidad(p.stock_minimo) }}">
+            <b class="{{ 'zero' if ex <= 0 else '' }}">{{ m.cantidad(ex) }}</b>
+            <span class="meter"><i class="{{ 'out' if ex <= 0 else ('low' if ex <= p.stock_minimo else '') }}" style="width:{{ ((ex / tope) * 100)|round(1) }}%"></i>{% if p.stock_minimo %}<u style="left:calc({{ ((p.stock_minimo / tope) * 100)|round(1) }}% - 1px)"></u>{% endif %}</span>
+          </div>
+          {% if p.existencia_vencida > 0 %}<span class="hint" title="Existencia en lotes vencidos">+{{ m.cantidad(p.existencia_vencida) }} vencida</span>{% endif %}
+        </td>
         {# El producto no guarda precio: es el costo promedio ponderado móvil
            del kardex. Un producto sin movimientos aún no tiene costo. #}
         {% set v = valores.get(p.id_producto) %}
         <td class="num">{{ '{:,.2f}'.format(v.costo_promedio) if v and v.costo_promedio else '—' }}</td>
         <td class="num">{{ '{:,.2f}'.format(v.valor_inventario) if v and v.valor_inventario else '—' }}</td>
-        <td>{{ 'Sí' if p.requiere_vencimiento else 'No' }}</td>
         <td>
-          {% if p.estado %}
-            <span class="badge badge-on">Activo</span>
-          {% else %}
-            <span class="badge badge-off">Inactivo</span>
-          {% endif %}
+          {% if not p.estado %}<span class="tag none">Inactivo</span>
+          {% elif ex <= 0 %}<span class="tag red">Agotado</span>
+          {% elif ex <= p.stock_minimo %}<span class="tag orange">Por reponer</span>
+          {% else %}<span class="tag green">Disponible</span>{% endif %}
         </td>
         {% if tiene_rol(ADMIN) %}
         <td class="actions">
@@ -84,7 +85,7 @@
       </tr>
       {% else %}
       <tr class="empty-row">
-        <td colspan="{{ 11 if tiene_rol(ADMIN) else 10 }}">
+        <td colspan="{{ 7 if tiene_rol(ADMIN) else 6 }}">
           <div class="empty-state">
             {{ i.icono('productos', 'empty-icon') }}
             <p>{{ 'Ningún producto coincide con el filtro.' if q or id_categoria else 'No hay productos registrados todavía.' }}</p>

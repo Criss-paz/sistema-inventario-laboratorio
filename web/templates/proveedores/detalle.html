@@ -13,9 +13,10 @@
 </div>
 
 <dl class="ficha">
-  <dt>Teléfono</dt><dd>{{ proveedor.telefono or '—' }}</dd>
-  <dt>Correo</dt><dd>{{ proveedor.correo or '—' }}</dd>
-  <dt>Dirección</dt><dd>{{ proveedor.direccion or '—' }}</dd>
+  <div><dt>Teléfono</dt><dd>{{ proveedor.telefono or '—' }}</dd></div>
+  <div><dt>Correo</dt><dd>{{ proveedor.correo or '—' }}</dd></div>
+  <div><dt>Dirección</dt><dd>{{ proveedor.direccion or '—' }}</dd></div>
+  <div><dt>Productos que suministra</dt><dd>{{ productos|length }}</dd></div>
 </dl>
 
 <h2>Productos que suministra <span class="subtitle">precio de compra acordado (RN-16)</span></h2>

@@ -9,7 +9,7 @@ aquí no se lee la tabla movimiento (rol_consulta solo ve la vista).
 """
 import datetime as dt
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, jsonify, render_template, request, url_for
 
 from db import query_all, query_one, query_page
 from routes.auth import login_required
@@ -27,36 +27,129 @@ def _pagina():
     return int(pagina) if pagina.isdigit() else 1
 
 
+MESES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
+         "septiembre", "octubre", "noviembre", "diciembre")
+
+
+def _calendario(lotes, hoy):
+    """Agrupa los lotes con existencia por mes de vencimiento (presentación):
+    una columna de vencidos, los 12 meses desde el actual y "Después"."""
+    columnas = [{"clave": "vencidos", "titulo": "Vencidos", "anio": "", "hoy": False, "lotes": []}]
+    for n in range(12):
+        mes = (hoy.month - 1 + n) % 12 + 1
+        anio = hoy.year + (hoy.month - 1 + n) // 12
+        columnas.append({"clave": (anio, mes), "titulo": MESES[mes - 1][:3],
+                         "anio": str(anio)[2:] if n == 0 or mes == 1 else "", "hoy": n == 0, "lotes": []})
+    columnas.append({"clave": "despues", "titulo": "Después", "anio": "", "hoy": False, "lotes": []})
+    por_clave = {c["clave"]: c for c in columnas}
+    for l in lotes:
+        if l["dias"] < 0:
+            por_clave["vencidos"]["lotes"].append(l)
+        else:
+            por_clave.get((l["fecha_vencimiento"].year, l["fecha_vencimiento"].month), columnas[-1])["lotes"].append(l)
+    return columnas
+
+
 @bp.route("/inicio")
 @login_required
 def inicio():
+    """Panel "Bodega hoy" (diseño de SIGAL). Todas las cifras salen de las
+    vistas y tablas que el rol del usuario puede leer (S7: nada se recalcula
+    ni se guarda en la app)."""
+    hoy = dt.date.today()
     resumen = query_one(
         """
         SELECT
           (SELECT count(*) FROM producto WHERE estado) AS productos_activos,
-          (SELECT count(*) FROM vw_existencia_producto WHERE existencia_utilizable > 0) AS con_existencia,
-          (SELECT count(*) FROM vw_inventario_bajo b
-            WHERE EXISTS (SELECT 1 FROM lote l WHERE l.id_producto = b.id_producto)) AS bajo_con_historial,
-          (SELECT count(*) FROM vw_lotes_por_vencer WHERE situacion = 'VENCIDO') AS lotes_vencidos,
+          (SELECT count(*) FROM vw_existencia_producto WHERE estado AND existencia_utilizable > 0) AS con_existencia,
+          (SELECT coalesce(sum(valor_inventario), 0) FROM vw_valorizacion_inventario) AS valor_bodega,
           (SELECT count(*) FROM vw_lotes_por_vencer WHERE situacion = 'POR VENCER') AS lotes_por_vencer,
-          (SELECT count(DISTINCT id_movimiento) FROM vw_historial_movimientos
-            WHERE fecha_hora >= CURRENT_DATE - 30) AS movimientos_30_dias
+          (SELECT count(*) FROM vw_lotes_por_vencer WHERE situacion = 'VENCIDO') AS lotes_vencidos,
+          (SELECT count(*) FROM vw_inventario_bajo b
+            WHERE b.existencia_utilizable > 0
+              AND EXISTS (SELECT 1 FROM lote l WHERE l.id_producto = b.id_producto)) AS bajo_minimo,
+          (SELECT count(*) FROM vw_existencia_producto e
+            WHERE e.estado AND e.existencia_utilizable <= 0
+              AND EXISTS (SELECT 1 FROM lote l WHERE l.id_producto = e.id_producto)) AS agotados
         """
     )
-    por_vencer = query_all(
-        "SELECT * FROM vw_lotes_por_vencer ORDER BY fecha_vencimiento, producto LIMIT 8"
-    )
-    ultimos = query_all(
+    lotes = query_all(
         """
-        SELECT id_movimiento, fecha_hora, tipo_movimiento, producto, cantidad, unidad_medida, nombre_usuario
+        SELECT l.id_lote, l.numero_lote, p.nombre AS producto, p.unidad_medida, l.fecha_vencimiento,
+               l.cantidad_disponible, l.fecha_vencimiento - CURRENT_DATE AS dias
+        FROM lote l
+        JOIN producto p ON p.id_producto = l.id_producto
+        WHERE l.estado AND l.cantidad_disponible > 0 AND l.fecha_vencimiento IS NOT NULL
+        ORDER BY l.fecha_vencimiento, p.nombre
+        """
+    )
+    sin_fecha = query_one(
+        "SELECT count(*) AS n FROM lote WHERE estado AND cantidad_disponible > 0 AND fecha_vencimiento IS NULL"
+    )["n"]
+    # Reponer primero: bajo el mínimo, primero los agotados y después los que
+    # más se consumen (salidas de los últimos 60 días).
+    reponer = query_all(
+        """
+        SELECT b.id_producto, b.codigo, b.nombre, b.unidad_medida, b.stock_minimo, b.existencia_utilizable,
+               coalesce(c.consumo, 0) AS consumo_60
+        FROM vw_inventario_bajo b
+        LEFT JOIN (SELECT id_producto, sum(cantidad) AS consumo
+                     FROM vw_historial_movimientos
+                    WHERE tipo_movimiento = 'SALIDA' AND fecha_hora >= CURRENT_DATE - 60
+                    GROUP BY id_producto) c ON c.id_producto = b.id_producto
+        WHERE EXISTS (SELECT 1 FROM lote l WHERE l.id_producto = b.id_producto)
+        ORDER BY (b.existencia_utilizable > 0), coalesce(c.consumo, 0) DESC, b.nombre
+        LIMIT 7
+        """
+    )
+    actividad = query_all(
+        """
+        SELECT id_movimiento, tipo_movimiento, codigo, producto, unidad_medida, max(fecha_hora) AS fecha_hora,
+               sum(cantidad) AS cantidad
         FROM vw_historial_movimientos
-        ORDER BY fecha_hora DESC, id_movimiento DESC
-        LIMIT 8
+        WHERE fecha_hora >= CURRENT_DATE - 14
+        GROUP BY id_movimiento, tipo_movimiento, codigo, producto, unidad_medida
+        ORDER BY max(fecha_hora) DESC, id_movimiento DESC
+        LIMIT 9
         """
     )
     return render_template(
-        "reportes/inicio.html", resumen=resumen, por_vencer=por_vencer, ultimos=ultimos, hoy=dt.date.today(),
+        "reportes/inicio.html", resumen=resumen, calendario=_calendario(lotes, hoy), sin_fecha=sin_fecha,
+        reponer=reponer, actividad=actividad, hoy=hoy, mes=MESES[hoy.month - 1],
     )
+
+
+@bp.route("/buscar")
+@login_required
+def buscar():
+    """Búsqueda rápida de la barra superior (Ctrl K): productos activos por
+    nombre o código, con su existencia utilizable. Responde JSON."""
+    q = (request.args.get("q") or "").strip()[:60]
+    if len(q) < 2:
+        return jsonify([])
+    filas = query_all(
+        """
+        SELECT id_producto, codigo, nombre, unidad_medida, existencia_utilizable
+        FROM vw_existencia_producto
+        WHERE estado AND (nombre ILIKE %s OR codigo ILIKE %s)
+        ORDER BY (codigo ILIKE %s) DESC, nombre
+        LIMIT 12
+        """,
+        (f"%{q}%", f"%{q}%", f"{q}%"),
+    )
+    def _existencia(valor, unidad):
+        """Igual que la macro con_unidad: "1 unidad", "3 unidades", "2 cajas"."""
+        u = (unidad or "").lower()
+        if valor != 1 and u:
+            u += "s" if u[-1] in "aeiou" else "es"
+        return f"{valor:,.2f}".rstrip("0").rstrip(".") + f" {u}"
+
+    return jsonify([
+        {"codigo": f["codigo"], "nombre": f["nombre"],
+         "existencia": _existencia(f["existencia_utilizable"], f["unidad_medida"]),
+         "url": url_for("informes.kardex", id_producto=f["id_producto"])}
+        for f in filas
+    ])
 
 
 @bp.route("/inventario-bajo")

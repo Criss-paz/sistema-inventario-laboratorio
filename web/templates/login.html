@@ -5,31 +5,34 @@
 {% block content %}
 <div class="login-wrap">
   <section class="login-panel" aria-label="Laboratorio">
-    <div class="brand">
-      <span class="brand-mark">{{ i.icono('marca') }}</span>
-      <span class="brand-text">
-        <strong>Inventario</strong>
-        <span>Laboratorio Privado Quetzaltenango</span>
-      </span>
+    <div class="auth-center">
+      <span class="auth-logo-xl">{{ i.icono('marca') }}</span>
+      <h2 class="auth-name">Inventario</h2>
+      <p class="auth-tag">Sistema de gestión y control de inventario del Laboratorio Privado Quetzaltenango</p>
+      {# Puntos de "inventario": la mayoría en calma, algunos por vencer (ámbar, naranja) y vencidos (rojo). #}
+      <div class="auth-dots" aria-hidden="true">
+        {% for n in range(42) %}<i class="{{ 'a' if n % 11 == 3 else ('o' if n % 13 == 7 else ('r' if n % 17 == 12 else '')) }}" style="animation-delay: {{ (n * 0.015)|round(3) }}s"></i>{% endfor %}
+      </div>
     </div>
-    <div>
-      <h1>Cada reactivo, con su lote y su fecha de vencimiento.</h1>
-      <p>Registre entradas y salidas, consulte existencias por lote y vea a tiempo lo que está por vencer o por agotarse.</p>
-    </div>
-    <footer>Universidad Mariano Gálvez, curso de Bases de Datos</footer>
+    <p class="auth-credit">Universidad Mariano Gálvez, curso de Bases de Datos</p>
   </section>
 
   <section class="login-form-side">
     <div class="login-card">
+      <span class="auth-logo-mobile">{{ i.icono('marca') }}</span>
       <h2>Iniciar sesión</h2>
-      <p class="login-subtitle">Use el usuario que le asignó el administrador.</p>
+      <p class="login-subtitle">Use el usuario y la contraseña que le asignó el administrador.</p>
 
       <form class="card" method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
         <label for="usuario">Usuario</label>
         <input type="text" id="usuario" name="usuario" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false">
 
         <label for="password">Contraseña</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
+        <div class="pass-wrap">
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+          <button type="button" class="pass-toggle" aria-label="Mostrar contraseña" aria-pressed="false"
+                  onclick="var c=document.getElementById('password');var v=c.type==='password';c.type=v?'text':'password';this.setAttribute('aria-pressed',v);this.setAttribute('aria-label',v?'Ocultar contraseña':'Mostrar contraseña');">{{ i.icono('ojo') }}</button>
+        </div>
 
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Entrar</button>

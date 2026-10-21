@@ -1,83 +1,120 @@
 {% extends "base.html" %}
 {% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
-{% block title %}Inicio — Inventario Laboratorio{% endblock %}
+{% block title %}Panel — Inventario Laboratorio{% endblock %}
+{% set dias_semana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'] %}
 {% block content %}
 <div class="top-actions">
-  <h1>Inicio<span class="subtitle">Estado del inventario hoy, {{ hoy.strftime('%d/%m/%Y') }}</span></h1>
+  <h1>Bodega hoy<span class="subtitle">{{ dias_semana[hoy.weekday()]|capitalize }} {{ hoy.day }} de {{ mes }} de {{ hoy.year }}</span></h1>
   {% if tiene_rol(ADMIN, ENCARGADO) %}
   <div class="actions">
-    <a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">{{ i.icono('mas') }}Registrar entrada</a>
-    <a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">{{ i.icono('menos') }}Registrar salida</a>
+    <a class="btn" href="{{ url_for('movimientos.salida') }}">{{ i.icono('salidas') }}Registrar salida</a>
+    <a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">{{ i.icono('entradas') }}Registrar entrada</a>
   </div>
   {% endif %}
 </div>
 
-<div class="stat-row">
+<section class="stat-row" aria-label="Resumen de bodega">
   <a class="stat-card" href="{{ url_for('productos.listar') }}">
-    <span class="stat-value">{{ resumen.con_existencia }}<small> / {{ resumen.productos_activos }}</small></span>
-    <span class="stat-label">Productos con existencia</span>
+    <span class="stat-value">{{ m.cantidad(resumen.con_existencia) }}<small>de {{ m.cantidad(resumen.productos_activos) }} productos</small></span>
+    <span class="stat-label">Con existencias</span>
   </a>
-  <a class="stat-card" href="{{ url_for('reportes.inventario_bajo') }}">
-    <span class="stat-value {{ 'stat-danger' if resumen.bajo_con_historial else 'stat-ok' }}">{{ resumen.bajo_con_historial }}</span>
-    <span class="stat-label">En inventario bajo</span>
-  </a>
-  <a class="stat-card" href="{{ url_for('reportes.por_vencer', situacion='VENCIDO') }}">
-    <span class="stat-value {{ 'stat-danger' if resumen.lotes_vencidos else 'stat-ok' }}">{{ resumen.lotes_vencidos }}</span>
-    <span class="stat-label">Lotes vencidos con existencia</span>
+  <a class="stat-card" href="{{ url_for('informes.inventario') }}">
+    <span class="stat-value">Q{{ resumen.valor_bodega|q }}</span>
+    <span class="stat-label">Valor en bodega</span>
   </a>
   <a class="stat-card" href="{{ url_for('reportes.por_vencer', situacion='POR VENCER') }}">
-    <span class="stat-value stat-info">{{ resumen.lotes_por_vencer }}</span>
-    <span class="stat-label">Lotes que vencen en 90 días</span>
+    <span class="stat-value {{ 'stat-warn' if resumen.lotes_por_vencer else 'stat-ok' }}">{{ resumen.lotes_por_vencer }}<small>lotes</small></span>
+    <span class="stat-label">Vencen en 90 días</span>
   </a>
-  <a class="stat-card" href="{{ url_for('movimientos.historial') }}">
-    <span class="stat-value stat-muted">{{ resumen.movimientos_30_dias }}</span>
-    <span class="stat-label">Movimientos en 30 días</span>
+  <a class="stat-card" href="{{ url_for('reportes.inventario_bajo') }}">
+    <span class="stat-value {{ 'stat-warn' if resumen.bajo_minimo else 'stat-ok' }}">{{ resumen.bajo_minimo }}<small>con existencias</small></span>
+    <span class="stat-label">Bajo el mínimo</span>
   </a>
-</div>
+  <a class="stat-card" href="{{ url_for('reportes.inventario_bajo') }}">
+    <span class="stat-value {{ 'stat-danger' if resumen.agotados else 'stat-ok' }}">{{ resumen.agotados }}<small>con historial</small></span>
+    <span class="stat-label">Agotados</span>
+  </a>
+</section>
 
-<div class="dos-columnas">
-  <section>
-    <h2>Próximos a vencer <a class="hint" href="{{ url_for('reportes.por_vencer') }}">ver todos</a></h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th class="num">Existencia</th></tr></thead>
-        <tbody>
-          {% for l in por_vencer %}
-          <tr>
-            <td>{{ l.producto }}</td>
-            <td><a href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"><span class="lote">{{ l.numero_lote }}</span></a></td>
-            <td>
-              {{ l.fecha_vencimiento.strftime('%d/%m/%Y') }}
-              {% if l.situacion == 'VENCIDO' %}<span class="badge badge-danger">Vencido</span>
-              {% else %}<span class="badge badge-warn">{{ l.dias_para_vencer }} días</span>{% endif %}
-            </td>
-            <td class="num">{{ m.cantidad(l.cantidad_disponible) }}</td>
-          </tr>
-          {% else %}
-          <tr class="empty-row"><td colspan="4">{{ i.vacio('Ningún lote vence en los próximos 90 días.', 'ok') }}</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<section class="sheet" aria-labelledby="cal-t">
+  <div class="sheet-head">
+    <h2 id="cal-t">Calendario de vencimientos</h2>
+    <p>Cada punto es un lote con existencia. Pase el cursor o tóquelo para ver el detalle.</p>
+    <div class="cal-legend" aria-hidden="true">
+      <span><i style="background:var(--st-red)"></i>Vencido</span><span><i style="background:var(--st-orange)"></i>30 días</span>
+      <span><i style="background:var(--amber)"></i>90 días</span><span><i style="background:var(--dot-calm)"></i>Más adelante</span>
     </div>
+  </div>
+  <div class="cal">
+    {% for c in calendario %}
+    {% set ci = loop.index0 %}
+    <div class="cal-col {{ 'now' if c.hoy else '' }}">
+      <div class="cal-dots">
+        {% for l in c.lotes %}
+        {% set clase = 'red' if l.dias < 0 else ('orange' if l.dias <= 30 else ('amber' if l.dias <= 90 else '')) %}
+        {% set cuando = ('venció hace ' ~ (-l.dias) ~ ' días') if l.dias < 0 else ('vence hoy' if l.dias == 0 else 'vence en ' ~ l.dias ~ ' días') %}
+        <a class="dot {{ clase }}" style="--i:{{ loop.index0 }};--c:{{ ci }}" href="{{ url_for('lotes.detalle', id_lote=l.id_lote) }}"
+           data-tip-titulo="{{ l.producto }}"
+           data-tip-texto="Lote {{ l.numero_lote }}, {{ l.fecha_vencimiento.strftime('%d/%m/%Y') }}, {{ cuando }}. Existencia: {{ m.con_unidad(l.cantidad_disponible, l.unidad_medida) }}."
+           aria-label="{{ l.producto }}, lote {{ l.numero_lote }}, {{ cuando }}"></a>
+        {% endfor %}
+      </div>
+      <div class="cal-foot">
+        <b>{{ c.titulo }}{% if c.anio %} <em>{{ c.anio }}</em>{% endif %}</b>
+        <span>{% if c.lotes %}{{ c.lotes|length }} {{ 'lote' if c.lotes|length == 1 else 'lotes' }}{% else %}Ninguno{% endif %}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="cal-note">
+    <span><b>{{ resumen.lotes_vencidos }}</b> {{ 'lote vencido sigue' if resumen.lotes_vencidos == 1 else 'lotes vencidos siguen' }} con existencia: hay que retirarlos.</span>
+    <span><b>{{ sin_fecha }}</b> {{ 'lote' if sin_fecha == 1 else 'lotes' }} con existencia no {{ 'tiene' if sin_fecha == 1 else 'tienen' }} fecha de vencimiento (productos que no caducan).</span>
+    <a class="link-btn" href="{{ url_for('reportes.por_vencer') }}">Ver el reporte de vencimientos</a>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="sheet">
+    <div class="sheet-head"><h2>Reponer primero</h2><p>Bajo el mínimo, ordenados por el consumo de los últimos 60 días</p></div>
+    {% if reponer %}
+    <ul class="rows">
+      {% for p in reponer %}
+      {% set dias = ((p.existencia_utilizable / (p.consumo_60 / 60))|int) if p.consumo_60 and p.existencia_utilizable > 0 else none %}
+      <li><a class="row-btn" href="{{ url_for('informes.kardex', id_producto=p.id_producto) }}">
+        <span class="t">{{ p.nombre }}</span>
+        <span class="r">
+          <b>{{ m.cantidad(p.existencia_utilizable) }} <span>/ {{ m.cantidad(p.stock_minimo) }}</span></b>
+          {% if p.existencia_utilizable <= 0 %}<span class="pill out">Agotado</span>
+          {% elif dias is not none %}<span class="pill low">Alcanza ~{{ dias }} {{ 'día' if dias == 1 else 'días' }}</span>
+          {% else %}<span class="pill low">Bajo el mínimo</span>{% endif %}
+        </span>
+        <span class="s"><code>{{ p.codigo }}</code>&ensp;{% if p.consumo_60 %}Salieron {{ m.cantidad(p.consumo_60) }} en 60 días{% else %}Sin salidas recientes{% endif %}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+    <div class="sheet-foot"><a class="btn btn-quiet btn-sm" href="{{ url_for('reportes.inventario_bajo') }}">Ver todo lo que hay que reponer</a></div>
+    {% else %}
+    <p class="empty-mini">Todo está por encima de su mínimo.</p>
+    {% endif %}
   </section>
-  <section>
-    <h2>Últimos movimientos <a class="hint" href="{{ url_for('movimientos.historial') }}">ver historial</a></h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Fecha</th><th>Tipo</th><th>Producto</th><th class="num">Cantidad</th></tr></thead>
-        <tbody>
-          {% for mv in ultimos %}
-          <tr>
-            <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">{{ mv.fecha_hora.strftime('%d/%m %H:%M') }}</a></td>
-            <td><span class="badge {{ 'badge-out' if mv.tipo_movimiento == 'SALIDA' else 'badge-on' }}">{{ mv.tipo_movimiento|tipo_mov }}</span></td>
-            <td>{{ mv.producto }}</td>
-            <td class="num">{{ m.cantidad(mv.cantidad) }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+
+  <section class="sheet">
+    <div class="sheet-head"><h2>Actividad reciente</h2><p>Últimos 14 días</p><div class="end"><a class="link-btn" href="{{ url_for('movimientos.historial') }}">Ver historial</a></div></div>
+    {% if actividad %}
+    <ul class="rows feed">
+      {% for mv in actividad %}
+      {% set t = mv.tipo_movimiento %}
+      <li><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">
+        <span class="mv {{ 'e' if t == 'ENTRADA' else ('d' if t == 'DEVOLUCION' else 's') }}" title="{{ t|tipo_mov }}">{{ i.icono('baja' if t == 'ENTRADA' else ('devuelve' if t == 'DEVOLUCION' else 'sube')) }}</span>
+        <div style="min-width:0"><div class="t">{{ mv.producto }}</div><div class="s"><code>{{ mv.codigo }}</code>&ensp;{{ mv.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</div></div>
+        <div class="q">{{ '−' if t == 'SALIDA' else '+' }}{{ m.cantidad(mv.cantidad) }}<span>{{ (t|tipo_mov)|lower }}</span></div>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-mini">No hubo entradas ni salidas en los últimos 14 días.</p>
+    {% endif %}
   </section>
 </div>
 {% endblock %}
