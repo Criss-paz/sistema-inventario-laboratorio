@@ -185,7 +185,7 @@ El usuario decidió el stack web (Python + Flask) entre 4 opciones presentadas y
 - Se confirmó que Python 3.14.7 y PostgreSQL 18.6 estaban instalados (con rutas completas, ya que el PATH de esta sesión de herramienta estaba desactualizado).
 - Se creó la base de datos `inventario_laboratorio`, el usuario `usuario_app` y el `GRANT` de schema `public` (necesario en PostgreSQL 15+, no estaba en la versión original de `INSTALL.md` — corregido).
 - Se ejecutó `001_schema.sql` (11 tablas + 6 índices, sin errores) y `001_seed.sql` (35 filas, sin errores).
-- Se creó `.env` real (con `DB_PASSWORD=1234` y un `APP_SECRET` aleatorio) y se confirmó que ya estaba en `.gitignore`.
+- Se creó `.env` real (con la contraseña local de la base y un `APP_SECRET` aleatorio, ninguno publicado) y se confirmó que ya estaba en `.gitignore`.
 - Se creó el entorno virtual e intentó instalar `psycopg2-binary`: **falló** — no tiene wheel para Python 3.14 en Windows (pide Visual C++ Build Tools). Se migró todo el código (`db.py`, `routes/categorias.py`, `routes/productos.py`, `seed_usuarios.py`, `requirements.txt`) a `psycopg` (v3), que sí tiene wheel para 3.14. Se corrigió también `.gitignore` (le faltaba `.venv/`).
 - Se ejecutó `seed_usuarios.py` (3 usuarios creados con hash real) y se levantó `python app.py` como proceso en segundo plano.
 - Se ejecutaron los 15 casos de prueba con `Invoke-WebRequest` contra el servidor real, verificando además varios resultados directamente en PostgreSQL con `psql`. **15/15 pasaron**, incluyendo un reinicio real del servidor (CP-15) para confirmar persistencia en BD y no en memoria.

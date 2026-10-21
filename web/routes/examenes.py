@@ -8,7 +8,7 @@ existencia utilizable actual: el insumo que menos rinde marca el límite.
 
 Consultar: todos los roles. Registrar/modificar/dar de baja exámenes y sus
 insumos: Administrador. "Eliminar" un examen es baja lógica vía `estado`
-(sql/ddl/003_examen_estado.sql, RN-23), igual que en los demás catálogos;
+(sql/ddl/003_examen_estado.sql, RN-24), igual que en los demás catálogos;
 los insumos sí se quitan con DELETE (tabla puente, sql/security/001_roles.sql).
 """
 import re
@@ -197,7 +197,7 @@ def quitar_insumo(id_examen, id_producto):
 @bp.route("/<int:id_examen>/alternar-estado", methods=["POST"])
 @rol_requerido(ADMIN)
 def alternar_estado(id_examen):
-    """Baja lógica (RN-23): el examen y sus insumos se conservan para poder reactivarlo."""
+    """Baja lógica (RN-24): el examen y sus insumos se conservan para poder reactivarlo."""
     examen = query_one("SELECT estado FROM examen_laboratorio WHERE id_examen = %s", (id_examen,))
     if examen is None:
         flash("El examen solicitado no existe.", "warning")

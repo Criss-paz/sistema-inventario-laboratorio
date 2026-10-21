@@ -18,7 +18,7 @@
 --               privilegio sobre tablas de catálogo (sql/security/001_roles.sql).
 --
 -- Reglas de negocio que materializa:
---   RN-23  Un examen dado de baja deja de aparecer en el informe de pruebas
+--   RN-24  Un examen dado de baja deja de aparecer en el informe de pruebas
 --          disponibles, pero conserva su ficha y sus insumos.
 --
 -- Dependencias: 001_schema.sql
@@ -34,7 +34,7 @@ ALTER TABLE examen_laboratorio
     ADD COLUMN IF NOT EXISTS estado BOOLEAN NOT NULL DEFAULT TRUE;
 
 COMMENT ON COLUMN examen_laboratorio.estado IS
-    'TRUE = el laboratorio ofrece el examen. FALSE = baja lógica (RN-23).';
+    'TRUE = el laboratorio ofrece el examen. FALSE = baja lógica (RN-24).';
 
 COMMIT;
 
