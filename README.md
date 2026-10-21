@@ -1,22 +1,22 @@
-# Sistema Web de Gestion y Control de Inventario — Laboratorio Privado Quetzaltenango
+# Sistema Web de Gestión y Control de Inventario — Laboratorio Privado Quetzaltenango
 
-## Entrega 1 — Analisis, propuesta y diseño conceptual
+## Entrega 1 — Análisis, propuesta y diseño conceptual
 
-### Descripcion
+### Descripción
 Proyecto orientado al diseño y posterior desarrollo de un sistema web para gestionar el inventario del Laboratorio Privado Quetzaltenango, con una base de datos relacional diseñada desde cero.
 
 ### Problema
 El laboratorio carece de un sistema centralizado para administrar productos, existencias, lotes, vencimientos, proveedores, insumos por examen y movimientos de inventario.
 
 ### Objetivo
-Diseñar y desarrollar una solucion web conectada a una base de datos relacional, con control de usuarios, productos, lotes, entradas, salidas, existencias y trazabilidad.
+Diseñar y desarrollar una solución web conectada a una base de datos relacional, con control de usuarios, productos, lotes, entradas, salidas, existencias y trazabilidad.
 
 ### Alcance inicial
 - Usuarios y roles
-- Categorias
+- Categorías
 - Productos
 - Proveedores
-- Examenes de laboratorio e insumos requeridos por examen
+- Exámenes de laboratorio e insumos requeridos por examen
 - Lotes y vencimientos
 - Entradas y salidas
 - Existencias
@@ -26,11 +26,11 @@ Diseñar y desarrollar una solucion web conectada a una base de datos relacional
 - Autenticacion y control de acceso
 
 ### Modelo conceptual
-El modelo esta compuesto por **9 entidades principales**:
+El modelo está compuesto por **9 entidades principales**:
 
 `ROL`, `USUARIO`, `CATEGORIA`, `PRODUCTO`, `PROVEEDOR`, `LOTE`, `MOVIMIENTO`, `EXAMEN_LABORATORIO` y `DETALLE_MOVIMIENTO`.
 
-Se resuelven dos relaciones N:M explicitas —PROVEEDOR–PRODUCTO (`SUMINISTRA`) y EXAMEN_LABORATORIO–PRODUCTO (`REQUIERE`)— y la relacion conceptual N:M entre MOVIMIENTO y LOTE se resuelve mediante la entidad asociativa `DETALLE_MOVIMIENTO`.
+Se resuelven dos relaciones N:M explícitas —PROVEEDOR–PRODUCTO (`SUMINISTRA`) y EXAMEN_LABORATORIO–PRODUCTO (`REQUIERE`)— y la relación conceptual N:M entre MOVIMIENTO y LOTE se resuelve mediante la entidad asociativa `DETALLE_MOVIMIENTO`.
 
 ### Estructura del repositorio
 ```text
@@ -56,10 +56,10 @@ sistema-inventario-laboratorio/
 │   ├── triggers/
 │   ├── procedures/
 │   └── security/
-└── web/            # Aplicacion web (desde Entrega 2)
+└── web/            # Aplicación web (desde Entrega 2)
 ```
 
-### Documentacion de Entrega 1
+### Documentación de Entrega 1
 - `docs/entrega-1/ENTREGA1_PROPUESTA.docx`
 - `docs/diagramas/DIAGRAMA-ER-LAB.drawio` — diagrama ER editable (fuente)
 - `docs/diagramas/DIAGRAMA-ER-LAB.drawio.png`
@@ -68,7 +68,7 @@ sistema-inventario-laboratorio/
 - `docs/bitacora-ia/Bitacora-IA.md`
 - `docs/certificaciones/CERTIFICACION_ENTREGA_1.md`
 
-### Documentacion de Entrega 2
+### Documentación de Entrega 2
 - `docs/entrega-2/modelo-relacional.md` — modelo relacional (11 tablas)
 - `docs/diagramas/DIAGRAMA-RELACIONAL.drawio` (+ PNG/PDF) — diagrama del modelo relacional
 - `docs/entrega-2/normalizacion-3fn.md` — normalización 3FN con ejemplo completo
@@ -87,7 +87,7 @@ sistema-inventario-laboratorio/
 ### Aplicación en línea
 **https://inventario-laboratorio-03s7.onrender.com** (Render + Neon, plan gratuito: la primera visita tras 15 minutos sin uso tarda unos 50 segundos). Las credenciales de producción no están en el repositorio; se entregan por un canal privado.
 
-### Documentacion de Entrega 3
+### Documentación de Entrega 3
 - `sql/triggers/001_triggers.sql` — existencia por lote, historial inmutable, vencimiento obligatorio
 - `sql/procedures/001_procedures.sql` — `sp_registrar_entrada` y `sp_registrar_salida` (FEFO)
 - `sql/views/001_views.sql` — existencia, inventario bajo, lotes por vencer, historial
@@ -103,6 +103,18 @@ sistema-inventario-laboratorio/
 - `docs/bitacora-ia/ENTREGA3_BITACORA_IA.md` — bitácora de IA de esta entrega
 - `docs/certificaciones/CERTIFICACION_ENTREGA_3.md`
 
+### Documentación de Entrega 4
+- `docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md` — manual de usuario: 12 flujos con capturas
+- `docs/entrega-4/ENTREGA4_MANUAL_TECNICO.md` — manual técnico: arquitectura, base de datos, seguridad, instalación, respaldo y mantenimiento
+- `docs/entrega-4/ENTREGA4_INFORME_FINAL.md` y `ENTREGA4_DECLARACION_INTEGRIDAD.md`
+- `docs/entrega-4/ENTREGA4_MATRIZ_TRAZABILIDAD.md` — trazabilidad v3 y CRUD por tabla
+- `docs/entrega-4/ENTREGA4_ESTANDARES_CUMPLIMIENTO.md` — estándares 6.1 a 6.4
+- `docs/entrega-4/ENTREGA4_GUIA_DEFENSA.md` — guion y preguntas de la defensa oral
+- `docs/casos-prueba/casos-prueba-entrega-4.md` — 14 casos (flujos del manual, respaldo, instalación desde cero)
+- `docs/bitacora-ia/ENTREGA4_BITACORA_IA.md` — bitácora de la Entrega 4 y consolidada
+- `docs/certificaciones/CERTIFICACION_ENTREGA_4.md`
+- `sql/ddl/003_examen_estado.sql`, `web/respaldo.py` — baja lógica de exámenes y respaldo (RNF-11)
+
 ### SGBD
 **PostgreSQL** — decidido en la Entrega 2. La Entrega 1 dejó este punto abierto ("a definir") y la bitácora de IA de la Entrega 1 mencionaba Oracle como intención inicial; el equipo confirmó PostgreSQL por su soporte completo de CHECK/FK/triggers/funciones, instalación simple y facilidad de defensa académica. Justificación completa en `docs/entrega-2/Bitacora-IA.md`.
 
@@ -113,11 +125,12 @@ sistema-inventario-laboratorio/
 |JOSE EDUARDO ESCOBAR|2690245346|
 
 ### Control de versiones
-Cada entrega finaliza con un commit de cierre y su tag: `entrega-1`, `entrega-2`, `entrega-3`.
+Cada entrega finaliza con un commit de cierre y su tag: `entrega-1`, `entrega-2`, `entrega-3` y `entrega-4`.
 
 ### Estado
 - Entrega 1 — Análisis, propuesta y diseño conceptual: **cerrada** (tag `entrega-1`).
 - Entrega 2 — Diseño lógico, diccionario e implementación base: **cerrada** (tag `entrega-2`, 01/09/2026). Contenido verificado por ejecución real (PostgreSQL 18 + Python 3.14, 30/08/2026 — 15/15 casos automatizados y 3 manuales en navegador). Incluye: SGBD (PostgreSQL), stack web (Flask + psycopg 3), modelo relacional, normalización 3FN, diccionario de datos, DDL, datos de prueba, login + 2 CRUD (Categorías, Productos), `AVANCE_WEB.md`, matriz de trazabilidad, casos de prueba ejecutados, diagrama ER corregido y re-exportado, y certificación firmada por ambos integrantes.
-- Entrega 3 — Implementación avanzada, seguridad y pruebas: **implementada** (26/09/2026). Base de datos: triggers, procedimientos (FEFO), vistas, valorización por costo promedio ponderado, 3 roles de PostgreSQL y el inventario real del laboratorio cargado (806 productos, 1,188 lotes, 5,839 movimientos). Web al 70%: movimientos, lotes, productos, exámenes, proveedores, categorías, reportes y usuarios, con control de acceso por rol en la app y en la base. Documentación: matriz de trazabilidad v2, estándares, 8 casos de prueba verificados y bitácora IA. Desplegada en internet (estándar S5). Instalación desde cero verificada en un segundo equipo el 28/09/2026: los 8 casos de prueba pasaron, con capturas en `docs/casos-prueba/evidencias-entrega-3/`. Cierre: certificación firmada por ambos integrantes y tag `entrega-3`.
+- Entrega 3 — Implementación avanzada, seguridad y pruebas: **implementada** (26/09/2026). Base de datos: triggers, procedimientos (FEFO), vistas, valorización por costo promedio ponderado, 3 roles de PostgreSQL y el inventario real del laboratorio cargado (806 productos, 1,188 lotes, 5,839 movimientos). Web al 70%: movimientos, lotes, productos, exámenes, proveedores, categorías, reportes y usuarios, con control de acceso por rol en la app y en la base. Documentación: matriz de trazabilidad v2, estándares, 8 casos de prueba verificados y bitácora IA. Desplegada en internet (estándar S5). Instalación desde cero verificada en un segundo equipo el 28/09/2026: los 8 casos de prueba pasaron, con capturas en `docs/casos-prueba/evidencias-entrega-3/`. Cierre: certificación firmada por ambos integrantes y tag `entrega-3`. **Cerrada** (29/09/2026), con la devolución de salidas agregada antes del tag.
+- Entrega 4 — Integración, documentación y defensa oral: **implementada** (20/10/2026), cierre previsto para el 03/11/2026. Web al 100%: CRUD de proveedor–producto, baja lógica de exámenes, respaldo de la base (RNF-11), cambio de contraseña propio y encabezados de seguridad. Documentación: manuales técnico y de usuario, informe final, declaración de integridad, matriz v3, diagramas actualizados, guía de defensa y bitácora consolidada. 14 de 14 casos de prueba aprobados, con capturas. Pendiente para el cierre: firmas, despliegue de la migración en producción y tag `entrega-4`.
 
 > **Nota sobre la integración:** el proyecto lo desarrollan 2 estudiantes. La consigna indica grupos de 3 "puede variar con autorización del catedrático".

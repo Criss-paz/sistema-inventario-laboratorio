@@ -1,9 +1,8 @@
-# Avance de la aplicación web — Entrega 3
+# Avance de la aplicación web — Entrega 4
 
-**Meta de la rúbrica para esta entrega:** 70% (módulos principales y control de acceso por rol).
-**Avance declarado:** los 39 requerimientos funcionales de la Entrega 1 tienen pantalla o están cubiertos por la base de datos.
+**Meta de la rúbrica para esta entrega:** 100% (todos los módulos y CRUD en todas las tablas principales).
+**Avance declarado: 100%.** Los 39 requerimientos funcionales y los 18 no funcionales tienen pantalla o están cubiertos por la base de datos. El último pendiente, el respaldo (RNF-11), se completó el 20/10/2026.
 **En línea:** https://inventario-laboratorio-03s7.onrender.com (Render + Neon, desplegada el 26/09/2026).
-Queda para la Entrega 4: respaldos (RNF-11) y pulido final.
 **Stack:** Python 3.14 + Flask 3 + PostgreSQL 18 (driver `psycopg` v3). Sin frameworks de interfaz: HTML, CSS y JavaScript propios.
 
 ## Módulos
@@ -15,11 +14,13 @@ Queda para la Entrega 4: respaldos (RNF-11) y pulido final.
 | Movimientos | ✅ | Pestañas Todos / Entradas / Salidas con filtros por fecha y búsqueda. Registrar entrada (crea o alimenta un lote) y salida (FEFO) llamando a los procedimientos almacenados | Consultar: todos. Registrar: administrador y encargado |
 | Lotes | ✅ | Existencia por lote, vencidos, por vencer y la ficha de cada lote con sus movimientos. Corregir número, vencimiento o dar de baja (nunca la existencia) | Consultar: todos. Corregir: administrador |
 | Productos | ✅ | CRUD con búsqueda, filtro por categoría, paginación y existencia en vivo | Consultar: todos. Editar: administrador |
-| Exámenes | ✅ | CRUD, insumos que consume cada examen y para cuántas pruebas alcanza la existencia | Consultar: todos. Editar: administrador |
-| Proveedores | ✅ | CRUD con baja lógica y productos que suministra con su precio | Consultar: todos. Editar: administrador |
+| Exámenes | ✅ | CRUD con baja lógica (Entrega 4), insumos que consume cada examen y para cuántas pruebas alcanza la existencia | Consultar: todos. Editar: administrador |
+| Proveedores | ✅ | CRUD con baja lógica; en la ficha, asignar productos con su precio, cambiar el precio y quitarlos (Entrega 4) | Consultar: todos. Editar: administrador |
 | Categorías | ✅ | CRUD con baja lógica | Consultar: todos. Editar: administrador |
 | Reportes | ✅ | Pantalla única: el usuario elige Inventario, Entradas, Salidas, Kardex, Proveedores, Pruebas, Catálogo de productos, Inventario bajo o Vencimientos. Todos en CSV e impresión | Todos |
 | Usuarios y roles | ✅ | Crear usuarios, cambiar rol, restablecer contraseña, desactivar; tabla de permisos por rol | Administrador |
+| Mi contraseña | ✅ | Cada usuario cambia su contraseña confirmando la actual (Entrega 4) | Todos |
+| Respaldo | ✅ | Descarga de un respaldo completo `.sql`, restaurable con `psql` (RNF-11, Entrega 4) | Administrador |
 
 ## Control de acceso por rol (RF-05)
 
@@ -103,7 +104,14 @@ cd web
 
 La aplicación está publicada en Render y la base de datos en Neon (PostgreSQL 17), ambas en US East (Ohio). Se verificó en producción con los 3 usuarios: 48 comprobaciones de páginas, permisos por rol, cookie de sesión solo por HTTPS, rechazo de las contraseñas de desarrollo y valor del inventario idéntico al local (Q524,714.36). Procedimiento en `INSTALL.md`, paso 8.
 
-## Pendiente (Entrega 4)
+## Entrega 4 (20/10/2026)
 
-- Respaldo y restauración de la base (RNF-11).
-- Pulido final a partir de la ejecución de los casos de prueba y la revisión del catedrático.
+| Cambio | Detalle |
+|---|---|
+| CRUD de proveedor–producto | Era la única tabla principal sin pantalla de escritura: solo la llenaba la carga inicial |
+| Baja lógica de exámenes | `sql/ddl/003_examen_estado.sql`; el informe de pruebas muestra solo los activos (RN-24) |
+| Respaldo | `web/respaldo.py` + Administración → Respaldo; probado con una restauración real (11 de 11 tablas idénticas) |
+| Seguridad | Cambio de contraseña propio, encabezados CSP, X-Frame-Options y HSTS, rechazo de POST de otro origen |
+| Correcciones | La devolución se mostraba como salida en el kardex, la ficha del lote e Inicio; "Devolución" sin tilde |
+
+CRUD por tabla y su justificación: `docs/entrega-4/ENTREGA4_MATRIZ_TRAZABILIDAD.md`. Casos de prueba: `docs/casos-prueba/casos-prueba-entrega-4.md` (14 de 14 aprobados). Manual de usuario: `docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md`.
