@@ -36,6 +36,7 @@ psql -U usuario_app -d inventario_laboratorio -f sql/dml/002_carga_catalogo.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/dml/003_seed_examenes.sql
 python web/seed_usuarios.py          # requiere el paso 4 (.env) y las dependencias del paso 5
 psql -U usuario_app -d inventario_laboratorio -f sql/dml/004_carga_movimientos.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/dml/005_carga_sigal.sql   # movimientos de SIGAL del 24/09 al 21/10/2026
 psql -U postgres    -d inventario_laboratorio -f sql/security/001_roles.sql
 # Devolución de salidas (RN-19 a RN-22):
 psql -U usuario_app -d inventario_laboratorio -f sql/ddl/002_devolucion.sql
@@ -60,7 +61,8 @@ Por qué este orden:
 4. `views/` — `001` solo depende de las tablas; `002` (kardex y valorización a costo promedio ponderado) usa las vistas de `001`.
 5. `dml/001` a `003` — catálogos: 806 productos y 26 proveedores reales del laboratorio (+24 de prueba inactivos), 50 exámenes.
 6. `seed_usuarios.py` — usuarios con contraseña hasheada por la app; los movimientos necesitan un responsable (RN-08).
-7. `dml/004` — el inventario real de marzo a septiembre de 2026: 1,188 lotes y 5,839 movimientos, con la existencia calculada por los triggers (tarda unos segundos).
+7. `dml/004` — el inventario real de marzo a septiembre de 2026 (registro en papel): 1,188 lotes y 5,839 movimientos, con la existencia calculada por los triggers (tarda unos segundos).
+   `dml/005` — lo que el laboratorio registró en SIGAL del 24/09 al 21/10/2026: 8 productos, 1 proveedor, 108 lotes y 721 movimientos (`docs/entrega-4/ENTREGA4_REPORTE_CARGA_SIGAL.md`).
 8. `security/` — **como `postgres`**: crear roles requiere superusuario. Va al final porque otorga permisos sobre tablas, vistas y procedimientos que ya deben existir.
 
 En Windows, si `psql` no está en el PATH, use la ruta completa: `& "C:\Program Files\PostgreSQL\18\bin\psql.exe" ...`
@@ -92,7 +94,7 @@ Abrir `http://localhost:8080` (o el valor de `APP_PORT` en `.env`) e iniciar ses
 ## 7. Verificación rápida
 Base de datos (en `psql`, conectado como `usuario_app`):
 - [ ] `\dt` muestra las 12 tablas y `\dv` las 7 vistas.
-- [ ] `SELECT count(*) FROM producto;` → 806 y `SELECT count(*) FROM movimiento;` → 5839.
+- [ ] `SELECT count(*) FROM producto;` → 814 y `SELECT count(*) FROM movimiento;` → 6560.
 - [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 7 triggers.
 - [ ] `\df sp_*` muestra `sp_registrar_entrada`, `sp_registrar_salida`, `sp_registrar_devolucion` y `sp_corregir_entrada`.
 - [ ] `\du rol_*` muestra `rol_administrador`, `rol_encargado` y `rol_consulta`.
@@ -103,7 +105,7 @@ Aplicación web:
 - [ ] El login funciona con `admin.dev` y rechaza una contraseña incorrecta.
 - [ ] `consulta.dev` no ve "Registrar entrada/salida" y recibe 403 en `/movimientos/entrada`.
 - [ ] `encargado.dev` registra una entrada y una salida; la salida se reparte por FEFO.
-- [ ] Reportes → Inventario muestra el valor total del inventario (Q524,714.36 con los datos iniciales).
+- [ ] Reportes → Inventario muestra el valor total del inventario (Q600,338.34 con los datos iniciales, al 21/10/2026).
 - [ ] Cerrar sesión redirige al login y bloquea el acceso directo a `/productos` sin sesión.
 - [ ] `admin.dev` ve **Administración → Respaldo** y descarga el archivo `.sql`.
 
