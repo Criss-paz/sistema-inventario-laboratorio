@@ -107,7 +107,7 @@ La última fila muestra por qué este sistema no guarda la existencia por produc
 | Tema | Decisión |
 |---|---|
 | Qué se carga | Registros de SIGAL posteriores al 23/09/2026 cuyo código no está en la base |
-| Responsable | `encargado.dev`, igual que la carga del papel; en SIGAL los usuarios son personas con nombre y el repositorio es público. La observación de cada salida conserva el área solicitante |
+| Responsable | `encargado.dev` (en producción, `encargado`), igual que la carga del papel; en SIGAL los usuarios son personas con nombre y el repositorio es público. La observación de cada salida conserva el área solicitante |
 | Fechas | SIGAL las guarda en UTC; se convierten a hora de Guatemala |
 | Salidas | Repartidas por FEFO sin lotes vencidos, como `sp_registrar_salida` |
 | Datos de SIGAL que no tienen lugar en este modelo | Requisiciones, pedidos, avisos, descuentos y retenciones de las facturas: no se cargan |

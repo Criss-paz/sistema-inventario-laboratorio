@@ -1633,9 +1633,11 @@ DECLARE
     v_filas         INTEGER;
     r_mov           RECORD;
 BEGIN
-    SELECT id_usuario INTO v_id_usuario FROM usuario WHERE usuario = 'encargado.dev';
+    -- encargado.dev en desarrollo (seed_usuarios.py); encargado en producción.
+    SELECT id_usuario INTO v_id_usuario FROM usuario
+     WHERE usuario IN ('encargado.dev', 'encargado') ORDER BY usuario DESC LIMIT 1;
     IF v_id_usuario IS NULL THEN
-        RAISE EXCEPTION 'Falta el usuario encargado.dev (responsable de las cargas históricas).';
+        RAISE EXCEPTION 'Falta el usuario encargado.dev o encargado (responsable de las cargas históricas).';
     END IF;
     IF (SELECT count(*) FROM lote l JOIN producto p ON p.id_producto = l.id_producto
           JOIN carga_lote cl ON cl.codigo = p.codigo AND cl.numero_lote = l.numero_lote) <> (SELECT count(*) FROM carga_lote) THEN

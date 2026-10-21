@@ -36,7 +36,7 @@ Decisiones (las mismas de generar_carga.py, detalladas en el reporte):
      sp_registrar_salida). Si a esa fecha solo hay existencia en lotes
      vencidos, se usan y se anotan. Si no hay existencia, la salida se mueve
      a la fecha de la entrada que la cubre; si ninguna la cubre, se rechaza.
-  6. Responsable: encargado.dev, igual que la carga del papel (en SIGAL los
+  6. Responsable: encargado.dev (en producción, encargado), igual que la carga del papel (en SIGAL los
      usuarios son personas con nombre; el repositorio es público). La
      observación conserva el código y, en las salidas, el área solicitante.
   7. Fechas: SIGAL las guarda en UTC; se convierten a hora de Guatemala.
@@ -361,9 +361,11 @@ DECLARE
     v_filas         INTEGER;
     r_mov           RECORD;
 BEGIN
-    SELECT id_usuario INTO v_id_usuario FROM usuario WHERE usuario = 'encargado.dev';
+    -- encargado.dev en desarrollo (seed_usuarios.py); encargado en producción.
+    SELECT id_usuario INTO v_id_usuario FROM usuario
+     WHERE usuario IN ('encargado.dev', 'encargado') ORDER BY usuario DESC LIMIT 1;
     IF v_id_usuario IS NULL THEN
-        RAISE EXCEPTION 'Falta el usuario encargado.dev (responsable de las cargas históricas).';
+        RAISE EXCEPTION 'Falta el usuario encargado.dev o encargado (responsable de las cargas históricas).';
     END IF;
     IF (SELECT count(*) FROM lote l JOIN producto p ON p.id_producto = l.id_producto
           JOIN carga_lote cl ON cl.codigo = p.codigo AND cl.numero_lote = l.numero_lote) <> (SELECT count(*) FROM carga_lote) THEN
@@ -452,7 +454,7 @@ Movimientos que el laboratorio registró en **SIGAL** después del registro en p
 | Tema | Decisión |
 |---|---|
 | Qué se carga | Registros de SIGAL posteriores al 23/09/2026 cuyo código no está en la base |
-| Responsable | `encargado.dev`, igual que la carga del papel; en SIGAL los usuarios son personas con nombre y el repositorio es público. La observación de cada salida conserva el área solicitante |
+| Responsable | `encargado.dev` (en producción, `encargado`), igual que la carga del papel; en SIGAL los usuarios son personas con nombre y el repositorio es público. La observación de cada salida conserva el área solicitante |
 | Fechas | SIGAL las guarda en UTC; se convierten a hora de Guatemala |
 | Salidas | Repartidas por FEFO sin lotes vencidos, como `sp_registrar_salida` |
 | Datos de SIGAL que no tienen lugar en este modelo | Requisiciones, pedidos, avisos, descuentos y retenciones de las facturas: no se cargan |
