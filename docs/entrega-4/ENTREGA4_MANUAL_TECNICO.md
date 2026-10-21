@@ -56,12 +56,12 @@ Este manual es para quien instala, administra o modifica el sistema: el administ
 │   ├── bitacora-ia/              bitácoras de uso de IA y la consolidada
 │   └── casos-prueba/             casos de cada entrega y sus evidencias
 ├── sql/
-│   ├── ddl/          001 esquema · 002 devolución · 003 baja lógica de exámenes
-│   ├── dml/          001–004 datos (002 y 004 generados por generar_carga.py)
-│   ├── triggers/     001 existencia, inmutabilidad, vencimiento · 002 tope de devolución
-│   ├── procedures/   001 entrada y salida (FEFO) · 002 devolución
-│   ├── views/        001 consultas · 002 kardex y valorización · 003–004 devolución
-│   └── security/     001 roles · 002 permisos de la devolución
+│   ├── ddl/          001 esquema · 002 devolución · 003 baja lógica de exámenes · 004 corrección de entradas
+│   ├── dml/          001–004 datos del papel (generar_carga.py) · 005 movimientos de SIGAL (generar_carga_sigal.py)
+│   ├── triggers/     001 existencia, inmutabilidad, vencimiento · 002 tope de devolución · 003 corrección
+│   ├── procedures/   001 entrada y salida (FEFO) · 002 devolución · 003 corrección de entradas
+│   ├── views/        001 consultas · 002 kardex y valorización · 003–004 devolución · 005 correcciones
+│   └── security/     001 roles · 002 permisos de la devolución · 003 permisos de la corrección
 └── web/
     ├── app.py          arma la app: blueprints, filtros, manejadores de error, encabezados
     ├── config.py       variables de entorno
@@ -74,7 +74,7 @@ Este manual es para quien instala, administra o modifica el sistema: el administ
                         búsqueda Ctrl K), fuentes Schibsted Grotesk y JetBrains Mono, favicon
 ```
 
-Cada script SQL abre con un encabezado: archivo, propósito, autor, descripción, reglas de negocio, dependencias, SGBD y forma de ejecutarlo (estándar S3). Los scripts `002` y `003` son **migraciones aditivas**: se aplican sobre una base existente sin borrar datos.
+Cada script SQL abre con un encabezado: archivo, propósito, autor, descripción, reglas de negocio, dependencias, SGBD y forma de ejecutarlo (estándar S3). Los scripts de esquema `002` a `004` son **migraciones aditivas**: se aplican sobre una base existente sin borrar datos.
 
 ---
 
@@ -89,16 +89,17 @@ El diseño completo (modelo relacional, normalización 3FN y diccionario de dato
 | `rol` | Los 3 roles de la aplicación | 3 |
 | `usuario` | Usuarios, con contraseña en hash | 3 (desarrollo) |
 | `categoria` | Clasificación de productos | 10 |
-| `producto` | Catálogo de insumos y reactivos | 806 |
-| `proveedor` | Proveedores | 50 |
-| `lote` | Cada lote recibido, con su existencia | 1,188 |
-| `movimiento` | Cabecera de cada entrada, salida o devolución | 5,839 |
-| `detalle_movimiento` | Cuánto de cada lote movió cada movimiento (resuelve movimiento–lote N:M) | 5,920 |
+| `producto` | Catálogo de insumos y reactivos | 814 |
+| `proveedor` | Proveedores | 51 |
+| `lote` | Cada lote recibido, con su existencia | 1,296 |
+| `movimiento` | Cabecera de cada entrada, salida o devolución | 6,560 |
+| `detalle_movimiento` | Cuánto de cada lote movió cada movimiento (resuelve movimiento–lote N:M) | 6,646 |
 | `examen_laboratorio` | Exámenes que ofrece el laboratorio | 50 |
 | `proveedor_producto` | Qué productos suministra cada proveedor y a qué precio (N:M) | 425 |
 | `examen_producto` | Qué insumos consume cada examen y cuánto (N:M) | 114 |
+| `correccion_entrada` | Cada dato corregido de una entrada: valor anterior, nuevo, motivo, quién y cuándo (solo crece) | 0 |
 
-Las 11 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (estándar S4): `RESTRICT` donde hay historial que proteger (lotes, movimientos), `CASCADE` en las tablas puente.
+Las 14 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (estándar S4): `RESTRICT` donde hay historial que proteger (lotes, movimientos), `CASCADE` en las tablas puente.
 
 **Baja lógica.** Ningún catálogo se borra: `categoria`, `producto`, `proveedor`, `usuario`, `lote` y, desde la Entrega 4, `examen_laboratorio` tienen columna `estado`. Así el historial siempre puede mostrar a qué producto, proveedor o usuario se refiere cada movimiento.
 
@@ -110,8 +111,10 @@ Las 11 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (es
 |---|---|---|
 | `trg_detalle_movimiento_existencia` | `detalle_movimiento` | La entrada y la devolución suman a la existencia del lote; la salida resta, con bloqueo `FOR UPDATE`, y nunca la deja negativa (RN-01 a RN-04) |
 | `trg_z_devolucion_tope` | `detalle_movimiento` | Una devolución no puede devolver más de lo que salió de ese lote, descontando lo ya devuelto (RN-22). El prefijo `z` hace que corra después del de existencia |
-| `trg_movimiento_inmutable`, `trg_detalle_movimiento_inmutable` | `movimiento`, `detalle_movimiento` | Prohíben `UPDATE` y `DELETE`: el historial solo crece (RN-09) |
+| `trg_movimiento_inmutable`, `trg_detalle_movimiento_inmutable` | `movimiento`, `detalle_movimiento` | Prohíben `UPDATE` y `DELETE`: el historial solo crece (RN-09). Única excepción: la cantidad y el precio de una entrada mientras corre `sp_corregir_entrada`, que deja la corrección registrada |
 | `trg_lote_vencimiento` | `lote` | Si el producto requiere vencimiento, el lote debe tener fecha (RN-07) |
+| `trg_z_correccion_existencia` | `detalle_movimiento` | Al corregir la cantidad de una entrada, ajusta el lote por la diferencia y no lo deja negativo (RN-01, RN-25) |
+| `trg_correccion_inmutable` | `correccion_entrada` | Las correcciones no se modifican ni se borran |
 
 ### 3.3 Procedimientos y funciones
 
@@ -120,6 +123,7 @@ Las 11 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (es
 | `sp_registrar_entrada` | Procedimiento, `SECURITY DEFINER` | Crea el lote si no existe (o suma al existente) y registra la entrada en una sola transacción |
 | `sp_registrar_salida` | Procedimiento, `SECURITY DEFINER` | Reparte la cantidad entre los lotes no vencidos, primero el que vence antes (FEFO); falla completa si no alcanza |
 | `sp_registrar_devolucion` | Procedimiento, `SECURITY DEFINER` | Registra el movimiento inverso de una salida, con motivo obligatorio, enlazado a ella (RN-19 a RN-21) |
+| `sp_corregir_entrada` | Procedimiento, `SECURITY DEFINER`, solo Administrador | Corrige cantidad, precio, proveedor, número de lote o vencimiento de una entrada y registra cada cambio en `correccion_entrada` (RN-25, RN-26) |
 | `fn_devolvible` | Función, `SECURITY DEFINER` | Saldo que aún se puede devolver de cada lote de una salida |
 | `fn_kardex_promedio` | Función | Kardex de un producto a costo promedio ponderado móvil |
 | `fn_validar_usuario_activo` | Función | Un movimiento solo lo registra un usuario activo (RN-08) |
@@ -139,6 +143,7 @@ Los procedimientos son `SECURITY DEFINER` con `search_path` fijo (`public, pg_te
 | `vw_historial_movimientos` | Historial legible: movimiento, lote, producto, proveedor y responsable, sin el hash de la contraseña |
 | `vw_valorizacion_inventario` | Valor del inventario a costo promedio ponderado |
 | `vw_devoluciones` | Auditoría de devoluciones con su salida de origen y motivo |
+| `vw_correcciones_entrada` | Correcciones de entradas con el dato en palabras y quién las hizo |
 
 ### 3.5 Roles de base de datos
 
@@ -146,7 +151,7 @@ Los procedimientos son `SECURITY DEFINER` con `search_path` fijo (`public, pg_te
 |---|---|---|
 | `rol_consulta` | — | `SELECT` en catálogos, lotes y vistas; ejecutar `fn_kardex_promedio` y `fn_devolvible`. Sin acceso a `usuario`, `rol` ni a las tablas de movimientos |
 | `rol_encargado` | `rol_consulta` | Además, ejecutar los tres procedimientos de registro |
-| `rol_administrador` | `rol_encargado` | Además, `INSERT`/`UPDATE` en catálogos; `UPDATE` de `lote` solo en las columnas que corrige una persona (número, proveedor, fechas, estado; nunca `cantidad_disponible`); `DELETE` en las tablas puente; y administrar usuarios por columna, **sin poder leer `password_hash`** |
+| `rol_administrador` | `rol_encargado` | Además, ejecutar `sp_corregir_entrada`; `INSERT`/`UPDATE` en catálogos; `UPDATE` de `lote` solo en las columnas que corrige una persona (número, proveedor, fechas, estado; nunca `cantidad_disponible`); `DELETE` en las tablas puente; y administrar usuarios por columna, **sin poder leer `password_hash`** |
 
 Ningún rol puede modificar `cantidad_disponible`, ni insertar, modificar o borrar movimientos directamente. Detalle y justificación en `sql/security/001_roles.sql`.
 
@@ -158,7 +163,7 @@ Costo promedio ponderado móvil, calculado en `fn_kardex_promedio`:
 - **Salida:** se valora al promedio vigente; no lo cambia.
 - **Devolución:** reingresa al promedio vigente; tampoco lo cambia (RN-23).
 
-Con los datos iniciales, el inventario vale **Q524,714.36**. Esta cifra sirve para comprobar que una instalación quedó bien (CP4-14).
+Con los datos iniciales (papel y SIGAL, hasta el 21/10/2026), el inventario vale **Q600,338.34**. Esta cifra sirve para comprobar que una instalación quedó bien (CP4-14).
 
 ---
 
@@ -251,7 +256,7 @@ Cualquier otro uso nuevo de esa función debe justificarse igual.
 
 En Windows, antes de `psql`: `$env:PGCLIENTENCODING = "UTF8"`. Sin esto, las tildes se guardan corruptas sin ningún error.
 
-La instalación completa desde cero toma unos 12 segundos de scripts. Se verificó el 20/10/2026 (CP4-14) con el mismo resultado que en la Entrega 3: 806 productos, 5,839 movimientos, 0 lotes incoherentes y Q524,714.36.
+La instalación completa desde cero toma unos 6 segundos de scripts. Se verificó el 21/10/2026 con los 21 pasos (CP4-14): 814 productos, 6,560 movimientos, 0 lotes incoherentes y Q600,338.34.
 
 ### 6.2 Producción (Render + Neon)
 
@@ -274,6 +279,14 @@ psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/views/004_kardex_devolucion.sql
 psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/security/002_devolucion.sql
 # Entrega 4 (reejecutable):
 psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/ddl/003_examen_estado.sql
+# Corrección de entradas:
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/ddl/004_correccion_entrada.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/triggers/003_correccion_entrada.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/procedures/003_correccion_entrada.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/views/005_correccion_entrada.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/security/003_correccion_entrada.sql
+# Movimientos de SIGAL (una sola vez; se niega a correr si ya se aplicó):
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/dml/005_carga_sigal.sql
 ```
 
 Para saber si una base ya tiene la devolución: `SELECT column_name FROM information_schema.columns WHERE table_name = 'movimiento' AND column_name = 'motivo';` (si devuelve una fila, ya está). Antes de aplicar cualquier migración en producción, **descargue un respaldo** (sección 7).
@@ -288,7 +301,7 @@ Cubre el requerimiento RNF-11.
 
 ### 7.1 Qué respalda
 
-`web/respaldo.py` genera un archivo `.sql` con **los datos** de las 11 tablas. No incluye la estructura: tablas, triggers, procedimientos, vistas y roles ya están versionados en `sql/` y se reinstalan desde ahí. El archivo:
+`web/respaldo.py` genera un archivo `.sql` con **los datos** de las 12 tablas. No incluye la estructura: tablas, triggers, procedimientos, vistas y roles ya están versionados en `sql/` y se reinstalan desde ahí. El archivo:
 
 - usa bloques `COPY … FROM stdin`, el mismo formato que `pg_dump`, así que es SQL estándar y legible, y se restaura sin la aplicación;
 - lee todas las tablas en **una sola foto** de la base (`REPEATABLE READ`, solo lectura), aunque alguien registre un movimiento mientras se genera;
@@ -327,8 +340,8 @@ La restauración **reemplaza todos los datos** de la base de destino. Por eso no
 
 Qué hace el archivo al restaurar, en **una sola transacción** (si algo falla, la base queda exactamente como estaba):
 
-1. Apaga los triggers de usuario de las 11 tablas. La existencia de cada lote ya viene calculada, y el trigger de historial inmutable impediría recargar los movimientos.
-2. `TRUNCATE` de las 11 tablas.
+1. Apaga los triggers de usuario de las 12 tablas. La existencia de cada lote ya viene calculada, y el trigger de historial inmutable impediría recargar los movimientos.
+2. `TRUNCATE` de las 12 tablas.
 3. `COPY` de cada tabla en orden de dependencias. Las FK **sí** se verifican, porque son triggers del sistema y no se apagan.
 4. Ajusta cada secuencia de identidad al siguiente valor libre.
 5. Vuelve a encender los triggers y hace `COMMIT`.
@@ -372,8 +385,8 @@ Qué hace el archivo al restaurar, en **una sola transacción** (si algo falla, 
 |---|---|---|
 | Casos de la Entrega 2 | `docs/casos-prueba/casos-prueba-entrega-2.md` | Login, CRUD de categorías y productos (18) |
 | Casos de la Entrega 3 | `docs/casos-prueba/casos-prueba-entrega-3.md` | Triggers, FEFO, inmutabilidad, roles, valorización, devolución (14) |
-| Casos de la Entrega 4 | `docs/casos-prueba/casos-prueba-entrega-4.md` | Flujos del manual de usuario, respaldo y restauración, instalación desde cero (14) |
-| Regresión de la app | Descrita en los casos de la Entrega 4 | 43 pantallas × 3 roles y los módulos nuevos (183 verificaciones) |
+| Casos de la Entrega 4 | `docs/casos-prueba/casos-prueba-entrega-4.md` | Flujos del manual de usuario, corrección de entradas, carga de SIGAL, respaldo y restauración, instalación desde cero (16) |
+| Regresión de la app | Descrita en los casos de la Entrega 4 | 43 pantallas × 3 roles y los módulos nuevos (199 verificaciones) |
 
 Las pruebas de la app usan el cliente de pruebas de Flask (`app.test_client()`) contra una base real con los datos iniciales; cada una deshace lo que crea. Las del navegador usan Playwright con Edge.
 

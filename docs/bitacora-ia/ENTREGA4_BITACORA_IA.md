@@ -122,6 +122,36 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 
 ---
 
+### Registro de Bitácora IA — Corrección de entradas con registro
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 21/10/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Poder corregir los datos de una entrada mal digitada sin eliminarla. |
+| **Prompt utilizado** | "Las entradas tienes que corregir porque no se pueden eliminar, solo corregir datos, entonces enfócate en ello también". La IA mostró cómo lo hace SIGAL (edición directa, sin rastro) y preguntó; el equipo eligió **corregir con registro** para no romper RN-09. |
+| **Resultado obtenido** | Tabla `correccion_entrada` (ddl/004), triggers/003 (excepción controlada en la inmutabilidad, ajuste del lote por la diferencia, correcciones inmutables), `sp_corregir_entrada` (procedures/003), `vw_correcciones_entrada` (views/005), permisos solo para el Administrador (security/003) y la pantalla *Corregir entrada* con la tabla de correcciones en la ficha. Reglas nuevas RN-25 y RN-26. |
+| **Validación del grupo** | Pruebas en `psql` dentro de `BEGIN … ROLLBACK`: subir, bajar de más (mensaje con el mínimo posible), precio, vencimiento, errores de validación, permisos por rol, y `UPDATE` y `DELETE` directos aun con la variable de sesión activa. **Corrección:** el trigger referenciaba `NEW.id_lote` en una sola condición; al borrar una corrección daba un error técnico en vez del mensaje de inmutabilidad. Se anidaron los `IF`. **Corrección:** la vista quedó al principio dentro del script del procedimiento; se movió a `views/005` (S2). **Error de la prueba automatizada:** una versión suponía valores viejos de la entrada CP4B y registró 2 correcciones reales; quedan en la base de desarrollo, como exige RN-25, y la prueba se corrigió (documentado en los casos de prueba). Prueba final: 16 verificaciones y CP4-15 en Edge. |
+| **Estándares aplicados** | S1–S4 (FK con `RESTRICT`), S6, S7 (el kardex se recalcula desde el historial), S8; A2, A3, A4, A6. |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
+### Registro de Bitácora IA — Inventario al día con los datos de SIGAL
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 21/10/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Cargar lo que el laboratorio registró en SIGAL después del 23/09/2026. |
+| **Prompt utilizado** | "Si yo tengo una base de datos puedes aplicarla? … SIGAL se está trabajando con ello". El equipo entregó un respaldo `pg_dump` de SIGAL y eligió **agregar lo nuevo** (no reemplazar). |
+| **Resultado obtenido** | El respaldo quedó fuera del repositorio: se movió a la carpeta ignorada y se agregó el patrón a `.gitignore`. `sql/dml/generar_carga_sigal.py` reutiliza las reglas de `generar_carga.py` y genera `005_carga_sigal.sql`: 205 entradas, 516 salidas, 108 lotes, 8 productos y 1 proveedor nuevos. También genera `ENTREGA4_REPORTE_CARGA_SIGAL.md`. |
+| **Validación del grupo** | Se confirmó que SIGAL conserva la numeración del papel (código E/S idéntico), para no duplicar. 12 registros antiguos sin equivalente resultaron ser servicios o rechazos de la Entrega 3 y se dejaron fuera. Se revisó que el script no publique nombres de personas (solo áreas y empresas). Se respaldó la base antes de cargar. Resultado: 0 lotes incoherentes; **804 de 813** productos con la misma existencia que SIGAL. Las 9 diferencias se explicaron: 2 entradas rechazadas por vencimiento anterior al ingreso, y 7 productos en los que el contador de SIGAL no coincide con sus propios movimientos (este sistema sí). Instalación desde cero de los 21 pasos: 814 productos, 6,560 movimientos y Q600,338.34. |
+| **Estándares aplicados** | S2, S3 (script generado con encabezado), S7, S8; R6 (respaldo fuera del repositorio, sin datos personales). |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
 ### Pendiente de registrar por el equipo
 
 | Acción | Responsable |
@@ -138,7 +168,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | 1 — Análisis, propuesta y diseño conceptual | `docs/bitacora-ia/Bitacora-IA.md` | 5 actividades | IA como apoyo de análisis y redacción | Equipo |
 | 2 — Diseño lógico e implementación base | `docs/entrega-2/Bitacora-IA.md` | 13 | Claude Code (Opus) | José Eduardo Escobar, Cristopher Alexis Castellanos Paz |
 | 3 — Implementación avanzada, seguridad y pruebas | `docs/bitacora-ia/ENTREGA3_BITACORA_IA.md` | 10 | Claude, Claude Code (Opus) | José Eduardo Escobar (8), Cristopher Alexis Castellanos Paz (2) |
-| 4 — Integración, documentación y defensa | este archivo | 7 | Claude Code (Opus), Playwright | José Eduardo Escobar |
+| 4 — Integración, documentación y defensa | este archivo | 9 | Claude Code (Opus), Playwright | José Eduardo Escobar |
 
 ### Para qué se usó la IA en cada etapa
 
@@ -147,7 +177,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | Análisis (E1) | Ordenar el problema, redactar requerimientos, proponer entidades | Alcance del sistema; qué módulos sí y cuáles no |
 | Diseño (E2) | Modelo relacional, normalización, diccionario, DDL, primeros CRUD | PostgreSQL como SGBD; normalización en hoja de cálculo, como la enseñó el catedrático |
 | Implementación (E3) | Triggers, procedimientos, roles, carga de los datos reales, web al 70%, despliegue | Usar el inventario real; qué errores del papel corregir y cuáles rechazar; anonimizar proveedores individuales; publicar en Render y Neon |
-| Cierre (E4) | Completar el CRUD, respaldo, seguridad, pruebas en navegador, manuales | Baja lógica en lugar de borrado; no ofrecer la restauración desde la app; qué protecciones de SIGAL aplicar y cuáles no |
+| Cierre (E4) | Completar el CRUD, respaldo, seguridad, interfaz de SIGAL, corrección de entradas, carga de SIGAL, pruebas en navegador, manuales | Baja lógica en lugar de borrado; no ofrecer la restauración desde la app; qué protecciones de SIGAL aplicar y cuáles no; diseño de SIGAL sí, módulos no; corregir entradas con registro y no con edición directa; agregar (no reemplazar) los datos de SIGAL |
 
 ### Errores de la IA detectados por la validación del equipo
 
@@ -160,6 +190,8 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | 4 | Pantalla de respaldo con 403 por un permiso que no existe | Prueba con el rol administrador |
 | 4 | Plantillas que mostraban la devolución como salida | Casos CP4-06 y CP4-08 en el navegador |
 | 4 | Etiquetas y afirmaciones de los documentos que no coincidían con el sistema | Contraste de cada afirmación con la interfaz y el código |
+| 4 | Trigger de inmutabilidad con un error técnico al borrar una corrección | Prueba de `DELETE` en `psql` |
+| 4 | Prueba automatizada que registró correcciones reales por suponer valores viejos | Conteo de correcciones antes y después |
 
 ### Lección del proyecto
 

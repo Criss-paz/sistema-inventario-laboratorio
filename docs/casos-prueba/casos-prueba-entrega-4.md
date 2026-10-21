@@ -75,7 +75,10 @@ El 21/10/2026 la interfaz adoptó el diseño de SIGAL: menú oscuro, barra super
 | CP4-12 | Panel en 390 px con el menú plegado y los indicadores en dos columnas | ✅ |
 | Interfaz | `Ctrl K` encuentra el producto y `Enter` abre su kardex; el tema oscuro se recuerda al recargar; el menú de usuario se cierra al hacer clic fuera; los puntos del calendario muestran su ficha | ✅ |
 
-**12 de 12 casos aprobados también con la interfaz nueva.** Capturas en `evidencias-entrega-4/interfaz-sigal/` (son las que ilustran el manual de usuario) y respuestas del sistema en `interfaz-sigal/CP4-resultados.json`. La regresión automatizada se repitió después del cambio: 183 verificaciones, 0 fallas.
+| **CP4-15** | U-13 Corregir una entrada: entrada CP4B de 20 unidades a Q50 → 22 a Q55, motivo escrito. *"Entrada #5883 corregida: 2 datos…"*; la ficha muestra 2 correcciones (antes/después/motivo/quién); el lote pasa de 15 a **17**; el kardex recalcula: saldo 17 × Q55 = **Q935**. Antes, en `psql` (`BEGIN … ROLLBACK`): bajar la entrada por debajo de lo ya salido se rechaza con el mínimo posible; corregir una salida, sin cambios, motivo corto o vencimiento anterior al ingreso se rechazan; `rol_encargado` no puede ejecutar el procedimiento; ni el dueño de las tablas puede modificar o borrar un detalle o una corrección fuera del procedimiento | ✅ |
+| **CP4-16** | Carga de SIGAL (`dml/005`): 205 entradas y 516 salidas del 24/09 al 21/10/2026, 0 lotes incoherentes, ninguno negativo; **804 de 813** productos con la misma existencia que SIGAL y las 9 diferencias explicadas (`ENTREGA4_REPORTE_CARGA_SIGAL.md`). La instalación desde cero con los 21 pasos (CP4-14, actualizado) da 814 productos, 6,560 movimientos y Q600,338.34 | ✅ |
+
+**12 de 12 casos aprobados también con la interfaz nueva, más CP4-15 y CP4-16.** Capturas en `evidencias-entrega-4/interfaz-sigal/` (son las que ilustran el manual de usuario) y respuestas del sistema en `interfaz-sigal/CP4-resultados.json`. La regresión automatizada se repitió después del cambio: 183 verificaciones, 0 fallas.
 
 ## Defectos encontrados al ejecutar los casos
 
@@ -100,5 +103,8 @@ Después de todos los cambios de la Entrega 4 se volvió a recorrer la aplicaci�
 | Baja lógica de exámenes: informe, CSV, permisos, reactivación | 14 | 0 fallas |
 | Respaldo: pantalla, descarga, contenido, permisos | 12 | 0 fallas |
 | Seguridad: cambio de contraseña, encabezados HTTP, POST desde otro origen | 16 | 0 fallas |
+| Corrección de entradas: botón y formulario solo para el Administrador, validaciones de la app y mensajes de la base, 403 para los otros roles, sin dejar correcciones | 16 | 0 fallas |
 
 Cada prueba deshace lo que crea (quita el producto asignado, reactiva el examen, devuelve la contraseña original) y su última verificación comprueba que la base quedó como estaba.
+
+**Nota sobre la base de desarrollo.** Una primera versión de la prueba automatizada de la corrección suponía que la entrada CP4B seguía en 20 unidades a Q50. Después de CP4-15 ya no era así, de modo que su verificación "sin cambios" registró 2 correcciones reales: la entrada volvió a 20 a Q50, con el motivo "Sin cambiar ningún dato". Como exige RN-25, esas correcciones no se pueden borrar y quedan en la base de desarrollo, sobre datos de prueba. La prueba se corrigió para leer los valores actuales y ya no escribe nada.

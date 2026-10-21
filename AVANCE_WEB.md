@@ -11,7 +11,7 @@
 |---|---|---|---|
 | Login / logout | ✅ | Sesión firmada, contraseña con hash, mensaje genérico ante error, redirección solo a rutas internas | Todos |
 | Inicio | ✅ | Resumen del inventario: productos con existencia, inventario bajo, lotes vencidos y por vencer, últimos movimientos | Todos |
-| Movimientos | ✅ | Pestañas Todos / Entradas / Salidas con filtros por fecha y búsqueda. Registrar entrada (crea o alimenta un lote) y salida (FEFO) llamando a los procedimientos almacenados | Consultar: todos. Registrar: administrador y encargado |
+| Movimientos | ✅ | Pestañas Todos / Entradas / Salidas con filtros por fecha y búsqueda. Registrar entrada (crea o alimenta un lote) y salida (FEFO) llamando a los procedimientos almacenados. Corregir una entrada mal digitada, con registro de cada cambio (Entrega 4) | Consultar: todos. Registrar: administrador y encargado. Corregir entradas: administrador |
 | Lotes | ✅ | Existencia por lote, vencidos, por vencer y la ficha de cada lote con sus movimientos. Corregir número, vencimiento o dar de baja (nunca la existencia) | Consultar: todos. Corregir: administrador |
 | Productos | ✅ | CRUD con búsqueda, filtro por categoría, paginación y existencia en vivo | Consultar: todos. Editar: administrador |
 | Exámenes | ✅ | CRUD con baja lógica (Entrega 4), insumos que consume cada examen y para cuántas pruebas alcanza la existencia | Consultar: todos. Editar: administrador |
@@ -52,7 +52,7 @@ Comprobación contable con los datos reales (marzo a septiembre de 2026): compra
 
 ## Datos
 
-La base se carga con el inventario real del laboratorio (registros en papel transcritos a Excel): 806 productos, 1,188 lotes y 5,839 movimientos. Los errores que tenía el papel y cómo se trataron están en `docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md`.
+La base se carga con el inventario real del laboratorio: los registros en papel (marzo a septiembre de 2026) y lo registrado en SIGAL del 24/09 al 21/10/2026. En total, 814 productos, 1,296 lotes y 6,560 movimientos, valorizados en Q600,338.34. Los errores que tenía el papel y cómo se trataron están en `docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md`.
 
 ## Interfaz
 
@@ -125,6 +125,8 @@ La aplicación está publicada en Render y la base de datos en Neon (PostgreSQL 
 | Baja lógica de exámenes | `sql/ddl/003_examen_estado.sql`; el informe de pruebas muestra solo los activos (RN-24) |
 | Respaldo | `web/respaldo.py` + Administración → Respaldo; probado con una restauración real (11 de 11 tablas idénticas) |
 | Seguridad | Cambio de contraseña propio, encabezados CSP, X-Frame-Options y HSTS, rechazo de POST de otro origen |
+| Corrección de entradas | Una entrada no se borra: el Administrador corrige cantidad, precio, proveedor, lote o vencimiento con motivo, y cada cambio queda en `correccion_entrada` (RN-25, RN-26) |
+| Datos al día | Movimientos de SIGAL del 24/09 al 21/10/2026 (`sql/dml/005_carga_sigal.sql`) |
 | Correcciones | La devolución se mostraba como salida en el kardex, la ficha del lote e Inicio; "Devolución" sin tilde |
 
 CRUD por tabla y su justificación: `docs/entrega-4/ENTREGA4_MATRIZ_TRAZABILIDAD.md`. Casos de prueba: `docs/casos-prueba/casos-prueba-entrega-4.md` (14 de 14 aprobados). Manual de usuario: `docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md`.

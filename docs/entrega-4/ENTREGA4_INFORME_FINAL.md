@@ -14,12 +14,12 @@
 El Laboratorio Privado Quetzaltenango llevaba el control de su bodega en papel. No había una forma confiable de saber cuánto quedaba de cada reactivo, qué lotes estaban por vencer ni quién había sacado qué. Este proyecto diseñó e implementó una base de datos relacional en PostgreSQL que resuelve ese problema, más una aplicación web que la consume.
 
 El sistema final tiene:
-- **11 tablas** en tercera forma normal;
-- **5 triggers**, **3 procedimientos almacenados** y **6 vistas** con las reglas de negocio;
+- **12 tablas** en tercera forma normal;
+- **7 triggers**, **4 procedimientos almacenados** y **7 vistas** con las reglas de negocio;
 - **3 roles de base de datos** con privilegios diferenciados;
 - una aplicación web con **11 módulos** y control de acceso en dos capas.
 
-Funciona con el **inventario real del laboratorio**, transcrito de los registros en papel: 806 productos, 1,188 lotes y 5,839 movimientos de marzo a septiembre de 2026, valorizados en Q524,714.36. Está publicado en internet, y su instalación desde cero toma unos 12 segundos de scripts.
+Funciona con el **inventario real del laboratorio**: los registros en papel de marzo a septiembre de 2026 y lo que el laboratorio registró después en SIGAL, hasta el 21/10/2026. En total, 814 productos, 1,296 lotes y 6,560 movimientos, valorizados en Q600,338.34. Está publicado en internet, y su instalación desde cero toma unos 12 segundos de scripts.
 
 ---
 
@@ -61,10 +61,10 @@ Diseñar, implementar y documentar un sistema de base de datos relacional que co
 | 1 | Entidades principales (sin asociativas N:M) | 8 | **9**: rol, usuario, categoria, producto, proveedor, lote, movimiento, detalle_movimiento, examen_laboratorio | Diagrama ER |
 | 2 | Relaciones N:M resueltas | 2 | **3**: proveedor–producto (`proveedor_producto`), examen–producto (`examen_producto`) y movimiento–lote (`detalle_movimiento`) | Modelo relacional |
 | 3 | Normalización hasta 3FN con ejemplo | Sí | Ejemplo completo de 0FN a 3FN | `docs/entrega-2/normalizacion-3fn.md` y `.xlsx` |
-| 4 | Restricciones explícitas | 15 | **38** en el esquema inicial (PK, FK, UNIQUE, CHECK, NOT NULL), más las de las migraciones: `fk_movimiento_origen`, `ck_movimiento_devolucion` y `NOT NULL` de `examen_laboratorio.estado` | `docs/entrega-2/diccionario-datos.md`, `sql/ddl/` |
-| 5 | Triggers y procedimientos con justificación | 2 y 2 | **5 triggers** y **3 procedimientos**, más 7 funciones, cada uno con su regla de negocio | `sql/triggers/`, `sql/procedures/` |
+| 4 | Restricciones explícitas | 15 | **38** en el esquema inicial (PK, FK, UNIQUE, CHECK, NOT NULL), más las de las migraciones: `fk_movimiento_origen`, `ck_movimiento_devolucion`, `NOT NULL` de `examen_laboratorio.estado` y, en `correccion_entrada`, 2 FK y 3 CHECK | `docs/entrega-2/diccionario-datos.md`, `sql/ddl/` |
+| 5 | Triggers y procedimientos con justificación | 2 y 2 | **7 triggers** y **4 procedimientos**, más 8 funciones, cada uno con su regla de negocio | `sql/triggers/`, `sql/procedures/` |
 | 6 | Roles con privilegios diferenciados | 3 | **3**: `rol_consulta ⊂ rol_encargado ⊂ rol_administrador` | `sql/security/` |
-| 7 | Registros por tabla principal | 50 | producto 806, lote 1,188, movimiento 5,839, detalle_movimiento 5,920, proveedor_producto 425, examen_producto 114, proveedor 50, examen_laboratorio 50. Excepciones justificadas: `rol`, `categoria` y `usuario` son catálogos de configuración | `sql/dml/` |
+| 7 | Registros por tabla principal | 50 | producto 814, lote 1,296, movimiento 6,560, detalle_movimiento 6,646, proveedor_producto 425, examen_producto 114, proveedor 50, examen_laboratorio 50. Excepciones justificadas: `rol`, `categoria` y `usuario` son catálogos de configuración | `sql/dml/` |
 
 ---
 
@@ -73,7 +73,7 @@ Diseñar, implementar y documentar un sistema de base de datos relacional que co
 ### 4.1 Decisiones de diseño principales
 
 1. **El lote es la unidad de control.** La existencia se guarda por lote, no por producto: así se puede vencer, rastrear al proveedor y aplicar FEFO. La existencia por producto se calcula en una vista.
-2. **El historial es inmutable.** Ningún movimiento se modifica ni se borra (RN-09). Lo garantizan dos triggers, y además ningún rol tiene `UPDATE` ni `DELETE` sobre esas tablas. Los errores se corrigen con un movimiento inverso, la devolución.
+2. **El historial no se borra.** Ningún movimiento se elimina (RN-09). Una salida equivocada se corrige con un movimiento inverso, la devolución. Una entrada mal digitada se corrige con `sp_corregir_entrada`, que registra cada dato cambiado con su valor anterior, el motivo y el usuario (RN-25, RN-26). Fuera de ese procedimiento, los triggers impiden cualquier cambio, y ningún rol tiene `UPDATE` ni `DELETE` sobre esas tablas.
 3. **Las reglas de negocio viven en la base de datos.** Existencias, FEFO, vencimiento obligatorio y tope de devolución se aplican aunque alguien use la base sin pasar por la aplicación.
 4. **Seguridad en dos capas.** La aplicación protege cada ruta por rol y, además, adopta en PostgreSQL el rol del usuario (`SET ROLE`). Ni el administrador puede leer los hashes de contraseñas ni cambiar existencias a mano.
 5. **Costo promedio ponderado móvil.** Cada compra recalcula el promedio y cada salida se valora al promedio vigente, calculado en la base con `fn_kardex_promedio`. El cuadre contable con los datos reales (compras − consumo = inventario) tiene una diferencia de Q0.06, que viene del redondeo de cada salida.
@@ -86,7 +86,7 @@ Diseñar, implementar y documentar un sistema de base de datos relacional que co
 | Interfaz | Diseño de SIGAL: menú oscuro, búsqueda rápida `Ctrl K`, tema claro y oscuro, avisos flotantes |
 | Acceso | Login, logout, cambio de contraseña propio, menú y permisos por rol |
 | Panel | "Bodega hoy": indicadores, calendario de vencimientos por lote, qué reponer primero y actividad reciente |
-| Movimientos | Entradas, salidas por FEFO, devolución de salidas, historial con filtros |
+| Movimientos | Entradas, salidas por FEFO, devolución de salidas, corrección de entradas con registro, historial con filtros |
 | Lotes | Existencia por lote, vencidos, por vencer, ficha con historial, corrección de datos |
 | Productos, Categorías, Proveedores, Exámenes | CRUD completo con baja lógica; productos y precios por proveedor; insumos por examen y "alcanza para N pruebas" |
 | Reportes | 9 reportes (inventario valorizado, entradas, salidas, kardex, proveedores, pruebas, catálogo, inventario bajo, vencimientos) con CSV e impresión |
@@ -102,7 +102,7 @@ El CRUD por tabla, con la justificación de las operaciones que no se ofrecen a 
 | 1 | 18/08/2026 | Propuesta, requerimientos, ER en notación Chen, Gantt |
 | 2 | 01/09/2026 | Modelo relacional, 3FN, diccionario, DDL; web al 30% (login, 2 CRUD) |
 | 3 | 29/09/2026 | Datos reales, triggers, procedimientos, vistas, roles, 8 casos de prueba, despliegue; web al 70%; devolución de salidas |
-| 4 | 03/11/2026 | Web al 100%: CRUD de proveedor–producto, baja de exámenes, respaldo, seguridad e interfaz con el diseño de SIGAL; manuales, informe y diagramas actualizados |
+| 4 | 03/11/2026 | Web al 100%: CRUD de proveedor–producto, baja de exámenes, corrección de entradas, respaldo, seguridad e interfaz con el diseño de SIGAL; inventario al día con SIGAL; manuales, informe y diagramas actualizados |
 
 ---
 
@@ -113,8 +113,8 @@ El CRUD por tabla, con la justificación de las operaciones que no se ofrecen a 
 | Entrega 2: login y CRUD | 18 | 18 aprobados |
 | Entrega 3: triggers, FEFO, roles, valorización | 8 | 8 aprobados, sobre una instalación desde cero en un segundo equipo |
 | Entrega 3: devolución de salidas | 6 | 6 aprobados |
-| Entrega 4: flujos del manual de usuario, respaldo, instalación | 14 | 14 aprobados, con capturas |
-| Regresión de la aplicación (Entrega 4) | 183 verificaciones | 0 fallas |
+| Entrega 4: flujos del manual de usuario, corrección de entradas, carga de SIGAL, respaldo, instalación | 16 | 16 aprobados, con capturas |
+| Regresión de la aplicación (Entrega 4) | 199 verificaciones | 0 fallas |
 
 Las pruebas encontraron defectos reales, que se corrigieron antes de cada cierre:
 - en la Entrega 3, el generador de la carga de datos y el kardex, que restaba las devoluciones;
@@ -149,7 +149,7 @@ La lección principal: la IA acelera mucho la escritura, pero **los errores que 
 
 1. Un buen modelo de datos resuelve la mayor parte del problema. Elegir el **lote** como unidad de existencia y el **historial inmutable** como fuente de verdad hizo posibles el FEFO, los vencimientos, la trazabilidad y la valorización sin datos redundantes.
 2. Poner las reglas de negocio en la base (triggers, procedimientos y roles) da garantías que la aplicación sola no puede dar. Aunque hubiera un error en la interfaz, PostgreSQL rechazaría una salida mayor a la existencia, una modificación del historial o una lectura de contraseñas.
-3. Probar con **datos reales** fue decisivo: los errores del papel, la escala (5,839 movimientos) y los casos límite no habrían aparecido con datos inventados.
+3. Probar con **datos reales** fue decisivo: los errores del papel, la escala (6,560 movimientos) y los casos límite no habrían aparecido con datos inventados. Al cargar los datos de SIGAL, 804 de 813 productos coincidieron exactamente; en 7 de las diferencias, el contador de existencias de SIGAL no coincidía con su propio historial, justo el desfase que este diseño evita al calcular la existencia desde los movimientos (S7).
 4. La documentación (manuales, matriz de trazabilidad, bitácora) no es un trámite: permite instalar el sistema desde cero en otro equipo y explicar cada decisión.
 
 ## 9. Recomendaciones

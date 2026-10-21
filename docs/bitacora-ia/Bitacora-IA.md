@@ -11,7 +11,7 @@ La bitácora se lleva por entrega. Este archivo corresponde a la Entrega 1; la d
 | Entrega 1 — Análisis, propuesta y diseño conceptual | este archivo | Cerrada |
 | Entrega 2 — Diseño lógico, diccionario e implementación base | [`docs/entrega-2/Bitacora-IA.md`](../entrega-2/Bitacora-IA.md) | Cerrada (13 registros) |
 | Entrega 3 — Implementación avanzada, seguridad y pruebas | [`docs/bitacora-ia/ENTREGA3_BITACORA_IA.md`](ENTREGA3_BITACORA_IA.md) | Cerrada (10 registros) |
-| Entrega 4 — Integración, documentación y defensa | [`docs/bitacora-ia/ENTREGA4_BITACORA_IA.md`](ENTREGA4_BITACORA_IA.md) | 7 registros + bitácora consolidada de todo el proyecto |
+| Entrega 4 — Integración, documentación y defensa | [`docs/bitacora-ia/ENTREGA4_BITACORA_IA.md`](ENTREGA4_BITACORA_IA.md) | 9 registros + bitácora consolidada de todo el proyecto |
 
 ## Entrega
 Entrega 1 — Análisis, propuesta y diseño conceptual

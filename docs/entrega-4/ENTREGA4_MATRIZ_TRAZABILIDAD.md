@@ -2,12 +2,12 @@
 
 Relaciona cada requerimiento de la Entrega 1 con dónde se implementa en la base de datos y en la aplicación web, y con la prueba que lo demuestra. Actualiza la versión 2 (`docs/entrega-3/ENTREGA3_MATRIZ_TRAZABILIDAD.md`).
 
-**Estado general:** **39 de 39 requerimientos funcionales y los 18 no funcionales implementados.** El último pendiente, RNF-11 (respaldos), se completó en esta entrega. Además hay 6 reglas de negocio nuevas: RN-19 a RN-23 (devolución) y RN-24 (baja lógica de exámenes). Ningún requerimiento queda abierto.
+**Estado general:** **39 de 39 requerimientos funcionales y los 18 no funcionales implementados.** El último pendiente, RNF-11 (respaldos), se completó en esta entrega. Además hay 8 reglas de negocio nuevas: RN-19 a RN-23 (devolución), RN-24 (baja lógica de exámenes) y RN-25 y RN-26 (corrección de entradas). Ningún requerimiento queda abierto.
 
 Convenciones de la columna *Evidencia*:
 - `CP4-xx`: caso de prueba de esta entrega (`docs/casos-prueba/casos-prueba-entrega-4.md`), ejecutado en el navegador siguiendo el manual de usuario.
 - `CP3-xx` y `CP-xx`: casos de las entregas 3 y 2, que siguen vigentes.
-- *Prueba automatizada*: verificación con el cliente de pruebas de Flask contra la base real con los 3 usuarios. La regresión de la Entrega 4 suma 183 verificaciones sin fallas.
+- *Prueba automatizada*: verificación con el cliente de pruebas de Flask contra la base real con los 3 usuarios. La regresión de la Entrega 4 suma 199 verificaciones sin fallas.
 
 ---
 
@@ -25,10 +25,11 @@ Qué operación ofrece la aplicación sobre cada tabla y por qué algunas no tie
 | `proveedor_producto` (N:M) | ✅ | ✅ | ✅ precio | ✅ `DELETE` | Ficha del proveedor (Entrega 4) | CP4-04 |
 | `examen_producto` (N:M) | ✅ | ✅ | quitar y volver a agregar | ✅ `DELETE` | Ficha del examen | CP4-07 |
 | `lote` | ✅ con la primera entrada | ✅ | ✅ número, proveedor, fechas | ✅ baja lógica | Movimientos → Entrada; Lotes → Corregir datos | CP4-05, CP4-06 |
-| `movimiento` + `detalle_movimiento` | ✅ entrada, salida, devolución | ✅ | ✖ por diseño | ✖ por diseño | Movimientos | CP4-05, CP4-06 |
+| `movimiento` + `detalle_movimiento` | ✅ entrada, salida, devolución | ✅ | ✅ solo entradas, con registro (`correccion_entrada`) | ✖ por diseño | Movimientos | CP4-05, CP4-06, CP4-15 |
+| `correccion_entrada` | ✅ al corregir | ✅ ficha de la entrada | ✖ por diseño | ✖ por diseño | Movimientos → Corregir entrada | CP4-15 |
 | `rol` | — | ✅ | — | — | Usuarios y roles (tabla de permisos) | CP4-01 |
 
-- **`movimiento` y `detalle_movimiento`:** no se modifican ni se borran por regla de negocio (RN-09). El trigger de inmutabilidad lo impide en la base, y una corrección se hace con una devolución (movimiento inverso, RN-19 a RN-22).
+- **`movimiento` y `detalle_movimiento`:** no se borran nunca (RN-09). Una **entrada** mal digitada se corrige con `sp_corregir_entrada` (solo Administrador), que registra cada dato cambiado con su valor anterior (RN-25, RN-26); una **salida** se corrige con una devolución (movimiento inverso, RN-19 a RN-22). El trigger de inmutabilidad impide cualquier otro cambio.
 - **`lote`:** su existencia nunca se edita a mano (la mantiene el trigger), y nace con la entrada que lo trae, para que ningún lote tenga existencia sin un movimiento que la explique.
 - **`rol`:** catálogo de configuración. Cada rol de la aplicación corresponde a un rol de PostgreSQL con sus privilegios; agregar uno exige crear también el rol de base de datos y sus permisos, así que se hace por script (`sql/security/`), no desde la pantalla.
 
@@ -50,7 +51,7 @@ Qué operación ofrece la aplicación sobre cada tabla y por qué algunas no tie
 
 | Requerimiento | Base de datos | Aplicación web | Evidencia |
 |---|---|---|---|
-| RF-06 a RF-08 Registrar, modificar y consultar productos | `producto` (806 productos reales) | `routes/productos.py`, con búsqueda, filtro y existencia | CP-11 a CP-14, CP4-03 |
+| RF-06 a RF-08 Registrar, modificar y consultar productos | `producto` (814 productos reales) | `routes/productos.py`, con búsqueda, filtro y existencia | CP-11 a CP-14, CP4-03 |
 | RF-09 Clasificar productos por categoría | `producto.id_categoria` → `categoria` | Selector y filtro por categoría | CP-11, CP-14, CP4-03 |
 | RF-10 Administrar categorías | `categoria` | `routes/categorias.py` | CP-06 a CP-10, CP4-11 |
 | RF-11 a RF-13 Registrar, modificar y consultar proveedores | `proveedor` (26 reales + 24 de prueba) | `routes/proveedores.py`: CRUD, detalle con precios | Prueba automatizada, CP4-04, CP4-11 |
@@ -125,15 +126,15 @@ Qué operación ofrece la aplicación sobre cada tabla y por qué algunas no tie
 | Requerimiento | Implementación | Estado |
 |---|---|---|
 | RNF-01 Navegador web | Flask + plantillas HTML | ✅ |
-| RNF-02 Base de datos relacional | PostgreSQL 18, 11 tablas en 3FN | ✅ |
+| RNF-02 Base de datos relacional | PostgreSQL 18, 12 tablas en 3FN | ✅ |
 | RNF-03 Autenticación | Login con sesión firmada | ✅ |
 | RNF-04, RNF-05 Contraseñas con hash | `generate_password_hash` (scrypt) / `check_password_hash`; cambio de contraseña propio confirmando la actual (CP4-02) | ✅ |
 | RNF-06 Acceso por roles | Doble capa: app (`rol_requerido`) y base de datos (`SET ROLE`) | ✅ |
-| RNF-07, RNF-08 Integridad | Restricciones del DDL (PK, FK, UNIQUE, CHECK, NOT NULL), 5 triggers y 3 procedimientos atómicos | ✅ |
+| RNF-07, RNF-08 Integridad | Restricciones del DDL (PK, FK, UNIQUE, CHECK, NOT NULL), 7 triggers y 4 procedimientos atómicos | ✅ |
 | RNF-09, RNF-10 Interfaz clara y mensajes | Los mensajes de las reglas de negocio llegan tal cual al usuario (SQLSTATE P0001); nunca se muestra SQL | ✅ |
 | RNF-11 Respaldos | `web/respaldo.py` + Administración → Respaldo: archivo `.sql` restaurable con `psql` en una sola transacción. Procedimiento en el manual técnico, sección 7 (CP4-10, CP4-13) | ✅ Entrega 4 |
 | RNF-12, RNF-13 Arquitectura mantenible y ampliable | Capas `config` / `db` / `routes` / `templates`; SQL separado por propósito | ✅ |
-| RNF-14 Tiempo de respuesta | Listas paginadas; el kardex de los 806 productos se calcula en ~18 ms | ✅ |
+| RNF-14 Tiempo de respuesta | Listas paginadas; el kardex de los 814 productos se calcula en ~18 ms | ✅ |
 | RNF-15 Validar antes de modificar inventario | Validación en el servidor + procedimientos + triggers | ✅ |
 | RNF-16 Información para trazabilidad | Historial inmutable con usuario, fecha y lote | ✅ |
 | RNF-17 Evitar accesos no autorizados | Rutas protegidas, 403, `SET ROLE`, redirección de login solo a rutas internas; desde la Entrega 4, encabezados de seguridad (CSP, X-Frame-Options, HSTS) y rechazo de POST de otro origen | ✅ |
@@ -171,4 +172,6 @@ Reglas de negocio nuevas, propuestas por el equipo. No provienen de los 39 RF: n
 | Cambiar mi contraseña | RF-03, RNF-04, RNF-17 | `auth.cambiar_contrasena`, sobre `db.conexion_sin_rol()` | CP4-02 |
 | Encabezados de seguridad y verificación de origen | RNF-17 | `app.encabezados_de_seguridad`, `app.mismo_origen` | Prueba automatizada (16 verificaciones) |
 | Devolución mostrada como reingreso en kardex, ficha del lote e Inicio | RN-21, RN-23 | `informes/kardex.html`, `lotes/detalle.html`, `reportes/inicio.html` | CP4-06, CP4-08 |
-| Manuales técnico y de usuario | Consigna, Entrega 4 | `docs/entrega-4/` | CP4-01 a CP4-14 siguen sus flujos |
+| Corrección de entradas con registro | RF-20, RF-28, RN-09, **RN-25** (una entrada se corrige, no se elimina; cada cambio queda registrado), **RN-26** (motivo obligatorio y usuario responsable) | `ddl/004`, `triggers/003`, `procedures/003` (`sp_corregir_entrada`), `views/005`, `security/003`; `movimientos.corregir` | CP4-15 |
+| Inventario al día con SIGAL | RF-20, RF-21, RF-35 | `sql/dml/005_carga_sigal.sql` (generado por `generar_carga_sigal.py`): 205 entradas y 516 salidas del 24/09 al 21/10/2026 | CP4-16 |
+| Manuales técnico y de usuario | Consigna, Entrega 4 | `docs/entrega-4/` | CP4-01 a CP4-16 siguen sus flujos |

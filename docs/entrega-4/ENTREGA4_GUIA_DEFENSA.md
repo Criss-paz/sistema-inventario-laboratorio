@@ -59,11 +59,11 @@ WHERE l.cantidad_disponible <> coalesce((
 
 | Dato | Valor |
 |---|---|
-| Tablas / entidades principales / relaciones N:M | 11 / 9 / 3 |
-| Triggers / procedimientos / funciones / vistas / roles | 5 / 3 / 7 / 6 / 3 |
-| Productos / lotes / movimientos (datos reales) | 806 / 1,188 / 5,839 |
-| Valor del inventario con los datos iniciales | Q524,714.36 |
-| Requerimientos | 39 RF, 18 RNF y 24 RN, todos implementados |
+| Tablas / entidades principales / relaciones N:M | 12 / 9 / 3 |
+| Triggers / procedimientos / funciones / vistas / roles | 7 / 4 / 8 / 7 / 3 |
+| Productos / lotes / movimientos (papel + SIGAL, hasta el 21/10/2026) | 814 / 1,296 / 6,560 |
+| Valor del inventario con los datos iniciales | Q600,338.34 |
+| Requerimientos | 39 RF, 18 RNF y 26 RN, todos implementados |
 | Casos de prueba ejecutados (entregas 2 a 4) | 46, todos aprobados |
 
 ---
@@ -104,6 +104,12 @@ El procedimiento corre con los permisos de su dueño. Así el rol del usuario no
 **¿Cómo se corrige un movimiento mal registrado si el historial es inmutable?**
 Con un movimiento inverso: la **devolución**. Queda enlazada a la salida que corrige (`id_movimiento_origen`) y con un motivo obligatorio, garantizado por un CHECK. Un trigger impide devolver más de lo que salió.
 
+**Si el historial es inmutable, ¿cómo se corrige una entrada mal digitada?**
+Con `sp_corregir_entrada`, solo el Administrador. La entrada no se borra: por cada dato que cambia (cantidad, precio, proveedor, número de lote o vencimiento) se inserta una fila en `correccion_entrada` con el valor anterior, el nuevo, el motivo y el usuario. Esa tabla tampoco se puede modificar. El trigger de inmutabilidad solo deja pasar el `UPDATE` de cantidad o precio de un detalle mientras corre el procedimiento, que lo indica con una variable de sesión local. Ningún rol tiene `UPDATE` sobre `detalle_movimiento`, así que la variable sola no sirve de nada. Si la cantidad baja, otro trigger ajusta el lote y no lo deja negativo.
+
+**¿Por qué no se puede corregir el producto de una entrada?**
+Porque movería existencia de un producto a otro y podría dejar sin respaldo salidas ya registradas. Se resuelve con una salida del producto equivocado y una entrada en el correcto, cada una con su observación.
+
 **¿Por qué el trigger del tope de devolución se llama `trg_z_…`?**
 PostgreSQL dispara los triggers `BEFORE` de una misma tabla en orden alfabético, y este debe correr después del trigger de existencia.
 
@@ -133,13 +139,16 @@ El login consulta con el usuario de conexión **antes** de adoptar un rol: es la
 Los catálogos usan baja lógica, para que el historial siempre muestre a qué producto, proveedor o usuario se refiere. Los movimientos no se editan ni se borran por regla de negocio. La tabla completa de CRUD está en `ENTREGA4_MATRIZ_TRAZABILIDAD.md`.
 
 **¿Cómo se respalda y se restaura?**
-Administración → Respaldo descarga un `.sql` con los datos de las 11 tablas, leídos en una sola foto consistente (`REPEATABLE READ`). Se restaura con `psql` sobre el esquema instalado, en una sola transacción y con los triggers apagados solo durante la carga. Se probó restaurándolo: las 11 tablas quedaron idénticas a la original.
+Administración → Respaldo descarga un `.sql` con los datos de las 12 tablas, leídos en una sola foto consistente (`REPEATABLE READ`). Se restaura con `psql` sobre el esquema instalado, en una sola transacción y con los triggers apagados solo durante la carga. Se probó restaurándolo: las 11 tablas quedaron idénticas a la original.
 
 **¿Cómo se instala desde cero?**
 Siguiendo `INSTALL.md`: crear la base, ejecutar los scripts en orden (estructura, triggers antes de los datos, seguridad al final), configurar `.env` y ejecutar la aplicación. Los scripts tardan unos 12 segundos.
 
 **¿Cómo usaron la IA y cómo garantizan que entienden el resultado?**
 Claude Code generó borradores de SQL, código y documentos. Cada resultado se probó contra la base real antes del commit, y la bitácora registra qué se corrigió o rechazó. Las pruebas encontraron errores que la IA no había visto: en el generador de la carga, en el kardex de devoluciones y en las plantillas. Cada decisión de esta guía la podemos explicar sin la herramienta.
+
+**¿De dónde salen los datos de octubre?**
+Del respaldo de SIGAL, el sistema hermano donde el laboratorio siguió registrando. `sql/dml/generar_carga_sigal.py` carga solo lo posterior al 23/09 cuyo código no estaba ya, con las mismas reglas que la carga del papel: FEFO, lotes `SL-` y servicios excluidos. Al comparar, 804 de 813 productos coinciden exactamente con SIGAL. En 7 de las diferencias, el contador de existencias de SIGAL no cuadra con su propio historial, y este sistema sí: es el argumento práctico para no guardar datos calculables (S7).
 
 **¿Qué mejorarían?**
 Bloqueo de cuenta por intentos fallidos de login, auditoría de cambios en catálogos, envío automático del respaldo fuera del servidor y un servidor pagado o en la red del laboratorio (manual técnico, sección 11).

@@ -14,7 +14,7 @@ Cada procedimiento tiene un código (**U-01**, **U-02**…). El mismo código ap
 1. [Antes de empezar](#1-antes-de-empezar)
 2. [Entrar, salir y cambiar la contraseña](#2-entrar-salir-y-cambiar-la-contraseña) — U-01, U-02
 3. [El Panel y la búsqueda rápida](#3-el-panel-y-la-búsqueda-rápida)
-4. [Registrar una entrada (compra o recepción)](#4-registrar-una-entrada) — U-03
+4. [Registrar y corregir una entrada](#4-registrar-una-entrada) — U-03, U-13
 5. [Registrar una salida (consumo)](#5-registrar-una-salida) — U-04
 6. [Corregir una salida mal registrada (devolución)](#6-corregir-una-salida-mal-registrada-devolución) — U-05
 7. [Consultar lotes, existencias y vencimientos](#7-consultar-lotes-existencias-y-vencimientos) — U-06
@@ -49,7 +49,7 @@ Cada usuario tiene un rol, y el rol decide qué puede hacer. El menú solo muest
 | Cambiar su propia contraseña | ✔ | ✔ | ✔ |
 | Registrar entradas, salidas y devoluciones | ✔ | ✔ | — |
 | Crear y editar productos, categorías, proveedores y exámenes | ✔ | — | — |
-| Corregir el número o el vencimiento de un lote | ✔ | — | — |
+| Corregir una entrada mal digitada, o el número o el vencimiento de un lote | ✔ | — | — |
 | Administrar usuarios y descargar el respaldo | ✔ | — | — |
 
 ### Cómo está organizada la pantalla
@@ -167,7 +167,30 @@ Una **entrada** es todo lo que llega a la bodega: una compra, una donación, una
 
 ![Formulario de entrada](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-05a-entrada.png)
 
-La existencia del lote sube automáticamente. La fecha, la hora y el nombre de quien registró quedan guardados y no se pueden cambiar después.
+La existencia del lote sube automáticamente. La fecha, la hora y el nombre de quien registró quedan guardados.
+
+### U-13 Corregir una entrada mal digitada
+
+*Solo el Administrador.* Una entrada **no se elimina**; si tiene un dato equivocado (cantidad, precio, proveedor, número de lote o vencimiento), se **corrige**, y la corrección queda registrada.
+
+1. Abra la entrada: **Movimientos → pestaña Entradas** → clic en su fecha.
+2. Presione **Corregir entrada**. El formulario viene con los datos registrados.
+3. Cambie solo lo que está mal.
+4. **Motivo:** explique por qué (mínimo 10 caracteres), por ejemplo *"La factura dice 22 unidades y se digitó 20"*.
+5. Presione **Guardar corrección**. Aparece *"Entrada #… corregida: 2 datos. El registro original y la corrección quedan en el historial."*
+
+![Corregir una entrada](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-15a-corregir-entrada.png)
+
+En la ficha de la entrada aparece la tabla **Correcciones**: cada dato corregido, con su valor anterior, el nuevo, el motivo, quién lo corrigió y cuándo. Esas filas no se pueden borrar.
+
+![Entrada corregida](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-15b-entrada-corregida.png)
+
+Qué hace el sistema por usted:
+- La **existencia del lote** sube o baja por la diferencia. No deja bajar una entrada por debajo de lo que ya salió de ese lote; el mensaje dice el mínimo posible.
+- El **kardex y el valor del inventario** se recalculan con el precio corregido.
+- El **proveedor, el número de lote y el vencimiento** son datos del lote: si el lote recibió varias entradas, el formulario lo advierte, porque la corrección vale para todas.
+
+No se corrige el **producto** de una entrada. Si se registró en el producto equivocado, registre una salida de ese producto y una entrada en el correcto, cada una con su observación.
 
 ---
 
@@ -379,7 +402,7 @@ El archivo contiene información del laboratorio y de sus proveedores: trátelo 
 ## 15. Preguntas frecuentes
 
 **Registré una entrada con un error. ¿Cómo la corrijo?**
-Si el error es el número de lote o la fecha de vencimiento, el administrador lo corrige desde la ficha del lote (sección 7). Si el error es la cantidad, registre una salida por la diferencia con una observación que lo explique. Los movimientos no se editan, para que el historial sea confiable.
+El administrador abre la entrada y usa **Corregir entrada** (U-13): cantidad, precio, proveedor, número de lote o vencimiento. La entrada no se borra y la corrección queda registrada con su motivo. Una **salida** equivocada se corrige con una **devolución** (U-05).
 
 **¿Por qué la salida tomó un lote distinto del que tengo en la mano?**
 Porque el sistema siempre descuenta primero del lote que vence antes (FEFO). Así se evita que un lote se venza en bodega mientras se usa uno más nuevo. Use físicamente ese lote.

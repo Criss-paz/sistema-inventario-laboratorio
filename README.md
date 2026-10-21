@@ -93,7 +93,7 @@ sistema-inventario-laboratorio/
 - `sql/views/001_views.sql` — existencia, inventario bajo, lotes por vencer, historial
 - `sql/views/002_valorizacion_promedio.sql` — kardex y valorización por costo promedio ponderado
 - `sql/security/001_roles.sql` — 3 roles de base de datos con privilegios diferenciados
-- `sql/dml/` + `sql/dml/generar_carga.py` — inventario real del laboratorio (806 productos, 1,188 lotes, 5,839 movimientos)
+- `sql/dml/` + `sql/dml/generar_carga.py` — inventario real del laboratorio del registro en papel (806 productos, 1,188 lotes, 5,839 movimientos; la Entrega 4 lo pone al día con SIGAL)
 - `docs/entrega-3/ENTREGA3_REPORTE_CARGA_DATOS.md` — errores encontrados en los registros en papel
 - `web/` — movimientos, lotes, productos, exámenes, proveedores, categorías, reportes y usuarios, con control de acceso por rol
 - `AVANCE_WEB.md` — estado de la app web
@@ -114,6 +114,8 @@ sistema-inventario-laboratorio/
 - `docs/bitacora-ia/ENTREGA4_BITACORA_IA.md` — bitácora de la Entrega 4 y consolidada
 - `docs/certificaciones/CERTIFICACION_ENTREGA_4.md`
 - `sql/ddl/003_examen_estado.sql`, `web/respaldo.py` — baja lógica de exámenes y respaldo (RNF-11)
+- `sql/*/00*_correccion_entrada.sql` — corrección de entradas con registro de cada cambio (RN-25, RN-26)
+- `sql/dml/005_carga_sigal.sql` + `generar_carga_sigal.py` y `docs/entrega-4/ENTREGA4_REPORTE_CARGA_SIGAL.md` — inventario al día con SIGAL (24/09 al 21/10/2026)
 
 ### SGBD
 **PostgreSQL** — decidido en la Entrega 2. La Entrega 1 dejó este punto abierto ("a definir") y la bitácora de IA de la Entrega 1 mencionaba Oracle como intención inicial; el equipo confirmó PostgreSQL por su soporte completo de CHECK/FK/triggers/funciones, instalación simple y facilidad de defensa académica. Justificación completa en `docs/entrega-2/Bitacora-IA.md`.
@@ -131,6 +133,6 @@ Cada entrega finaliza con un commit de cierre y su tag: `entrega-1`, `entrega-2`
 - Entrega 1 — Análisis, propuesta y diseño conceptual: **cerrada** (tag `entrega-1`).
 - Entrega 2 — Diseño lógico, diccionario e implementación base: **cerrada** (tag `entrega-2`, 01/09/2026). Contenido verificado por ejecución real (PostgreSQL 18 + Python 3.14, 30/08/2026 — 15/15 casos automatizados y 3 manuales en navegador). Incluye: SGBD (PostgreSQL), stack web (Flask + psycopg 3), modelo relacional, normalización 3FN, diccionario de datos, DDL, datos de prueba, login + 2 CRUD (Categorías, Productos), `AVANCE_WEB.md`, matriz de trazabilidad, casos de prueba ejecutados, diagrama ER corregido y re-exportado, y certificación firmada por ambos integrantes.
 - Entrega 3 — Implementación avanzada, seguridad y pruebas: **implementada** (26/09/2026). Base de datos: triggers, procedimientos (FEFO), vistas, valorización por costo promedio ponderado, 3 roles de PostgreSQL y el inventario real del laboratorio cargado (806 productos, 1,188 lotes, 5,839 movimientos). Web al 70%: movimientos, lotes, productos, exámenes, proveedores, categorías, reportes y usuarios, con control de acceso por rol en la app y en la base. Documentación: matriz de trazabilidad v2, estándares, 8 casos de prueba verificados y bitácora IA. Desplegada en internet (estándar S5). Instalación desde cero verificada en un segundo equipo el 28/09/2026: los 8 casos de prueba pasaron, con capturas en `docs/casos-prueba/evidencias-entrega-3/`. Cierre: certificación firmada por ambos integrantes y tag `entrega-3`. **Cerrada** (29/09/2026), con la devolución de salidas agregada antes del tag.
-- Entrega 4 — Integración, documentación y defensa oral: **implementada** (20/10/2026), cierre previsto para el 03/11/2026. Web al 100%: CRUD de proveedor–producto, baja lógica de exámenes, respaldo de la base (RNF-11), cambio de contraseña propio, encabezados de seguridad e interfaz con el diseño de SIGAL (Panel "Bodega hoy", búsqueda `Ctrl K`, tema claro y oscuro). Documentación: manuales técnico y de usuario, informe final, declaración de integridad, matriz v3, diagramas actualizados, guía de defensa y bitácora consolidada. 14 de 14 casos de prueba aprobados, con capturas. Pendiente para el cierre: firmas, despliegue de la migración en producción y tag `entrega-4`.
+- Entrega 4 — Integración, documentación y defensa oral: **implementada** (20/10/2026), cierre previsto para el 03/11/2026. Web al 100%: CRUD de proveedor–producto, baja lógica de exámenes, respaldo de la base (RNF-11), cambio de contraseña propio, encabezados de seguridad, corrección de entradas con registro, inventario al día con SIGAL e interfaz con el diseño de SIGAL (Panel "Bodega hoy", búsqueda `Ctrl K`, tema claro y oscuro). Documentación: manuales técnico y de usuario, informe final, declaración de integridad, matriz v3, diagramas actualizados, guía de defensa y bitácora consolidada. 14 de 14 casos de prueba aprobados, con capturas. Pendiente para el cierre: firmas, despliegue de la migración en producción y tag `entrega-4`.
 
 > **Nota sobre la integración:** el proyecto lo desarrollan 2 estudiantes. La consigna indica grupos de 3 "puede variar con autorización del catedrático".
