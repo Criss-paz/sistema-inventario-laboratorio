@@ -60,6 +60,7 @@
           <span class="user-name">{{ session.get('nombre_usuario') }}</span>
           <span class="user-role">{{ session.get('nombre_rol') }}</span>
         </div>
+        <a class="icon-btn icon-btn-neutro" href="{{ url_for('auth.cambiar_contrasena') }}" title="Cambiar mi contraseña" aria-label="Cambiar mi contraseña">{{ i.icono('clave') }}</a>
         <form action="{{ url_for('auth.logout') }}" method="post">
           <button type="submit" class="icon-btn" title="Cerrar sesión" aria-label="Cerrar sesión">{{ i.icono('salir') }}</button>
         </form>

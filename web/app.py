@@ -14,7 +14,9 @@ Ejecutar:
 import datetime as dt
 
 import psycopg
-from flask import Flask, redirect, url_for, render_template
+from urllib.parse import urlsplit
+
+from flask import Flask, abort, redirect, request, url_for, render_template
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
@@ -45,6 +47,32 @@ def create_app():
     for bp in (auth_bp, categorias_bp, productos_bp, proveedores_bp, lotes_bp,
                movimientos_bp, examenes_bp, reportes_bp, usuarios_bp, informes_bp, respaldo_bp):
         app.register_blueprint(bp)
+
+    # Formularios solo desde esta misma app. La cookie de sesión ya es
+    # SameSite=Lax (config.py), que no viaja en un POST desde otro sitio; esta
+    # verificación del encabezado Origin es una segunda barrera contra CSRF.
+    @app.before_request
+    def mismo_origen():
+        if request.method == "POST":
+            origen = request.headers.get("Origin")
+            if origen and urlsplit(origen).netloc != request.host:
+                abort(403)
+
+    # Encabezados de seguridad en todas las respuestas (RNF-17).
+    # 'unsafe-inline' en script/style: las plantillas tienen scripts cortos y
+    # confirmaciones onsubmit propios; no se carga nada de otros dominios.
+    @app.after_request
+    def encabezados_de_seguridad(respuesta):
+        respuesta.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
+        )
+        respuesta.headers["X-Content-Type-Options"] = "nosniff"
+        respuesta.headers["X-Frame-Options"] = "DENY"
+        respuesta.headers["Referrer-Policy"] = "same-origin"
+        if app.config["APP_ENV"] == "production":
+            respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
+        return respuesta
 
     # Las plantillas deciden qué botones mostrar con tiene_rol(ADMIN, ...).
     @app.context_processor

@@ -1,7 +1,7 @@
 """
 routes/auth.py — Login, logout y control de acceso por rol.
 RF-01 (iniciar sesión), RF-02 (cerrar sesión), RF-05 (acceso según rol),
-RNF-03/04/05/06/17.
+RNF-03/04/05/06/17. Además, cada usuario puede cambiar su propia contraseña.
 
 El acceso por rol se controla en dos capas:
   1. Aquí, en la app: rol_requerido() bloquea la ruta y las plantillas
@@ -17,15 +17,17 @@ Qué puede hacer cada rol (igual que sql/security/001_roles.sql):
 from functools import wraps
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, abort
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import query_one, ROL_BD
+from db import query_one, conexion_sin_rol, ROL_BD
 
 ADMIN = "Administrador"
 ENCARGADO = "Encargado de inventario"
 CONSULTA = "Usuario de consulta"
 
 bp = Blueprint("auth", __name__)
+
+LARGO_MINIMO_CLAVE = 8
 
 
 def login_required(view):
@@ -116,3 +118,58 @@ def logout():
     session.clear()
     flash("Sesión cerrada.", "info")
     return redirect(url_for("auth.login"))
+
+
+@bp.route("/mi-cuenta/contrasena", methods=["GET", "POST"])
+@login_required
+def cambiar_contrasena():
+    """Cualquier usuario cambia SU contraseña confirmando la actual (RN-15).
+
+    Los roles de encargado y de consulta no tienen acceso a la tabla usuario,
+    y ninguno puede leer password_hash; por eso la verificación y el UPDATE
+    usan db.conexion_sin_rol(), igual que el login, y siempre sobre el
+    id_usuario de la sesión (firmada por la app), nunca uno recibido del
+    formulario.
+    """
+    if request.method == "GET":
+        return render_template("cambiar_contrasena.html")
+
+    actual = request.form.get("actual") or ""
+    nueva = request.form.get("nueva") or ""
+    confirmacion = request.form.get("confirmacion") or ""
+
+    # A3: validación antes de tocar la base de datos.
+    errores = []
+    if not actual:
+        errores.append("Escriba su contraseña actual.")
+    if len(nueva) < LARGO_MINIMO_CLAVE:
+        errores.append(f"La nueva contraseña debe tener al menos {LARGO_MINIMO_CLAVE} caracteres.")
+    elif nueva != confirmacion:
+        errores.append("La confirmación no coincide con la nueva contraseña.")
+    elif nueva == actual:
+        errores.append("La nueva contraseña debe ser distinta de la actual.")
+    if errores:
+        for e in errores:
+            flash(e, "danger")
+        return render_template("cambiar_contrasena.html"), 400
+
+    try:
+        with conexion_sin_rol() as conn:
+            fila = conn.execute(
+                "SELECT password_hash FROM usuario WHERE id_usuario = %s AND estado",
+                (session["id_usuario"],),
+            ).fetchone()
+            if fila is None or not check_password_hash(fila["password_hash"], actual):
+                flash("La contraseña actual no es correcta.", "danger")
+                return render_template("cambiar_contrasena.html"), 400
+            conn.execute(
+                "UPDATE usuario SET password_hash = %s WHERE id_usuario = %s",
+                (generate_password_hash(nueva), session["id_usuario"]),
+            )
+    except Exception:
+        # A2: nunca se muestra el error SQL crudo al usuario.
+        flash("No se pudo cambiar la contraseña. Intente más tarde.", "danger")
+        return render_template("cambiar_contrasena.html"), 500
+
+    flash("Contraseña cambiada. Úsela la próxima vez que inicie sesión.", "success")
+    return redirect(url_for("index"))

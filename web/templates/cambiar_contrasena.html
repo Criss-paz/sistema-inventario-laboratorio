@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Cambiar contraseña — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Cambiar mi contraseña<span class="subtitle">{{ session.get('nombre_usuario') }}</span></h1>
+</div>
+
+<form class="card" method="post" autocomplete="off">
+  <label for="actual">Contraseña actual</label>
+  <input type="password" id="actual" name="actual" required autofocus autocomplete="current-password">
+
+  <label for="nueva">Nueva contraseña <span class="hint">(mínimo 8 caracteres)</span></label>
+  <input type="password" id="nueva" name="nueva" required minlength="8" autocomplete="new-password">
+
+  <label for="confirmacion">Repita la nueva contraseña</label>
+  <input type="password" id="confirmacion" name="confirmacion" required minlength="8" autocomplete="new-password">
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Cambiar contraseña</button>
+    <a class="btn" href="{{ url_for('index') }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

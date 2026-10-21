@@ -20,6 +20,8 @@ from psycopg import sql as pgsql
 from psycopg.rows import dict_row
 from flask import g, current_app, session
 
+from config import Config
+
 # Rol de la aplicación (tabla `rol`) → rol de base de datos.
 ROL_BD = {
     "Administrador": "rol_administrador",
@@ -60,6 +62,26 @@ def get_db():
             conn.commit()
         g.db = conn
     return g.db
+
+
+def conexion_sin_rol():
+    """Conexión nueva con el usuario dueño de las tablas, SIN `SET ROLE`.
+
+    Es la excepción documentada al control de acceso en la base: ningún rol
+    de la app puede leer usuario.password_hash (sql/security/001_roles.sql),
+    así que lo que necesita ese dato usa esta conexión. Solo la usan:
+      - el login (antes de que exista sesión, vía get_db);
+      - cambiar_contrasena (routes/auth.py), siempre sobre el usuario de la
+        propia sesión, que está firmada por la app;
+      - el respaldo (respaldo.py), restringido al Administrador y de solo
+        lectura.
+    Lee Config y no current_app para que respaldo.py funcione también desde
+    la línea de comandos. Quien la abre la cierra (usar con `with`).
+    """
+    if Config.DATABASE_URL:
+        return psycopg.connect(Config.DATABASE_URL, row_factory=dict_row)
+    return psycopg.connect(host=Config.DB_HOST, port=Config.DB_PORT, dbname=Config.DB_NAME,
+                           user=Config.DB_USER, password=Config.DB_PASSWORD, row_factory=dict_row)
 
 
 def close_db(e=None):

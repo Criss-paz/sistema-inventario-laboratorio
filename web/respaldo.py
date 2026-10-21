@@ -31,7 +31,7 @@ import sys
 import psycopg
 from psycopg import sql as pgsql
 
-from config import Config
+from db import conexion_sin_rol
 
 # Orden de carga: cada tabla después de las que referencia con FK.
 # Si el esquema gana una tabla nueva, generar() se niega a respaldar hasta
@@ -55,21 +55,6 @@ def nombre_archivo(momento=None):
     return f"respaldo_inventario_{momento:%Y%m%d_%H%M}.sql"
 
 
-def _conectar():
-    """Conexión con el usuario dueño de las tablas, SIN `SET ROLE`.
-
-    Es la misma excepción que el login (routes/auth.py): ningún rol de la app
-    puede leer usuario.password_hash (sql/security/001_roles.sql), pero un
-    respaldo sin las contraseñas no serviría para restaurar el sistema. Por
-    eso la ruta que llama aquí está restringida al Administrador, y esta
-    conexión es de solo lectura.
-    """
-    if Config.DATABASE_URL:
-        return psycopg.connect(Config.DATABASE_URL)
-    return psycopg.connect(host=Config.DB_HOST, port=Config.DB_PORT, dbname=Config.DB_NAME,
-                           user=Config.DB_USER, password=Config.DB_PASSWORD)
-
-
 def _columnas(cur, tabla):
     cur.execute(
         """
@@ -79,7 +64,7 @@ def _columnas(cur, tabla):
         """,
         (tabla,),
     )
-    return [fila[0] for fila in cur.fetchall()]
+    return [fila["column_name"] for fila in cur.fetchall()]
 
 
 def _columna_identidad(cur, tabla):
@@ -91,12 +76,12 @@ def _columna_identidad(cur, tabla):
         (tabla,),
     )
     fila = cur.fetchone()
-    return fila[0] if fila else None
+    return fila["column_name"] if fila else None
 
 
 def _verificar_tablas(cur):
     cur.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
-    en_base = {fila[0] for fila in cur.fetchall()}
+    en_base = {fila["tablename"] for fila in cur.fetchall()}
     faltan = en_base - set(TABLAS)
     sobran = set(TABLAS) - en_base
     if faltan or sobran:
@@ -117,21 +102,24 @@ def generar(generado_por="línea de comandos"):
     conteo = {}
     escribir = lambda texto: salida.write(texto.encode("utf-8"))
     try:
-        with _conectar() as conn:
+        # Sin SET ROLE (ver db.conexion_sin_rol): un respaldo sin las
+        # contraseñas no serviría para restaurar el sistema.
+        with conexion_sin_rol() as conn:
             conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
             conn.read_only = True
             with conn.cursor() as cur:
                 _verificar_tablas(cur)
-                cur.execute("SELECT current_database(), version()")
-                base, version = cur.fetchone()
+                cur.execute("SELECT current_database() AS base, version() AS version")
+                fila = cur.fetchone()
+                base, version = fila["base"], fila["version"]
                 ident = {t: pgsql.Identifier(t) for t in TABLAS}
 
                 cuerpo = io.BytesIO()
                 for tabla in TABLAS:
                     columnas = _columnas(cur, tabla)
                     lista = pgsql.SQL(", ").join(map(pgsql.Identifier, columnas))
-                    cur.execute(pgsql.SQL("SELECT count(*) FROM {}").format(ident[tabla]))
-                    conteo[tabla] = cur.fetchone()[0]
+                    cur.execute(pgsql.SQL("SELECT count(*) AS filas FROM {}").format(ident[tabla]))
+                    conteo[tabla] = cur.fetchone()["filas"]
 
                     cuerpo.write(f"\n-- {tabla}: {conteo[tabla]} filas\n".encode())
                     cuerpo.write(pgsql.SQL("COPY {} ({}) FROM stdin;\n").format(ident[tabla], lista)
