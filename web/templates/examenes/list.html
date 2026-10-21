@@ -19,11 +19,12 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Código</th><th>Examen</th><th>Descripción</th><th class="num">Insumos</th><th class="num">Alcanzan para</th></tr>
+      <tr><th>Código</th><th>Examen</th><th>Descripción</th><th class="num">Insumos</th><th class="num">Alcanzan para</th><th>Estado</th>
+        {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
     </thead>
     <tbody>
       {% for e in examenes %}
-      <tr>
+      <tr class="{{ '' if e.estado else 'inactivo' }}">
         <td><code>{{ e.codigo_interno }}</code></td>
         <td><a href="{{ url_for('examenes.detalle', id_examen=e.id_examen) }}"><strong>{{ e.nombre_examen }}</strong></a></td>
         <td>{{ e.descripcion or '—' }}</td>
@@ -31,9 +32,25 @@
         <td class="num {{ 'alerta' if e.alcanzan is not none and e.alcanzan == 0 else '' }}">
           {% if e.alcanzan is none %}<span class="hint">sin insumos</span>{% else %}{{ m.cantidad(e.alcanzan) }} exámenes{% endif %}
         </td>
+        <td>
+          {% if e.estado %}
+            <span class="badge badge-on">Activo</span>
+          {% else %}
+            <span class="badge badge-off">De baja</span>
+          {% endif %}
+        </td>
+        {% if tiene_rol(ADMIN) %}
+        <td class="actions">
+          <a class="btn btn-sm" href="{{ url_for('examenes.editar', id_examen=e.id_examen) }}">Editar</a>
+          <form method="post" action="{{ url_for('examenes.alternar_estado', id_examen=e.id_examen) }}"
+                onsubmit="return confirm({{ ('¿Dar de baja el examen ' if e.estado else '¿Activar el examen ')|tojson }} + {{ e.nombre_examen|tojson }} + '?');">
+            <button type="submit" class="btn btn-sm {{ 'btn-danger' if e.estado else '' }}">{{ 'Dar de baja' if e.estado else 'Activar' }}</button>
+          </form>
+        </td>
+        {% endif %}
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="5">{{ i.vacio('No hay exámenes con esa búsqueda.', 'examenes') }}</td></tr>
+      <tr class="empty-row"><td colspan="7">{{ i.vacio('No hay exámenes con esa búsqueda.', 'examenes') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

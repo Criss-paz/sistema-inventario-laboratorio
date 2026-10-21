@@ -6,9 +6,10 @@ varios productos: tabla puente examen_producto).
 Además de la lista de insumos, se calcula cuántos exámenes alcanzan con la
 existencia utilizable actual: el insumo que menos rinde marca el límite.
 
-Consultar: todos los roles. Registrar/modificar exámenes y sus insumos:
-Administrador. examen_laboratorio no tiene columna estado; los insumos sí
-se pueden quitar (DELETE solo en tablas puente, sql/security/001_roles.sql).
+Consultar: todos los roles. Registrar/modificar/dar de baja exámenes y sus
+insumos: Administrador. "Eliminar" un examen es baja lógica vía `estado`
+(sql/ddl/003_examen_estado.sql, RN-23), igual que en los demás catálogos;
+los insumos sí se quitan con DELETE (tabla puente, sql/security/001_roles.sql).
 """
 import re
 from decimal import Decimal, InvalidOperation
@@ -50,7 +51,7 @@ def listar():
         params = [f"%{q}%", f"%{q}%"]
     examenes, total = query_page(
         f"""
-        SELECT e.id_examen, e.codigo_interno, e.nombre_examen, e.descripcion,
+        SELECT e.id_examen, e.codigo_interno, e.nombre_examen, e.descripcion, e.estado,
                count(ep.id_producto) AS insumos,
                min(floor(v.existencia_utilizable / ep.cantidad_requerida)) AS alcanzan
         FROM examen_laboratorio e
@@ -58,7 +59,7 @@ def listar():
         LEFT JOIN vw_existencia_producto v ON v.id_producto = ep.id_producto
         {where}
         GROUP BY e.id_examen
-        ORDER BY e.nombre_examen
+        ORDER BY e.estado DESC, e.nombre_examen
         """,
         params, pagina,
     )
@@ -191,3 +192,23 @@ def quitar_insumo(id_examen, id_producto):
     except Exception as exc:
         flash(mensaje_error(exc, "No se pudo quitar el insumo. Intente más tarde."), "danger")
     return redirect(url_for("examenes.detalle", id_examen=id_examen))
+
+
+@bp.route("/<int:id_examen>/alternar-estado", methods=["POST"])
+@rol_requerido(ADMIN)
+def alternar_estado(id_examen):
+    """Baja lógica (RN-23): el examen y sus insumos se conservan para poder reactivarlo."""
+    examen = query_one("SELECT estado FROM examen_laboratorio WHERE id_examen = %s", (id_examen,))
+    if examen is None:
+        flash("El examen solicitado no existe.", "warning")
+        return redirect(url_for("examenes.listar"))
+
+    nuevo_estado = not examen["estado"]
+    try:
+        execute("UPDATE examen_laboratorio SET estado = %s WHERE id_examen = %s", (nuevo_estado, id_examen))
+    except Exception as exc:
+        flash(mensaje_error(exc, "No se pudo cambiar el estado del examen. Intente más tarde."), "danger")
+        return redirect(url_for("examenes.listar"))
+
+    flash("Examen activado." if nuevo_estado else "Examen dado de baja. Ya no aparece en el informe de pruebas.", "success")
+    return redirect(url_for("examenes.listar"))

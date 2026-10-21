@@ -440,6 +440,7 @@ def pruebas():
         FROM examen_laboratorio e
         LEFT JOIN examen_producto ep ON ep.id_examen = e.id_examen
         LEFT JOIN vw_existencia_producto v ON v.id_producto = ep.id_producto
+        WHERE e.estado  -- RN-23: los exámenes dados de baja no se ofrecen
         GROUP BY e.id_examen
         ORDER BY e.nombre_examen
         """

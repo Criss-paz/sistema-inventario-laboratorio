@@ -44,6 +44,8 @@ psql -U usuario_app -d inventario_laboratorio -f sql/procedures/002_devolucion.s
 psql -U usuario_app -d inventario_laboratorio -f sql/views/003_devolucion.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/views/004_kardex_devolucion.sql
 psql -U postgres    -d inventario_laboratorio -f sql/security/002_devolucion.sql
+# Baja lógica de exámenes (RN-23):
+psql -U usuario_app -d inventario_laboratorio -f sql/ddl/003_examen_estado.sql
 ```
 Por qué este orden:
 1. `ddl/` — tablas y restricciones.
