@@ -39,7 +39,7 @@ from db import conexion_sin_rol
 TABLAS = (
     "rol", "usuario", "categoria", "producto", "proveedor", "lote",
     "movimiento", "detalle_movimiento", "examen_laboratorio",
-    "proveedor_producto", "examen_producto",
+    "proveedor_producto", "examen_producto", "correccion_entrada",
 )
 
 # Guatemala no usa horario de verano: UTC-6 todo el año.

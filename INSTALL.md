@@ -46,6 +46,12 @@ psql -U usuario_app -d inventario_laboratorio -f sql/views/004_kardex_devolucion
 psql -U postgres    -d inventario_laboratorio -f sql/security/002_devolucion.sql
 # Baja lógica de exámenes (RN-24):
 psql -U usuario_app -d inventario_laboratorio -f sql/ddl/003_examen_estado.sql
+# Corrección de entradas con registro (RN-25, RN-26):
+psql -U usuario_app -d inventario_laboratorio -f sql/ddl/004_correccion_entrada.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/triggers/003_correccion_entrada.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/procedures/003_correccion_entrada.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/views/005_correccion_entrada.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/security/003_correccion_entrada.sql
 ```
 Por qué este orden:
 1. `ddl/` — tablas y restricciones.
@@ -85,10 +91,10 @@ Abrir `http://localhost:8080` (o el valor de `APP_PORT` en `.env`) e iniciar ses
 
 ## 7. Verificación rápida
 Base de datos (en `psql`, conectado como `usuario_app`):
-- [ ] `\dt` muestra las 11 tablas y `\dv` las 6 vistas.
+- [ ] `\dt` muestra las 12 tablas y `\dv` las 7 vistas.
 - [ ] `SELECT count(*) FROM producto;` → 806 y `SELECT count(*) FROM movimiento;` → 5839.
-- [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 5 triggers.
-- [ ] `\df sp_*` muestra `sp_registrar_entrada`, `sp_registrar_salida` y `sp_registrar_devolucion`.
+- [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 7 triggers.
+- [ ] `\df sp_*` muestra `sp_registrar_entrada`, `sp_registrar_salida`, `sp_registrar_devolucion` y `sp_corregir_entrada`.
 - [ ] `\du rol_*` muestra `rol_administrador`, `rol_encargado` y `rol_consulta`.
 - [ ] `SET ROLE rol_consulta; UPDATE producto SET stock_minimo = 1 WHERE id_producto = 1;` → *permiso denegado*. Después, `RESET ROLE;`.
 - [ ] La consulta de coherencia de `sql/dml/README.md` devuelve 0.

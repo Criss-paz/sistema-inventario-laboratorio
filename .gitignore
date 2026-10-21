@@ -28,6 +28,7 @@ database/respaldos/*.sql
 database/respaldos/*.dump
 # Respaldos descargados desde Administración → Respaldo: datos reales del laboratorio
 respaldo_inventario_*.sql
+respaldo_sigal_*.sql
 
 # Compilados / distribución
 dist/

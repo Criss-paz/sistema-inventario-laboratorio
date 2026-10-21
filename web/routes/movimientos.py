@@ -4,6 +4,8 @@ RF-20 a RF-25 (entradas, salidas con FEFO y validación de existencia),
 RF-26 a RF-28 (historial con responsable y fecha), RN-01, RN-04, RN-08.
 Devolución de una salida equivocada: RN-19 a RN-22 (vínculo con la salida
 corregida, motivo obligatorio, reposición de existencia y tope devolvible).
+Corrección de una entrada mal digitada: RN-25 y RN-26 (la entrada no se
+borra; cada campo corregido queda registrado con su motivo).
 
 Las entradas y salidas NO se insertan desde aquí: se llama a los
 procedimientos sp_registrar_entrada / sp_registrar_salida, que validan las
@@ -13,6 +15,7 @@ Si una regla se viola, el procedimiento o el trigger lanza un mensaje
 (SQLSTATE P0001) que se muestra tal cual al usuario (db.mensaje_error).
 
 Consultar historial: todos los roles. Registrar: Administrador y Encargado.
+Corregir una entrada: solo Administrador.
 """
 import datetime as dt
 from decimal import Decimal, InvalidOperation
@@ -163,8 +166,12 @@ def detalle(id_movimiento):
         ):
             costos[fila["id_producto"]] = fila["costo"]
 
+    correcciones = query_all(
+        "SELECT * FROM vw_correcciones_entrada WHERE id_movimiento = %s ORDER BY fecha_hora, id_correccion",
+        (id_movimiento,),
+    )
     return render_template("movimientos/detalle.html", mov=detalles[0],
-                           detalles=detalles, costos=costos)
+                           detalles=detalles, costos=costos, correcciones=correcciones)
 
 
 @bp.route("/entrada", methods=["GET", "POST"])
@@ -334,6 +341,94 @@ def devolucion(id_movimiento):
           f"{len(id_lotes)} lote(s). La salida #{id_movimiento} queda corregida "
           "y ambos movimientos permanecen en el historial.", "success")
     return redirect(url_for("movimientos.detalle", id_movimiento=fila["p_id_movimiento"]))
+
+
+@bp.route("/<int:id_movimiento>/corregir", methods=["GET", "POST"])
+@rol_requerido(ADMIN)
+def corregir(id_movimiento):
+    """Corrige una entrada mal digitada sin borrarla (RN-25, RN-26).
+
+    Solo valida el formulario y llama a sp_corregir_entrada, que registra
+    cada campo corregido en correccion_entrada y ajusta la existencia del
+    lote. Los campos que no cambian se envían como NULL (no se tocan).
+    """
+    entrada = query_one(
+        """
+        SELECT h.id_movimiento, h.tipo_movimiento, h.fecha_hora, h.nombre_usuario, h.observacion,
+               h.codigo, h.producto, h.unidad_medida, h.cantidad, h.precio_unitario,
+               l.id_lote, l.numero_lote, l.id_proveedor, l.fecha_ingreso, l.fecha_vencimiento,
+               l.cantidad_disponible, p.requiere_vencimiento,
+               (SELECT count(*) FROM vw_historial_movimientos o
+                 WHERE o.id_lote = l.id_lote AND o.tipo_movimiento = 'ENTRADA') AS entradas_del_lote
+        FROM vw_historial_movimientos h
+        JOIN lote l ON l.id_lote = h.id_lote
+        JOIN producto p ON p.id_producto = h.id_producto
+        WHERE h.id_movimiento = %s
+        """,
+        (id_movimiento,),
+    )
+    if entrada is None:
+        flash("El movimiento solicitado no existe.", "warning")
+        return redirect(url_for("movimientos.historial"))
+    if entrada["tipo_movimiento"] != "ENTRADA":
+        flash("Solo se pueden corregir entradas. Una salida equivocada se corrige con una devolución.", "warning")
+        return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
+
+    proveedores = query_all(
+        "SELECT id_proveedor, nombre FROM proveedor WHERE estado OR id_proveedor = %s ORDER BY nombre",
+        (entrada["id_proveedor"],),
+    )
+    contexto = {"e": entrada, "proveedores": proveedores, "form": request.form}
+    if request.method == "GET":
+        return render_template("movimientos/corregir.html", **contexto)
+
+    # A3: validación en el servidor antes de tocar la base.
+    errores = []
+    motivo = (request.form.get("motivo") or "").strip()[:255]
+    if len(motivo) < 10:
+        errores.append("Explique el motivo de la corrección (al menos 10 caracteres).")
+    cantidad = _decimal(request.form.get("cantidad"), "La cantidad", errores, minimo_exclusivo=0)
+    precio = _decimal(request.form.get("precio_unitario"), "El precio unitario", errores, minimo=0)
+    numero_lote = (request.form.get("numero_lote") or "").strip()
+    if not numero_lote or len(numero_lote) > 50:
+        errores.append("El número de lote es obligatorio (máximo 50 caracteres).")
+    id_proveedor = request.form.get("id_proveedor", "")
+    if not id_proveedor.isdigit():
+        errores.append("Seleccione el proveedor.")
+    vence_txt = (request.form.get("fecha_vencimiento") or "").strip()
+    vence = None
+    if vence_txt:
+        try:
+            vence = dt.date.fromisoformat(vence_txt)
+        except ValueError:
+            errores.append("La fecha de vencimiento no es válida.")
+    elif entrada["fecha_vencimiento"] is not None:
+        errores.append("La fecha de vencimiento no se puede dejar vacía; corríjala o déjela como está.")
+    if errores:
+        for e in errores:
+            flash(e, "danger")
+        return render_template("movimientos/corregir.html", **contexto), 400
+
+    # Solo se envía lo que cambió; el procedimiento ignora los NULL.
+    def cambio(nuevo, actual):
+        return None if nuevo == actual else nuevo
+
+    try:
+        fila = call_procedure(
+            "CALL sp_corregir_entrada(%s, %s, %s, %s, %s, %s, %s, %s, NULL)",
+            (session["id_usuario"], id_movimiento, motivo,
+             cambio(cantidad, entrada["cantidad"]), cambio(precio, entrada["precio_unitario"]),
+             cambio(int(id_proveedor), entrada["id_proveedor"]), cambio(numero_lote, entrada["numero_lote"]),
+             cambio(vence, entrada["fecha_vencimiento"])),
+        )
+    except Exception as exc:
+        flash(mensaje_error(exc, "No se pudo corregir la entrada. Intente más tarde."), "danger")
+        return render_template("movimientos/corregir.html", **contexto), 400
+
+    n = fila["p_cambios"]
+    flash(f"Entrada #{id_movimiento} corregida: {n} {'dato' if n == 1 else 'datos'}. "
+          "El registro original y la corrección quedan en el historial.", "success")
+    return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
 
 
 @bp.route("/existencia")

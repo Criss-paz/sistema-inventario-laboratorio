@@ -9,6 +9,9 @@
   {% if mov.tipo_movimiento == 'SALIDA' and session.get('nombre_rol') in ['Administrador', 'Encargado de inventario'] %}
   <a class="btn btn-sm btn-primary" href="{{ url_for('movimientos.devolucion', id_movimiento=mov.id_movimiento) }}">Devolver esta salida</a>
   {% endif %}
+  {% if mov.tipo_movimiento == 'ENTRADA' and tiene_rol(ADMIN) %}
+  <a class="btn btn-sm btn-primary" href="{{ url_for('movimientos.corregir', id_movimiento=mov.id_movimiento) }}">{{ i.icono('editar') }}Corregir entrada</a>
+  {% endif %}
   <a class="btn btn-sm" href="{{ url_for('movimientos.historial') }}">{{ i.icono('volver') }}Historial</a>
 </div>
 
@@ -39,8 +42,8 @@
         <td><a href="{{ url_for('lotes.detalle', id_lote=d.id_lote) }}"><span class="lote">{{ d.numero_lote }}</span></a></td>
         <td><code>{{ d.codigo }}</code> {{ d.producto }}</td>
         <td class="num">{{ m.con_unidad(d.cantidad, d.unidad_medida) }}</td>
-        <td class="num">{% if precio is not none %}{{ '%.2f'|format(precio) }}{% else %}—{% endif %}</td>
-        <td class="num">{% if precio is not none %}{{ '%.2f'|format(d.cantidad * precio) }}{% else %}—{% endif %}</td>
+        <td class="num">{% if precio is not none %}{{ precio|q }}{% else %}—{% endif %}</td>
+        <td class="num">{% if precio is not none %}{{ (d.cantidad * precio)|q }}{% else %}—{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -48,6 +51,26 @@
 </div>
 {% if mov.tipo_movimiento != 'ENTRADA' %}
 <p class="hint">El costo se valoriza al <strong>promedio ponderado móvil</strong> vigente el día del movimiento, no al precio de compra de cada lote. Solo las entradas guardan un precio propio: el de la factura del proveedor.</p>
+{% endif %}
+{% if correcciones %}
+<h2>Correcciones <span class="subtitle">la entrada no se borra; cada dato corregido queda aquí (RN-25)</span></h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Fecha</th><th>Dato</th><th>Antes</th><th>Después</th><th>Motivo</th><th>Corrigió</th></tr></thead>
+    <tbody>
+      {% for c in correcciones %}
+      <tr>
+        <td class="fecha">{{ c.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td><span class="tag amber">{{ c.campo_legible }}</span></td>
+        <td class="faint">{{ c.valor_anterior or '—' }}</td>
+        <td><strong>{{ c.valor_nuevo or '—' }}</strong></td>
+        <td class="obs">{{ c.motivo }}</td>
+        <td class="quien">{{ c.nombre_usuario }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endif %}
 {% if mov.tipo_movimiento == 'SALIDA' and detalles|length > 1 %}
 <p class="hint">La salida se repartió en {{ detalles|length }} lotes: primero el que vence antes (FEFO).</p>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m %}
+{% block title %}Corregir entrada #{{ e.id_movimiento }}{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Corregir entrada #{{ e.id_movimiento }}
+    <span class="subtitle"><code>{{ e.codigo }}</code> {{ e.producto }}, registrada el {{ e.fecha_hora.strftime('%d/%m/%Y a las %H:%M') }} por {{ e.nombre_usuario }}</span></h1>
+  <a class="btn btn-sm" href="{{ url_for('movimientos.detalle', id_movimiento=e.id_movimiento) }}">{{ i.icono('volver') }}Entrada</a>
+</div>
+
+<p class="nota">La entrada no se borra: se corrigen sus datos. Cada dato que cambie queda guardado con su valor anterior, el nuevo, el motivo y su nombre (RN-25, RN-26). La existencia del lote y el costo promedio se ajustan solos.</p>
+
+<form class="card" method="post">
+  <label for="cantidad">Cantidad <span class="hint">(registrada: {{ m.con_unidad(e.cantidad, e.unidad_medida) }}; el lote tiene hoy {{ m.cantidad(e.cantidad_disponible) }})</span></label>
+  <input type="number" id="cantidad" name="cantidad" required min="0.01" step="0.01" value="{{ form.get('cantidad', e.cantidad) }}">
+
+  <label for="precio_unitario">Precio unitario de compra (Q)</label>
+  <input type="number" id="precio_unitario" name="precio_unitario" required min="0" step="0.01" value="{{ form.get('precio_unitario', e.precio_unitario) }}">
+
+  <label for="id_proveedor">Proveedor</label>
+  <select id="id_proveedor" name="id_proveedor" required>
+    {% for pr in proveedores %}
+    <option value="{{ pr.id_proveedor }}" {{ 'selected' if (form.get('id_proveedor', e.id_proveedor)|string) == (pr.id_proveedor|string) else '' }}>{{ pr.nombre }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="numero_lote">Número de lote</label>
+  <input type="text" id="numero_lote" name="numero_lote" required maxlength="50" value="{{ form.get('numero_lote', e.numero_lote) }}">
+
+  <label for="fecha_vencimiento">Fecha de vencimiento {% if e.requiere_vencimiento %}<span class="hint">(obligatoria para este producto, RN-07)</span>{% endif %}</label>
+  <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" min="{{ e.fecha_ingreso.isoformat() }}"
+         value="{{ form.get('fecha_vencimiento', e.fecha_vencimiento.isoformat() if e.fecha_vencimiento else '') }}">
+
+  {% if e.entradas_del_lote > 1 %}
+  <p class="hint">El proveedor, el número de lote y el vencimiento son datos del lote <span class="lote">{{ e.numero_lote }}</span>, que recibió {{ e.entradas_del_lote }} entradas: corregirlos los cambia para todas.</p>
+  {% endif %}
+
+  <label for="motivo">Motivo de la corrección <span class="hint">(obligatorio, mínimo 10 caracteres)</span></label>
+  <textarea id="motivo" name="motivo" rows="3" maxlength="255" required minlength="10"
+            placeholder="Ejemplo: la factura dice 25 unidades y se digitó 20.">{{ form.get('motivo', '') }}</textarea>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Guardar corrección</button>
+    <a class="btn" href="{{ url_for('movimientos.detalle', id_movimiento=e.id_movimiento) }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

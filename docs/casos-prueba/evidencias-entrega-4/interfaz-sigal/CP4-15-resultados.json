@@ -1,0 +1,9 @@
+{
+  "detalle": "CP4B-A | PRUEBA-CP4B REACTIVO DE PRUEBA CP4B | 22 unidades | 55.00 | 1210.00",
+  "correcciones": [
+    "21/10/2026 16:24 | Cantidad | 20.00 | 22 | Prueba CP4-15: la factura dice 22 unidades a Q55 y se digitó 20 a Q50. | Administrador de Prueba",
+    "21/10/2026 16:24 | Precio unitario | 50.00 | 55 | Prueba CP4-15: la factura dice 22 unidades a Q55 y se digitó 20 a Q50. | Administrador de Prueba"
+  ],
+  "lote": "CP4B-A | PRUEBA-CP4B REACTIVO DE PRUEBA CP4B | PROVEEDOR DE PRUEBA CP4B | 21/10/2026 | 30/04/2027 | 17 unidades | Activo",
+  "kardex": "01/10/2026 | Saldo inicial |  | 0 | 0.00 | 0.00 || 21/10/2026 | Prueba CP4B-05 | 22 | 55.00 | 1,210.00 |  |  |  | 22 | 55.00 | 1,210.00 || 21/10/2026 | Prueba CP4B-06 |  |  |  | 8 | 55.00 | 440.00 | 14 | 55.00 | 770.00 || 21/10/2026 | Devolución de la salida #5884 | 3 | 55.00 | 165.00 |  |  |  | 17 | 55.00 | 935.00"
+}
