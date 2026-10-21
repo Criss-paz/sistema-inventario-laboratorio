@@ -26,6 +26,8 @@ Thumbs.db
 # Respaldos de base de datos con datos reales
 database/respaldos/*.sql
 database/respaldos/*.dump
+# Respaldos descargados desde Administración → Respaldo: datos reales del laboratorio
+respaldo_inventario_*.sql
 
 # Compilados / distribución
 dist/

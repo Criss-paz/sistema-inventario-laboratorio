@@ -1,0 +1,66 @@
+# Cumplimiento de estándares de calidad — Entrega 4
+
+Revisión final de los estándares de la consigna (sección 6) sobre el repositorio al cierre del proyecto. Actualiza `docs/entrega-3/ENTREGA3_ESTANDARES_CUMPLIMIENTO.md`. Cada fila cita dónde se verifica, y las cifras se midieron sobre el código el 20/10/2026. Lo que no se cumple, o depende de una acción pendiente, se declara.
+
+---
+
+## 6.1 Estándares del repositorio Git
+
+| # | Estándar | Estado | Evidencia verificable |
+|---|---|---|---|
+| **R1** | Estructura de carpetas | ✅ Cumple | `README.md`, `.gitignore`, `.env.example`, `INSTALL.md`; `docs/` con `entrega-1` a `entrega-4`, `diagramas`, `certificaciones`, `bitacora-ia` y `casos-prueba`; `sql/` con `ddl`, `dml`, `views`, `triggers`, `procedures` y `security`; `web/`. |
+| **R2** | README.md | ✅ Cumple | Nombre del proyecto, integrantes con carné, SGBD, instalación (enlace a `INSTALL.md`), aplicación en línea, documentos de cada entrega y estado. |
+| **R3** | Commits descriptivos | ✅ Cumple | Prefijos convencionales con ámbito: `feat(respaldo): …`, `fix(web): …`, `docs(diagramas): …`, `test(casos): …`. El cuerpo explica el porqué de cada cambio. |
+| **R4** | Participación visible | ⏳ Pendiente de cierre | Hay commits de ambos integrantes a lo largo del proyecto (Cristopher Alexis Castellanos Paz como `Criss-paz`; José Eduardo Escobar). En la Entrega 4, los commits hasta el 20/10/2026 son de José Eduardo Escobar. **Falta el aporte propio de Cristopher en esta entrega** (revisión del manual de usuario en producción, firma de la certificación), que debe quedar en commits suyos antes del tag. |
+| **R5** | Tags por entrega | ⏳ Al cierre | `entrega-1`, `entrega-2` y `entrega-3` publicados. `entrega-4` se crea al cierre, después de las firmas. |
+| **R6** | Sin credenciales | ✅ Cumple | Búsqueda en todo el repositorio (`git grep`) de cadenas de conexión con contraseña, `DB_PASSWORD=`, `APP_SECRET=` y claves de Neon (`npg_…`): solo aparecen los valores ficticios de `.env.example`. En esta entrega se quitó de `docs/entrega-2/Bitacora-IA.md` la mención en texto de la contraseña local de la base. Las contraseñas de `web/seed_usuarios.py` son de desarrollo y no funcionan en producción. |
+| **R7** | .gitignore | ✅ Cumple | Excluye `.env`, entornos virtuales, `__pycache__`, temporales y la carpeta con los Excel del laboratorio. |
+| **R8** | Acceso al catedrático | ✅ Cumple | Repositorio público: https://github.com/Criss-paz/sistema-inventario-laboratorio |
+
+## 6.2 Estándares de calidad SQL
+
+| # | Estándar | Estado | Evidencia verificable |
+|---|---|---|---|
+| **S1** | Nomenclatura `snake_case` | ✅ Cumple | Tablas, columnas y objetos en `snake_case`, con prefijo según el tipo: `vw_` vistas, `fn_` funciones, `sp_` procedimientos, `trg_` triggers, `rol_` roles, `pk_`/`fk_`/`uq_`/`ck_` restricciones, `ix_` índices. Las columnas nuevas (`id_movimiento_origen`, `motivo`, `examen_laboratorio.estado`) siguen la misma regla. |
+| **S2** | Un script, un propósito | ✅ Cumple | 17 scripts en las 6 carpetas, uno por propósito y por versión: `ddl/001–003`, `dml/001–004`, `triggers/001–002`, `procedures/001–002`, `views/001–004`, `security/001–002`. La migración de la Entrega 4 (`ddl/003_examen_estado.sql`) solo altera estructura; sus permisos no necesitan script porque los `GRANT` son por tabla. |
+| **S3** | Encabezado | ✅ Cumple | **17 de 17** scripts abren con *Archivo, Propósito, Proyecto, Autor, Descripción, Dependencias, SGBD, Ejecutar*. Los que materializan reglas las listan (por ejemplo, RN-24 en `ddl/003`). |
+| **S4** | Integridad referencial | ✅ Cumple | **12 de 12** FK con `ON DELETE` y `ON UPDATE` explícitos: las 11 del esquema más `fk_movimiento_origen` (`ON DELETE RESTRICT ON UPDATE CASCADE`, justificada: el historial no se borra). |
+| **S5** | Desplegado en internet | ✅ Cumple | https://inventario-laboratorio-03s7.onrender.com (Render + Neon). La instalación desde cero se volvió a verificar el 20/10/2026 (CP4-14: 16 de 16 pasos sin errores, mismos números que la Entrega 3). |
+| **S6** | Regla de negocio explicada | ✅ Cumple | Los 5 triggers y los 3 procedimientos citan en su encabezado y en comentarios la regla que aplican (RN-01 a RN-09, RN-19 a RN-23) y el porqué (por ejemplo, el prefijo `trg_z_` que fija el orden de disparo). |
+| **S7** | Sin redundancia | ✅ Cumple | Existencias por producto, inventario bajo, días para vencer, costos promedio y valorización se calculan en vistas y funciones. La única cifra derivada que se almacena es `lote.cantidad_disponible`, que mantiene el trigger: 0 lotes incoherentes con su historial (CP4-14). El respaldo guarda solo datos; la estructura se reinstala desde `sql/`. |
+| **S8** | SQL de IA revisado y probado | ✅ Cumple | La migración `ddl/003` se aplicó primero en la base local y se probó con la app (14 verificaciones) antes del commit. Las seis migraciones de la devolución, que faltaban en la base de desarrollo, se aplicaron y verificaron. El respaldo se probó restaurándolo en un esquema aislado (11 de 11 tablas idénticas). La instalación completa se probó desde cero en otro esquema. Registro en `docs/bitacora-ia/ENTREGA4_BITACORA_IA.md`. |
+
+**Resultado: los 8 estándares SQL se cumplen.**
+
+## 6.3 Estándares de código de aplicación
+
+| # | Estándar | Estado | Evidencia verificable |
+|---|---|---|---|
+| **A1** | Separación de capas | ✅ Cumple | `config.py` (entorno), `db.py` (único acceso a PostgreSQL, incluida la conexión sin rol, que antes abría `respaldo.py` por su cuenta y se movió aquí), `respaldo.py` (servicio sin Flask), `routes/` (11 módulos), `templates/` (40 plantillas), `static/`. Las reglas de negocio viven en la base. |
+| **A2** | Errores comprensibles, sin SQL crudo | ✅ Cumple | `db.mensaje_error()` deja pasar solo los mensajes de negocio (`P0001`) y "su rol no tiene permiso"; todo lo demás se reemplaza por un texto genérico. Páginas propias para 403, 404 y 500. El respaldo traduce sus fallas a `RespaldoError` con mensaje para el usuario. |
+| **A3** | Validación de entrada | ✅ Cumple | Validación en el servidor de cada formulario nuevo: precio ≥ 0 con 2 decimales y producto activo (proveedor–producto); largo mínimo, confirmación y contraseña distinta de la anterior (cambio de contraseña); existencia del examen antes de cambiar su estado. Las validaciones HTML (`required`, `minlength`) son ayuda, no la defensa. |
+| **A4** | Consultas parametrizadas | ✅ Cumple | Las 116 llamadas a la base pasan los datos del usuario como parámetros. Las consultas armadas con f-string solo combinan fragmentos fijos del código, y el respaldo compone identificadores con `psycopg.sql.Identifier` a partir de una lista fija de tablas. |
+| **A5** | Código legible, responsabilidad única | ✅ Cumple | 16 módulos y 102 funciones con nombres del dominio (`guardar_producto`, `alternar_estado`, `cambiar_contrasena`, `_verificar_tablas`). Las tres funciones más largas son `create_app` (89 líneas, casi todo funciones internas de 5 a 10 líneas), `respaldo.generar` (80, una sola tarea: escribir el archivo) y `movimientos.devolucion` (80). |
+| **A6** | Documentación de funciones que acceden a la BD | ✅ Cumple | **16 de 16** módulos con docstring que explica su responsabilidad, los requerimientos y quién puede usarlos. Las funciones con decisiones no obvias lo explican: `conexion_sin_rol` (por qué y quién la usa), `generar` (por qué `REPEATABLE READ`), `mismo_origen` (por qué además de `SameSite`). |
+
+**Resultado: los 6 estándares de aplicación se cumplen.**
+
+## 6.4 Estándares de documentación
+
+| # | Estándar | Estado | Evidencia verificable |
+|---|---|---|---|
+| **D1** | Ortografía | ✅ Cumple | Los documentos de la Entrega 4 se revisaron con tildes y signos completos. Se corrigieron el `README.md` (encabezados escritos sin tildes desde la Entrega 1) y la etiqueta "Devolucion" de la interfaz. |
+| **D2** | Versionado por entrega | ✅ Cumple | `docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md`, `ENTREGA4_MANUAL_TECNICO.md`, `ENTREGA4_INFORME_FINAL.md`, `ENTREGA4_DECLARACION_INTEGRIDAD.md`, `ENTREGA4_MATRIZ_TRAZABILIDAD.md`, `ENTREGA4_ESTANDARES_CUMPLIMIENTO.md`, `ENTREGA4_GUIA_DEFENSA.md`; `docs/bitacora-ia/ENTREGA4_BITACORA_IA.md`; `docs/certificaciones/CERTIFICACION_ENTREGA_4.md`. |
+| **D3** | Diagramas editables + PNG/PDF | ✅ Cumple | `docs/diagramas/`: ER (Chen) y relacional en `.drawio`, `.png` y `.pdf`, **actualizados en esta entrega** con la devolución (relación recursiva *Corrige*, `id_movimiento_origen`, `motivo`) y `examen_laboratorio.estado`. |
+| **D4** | Matriz de trazabilidad actualizada | ✅ Cumple | `ENTREGA4_MATRIZ_TRAZABILIDAD.md` (v3): 39 RF, 18 RNF y 24 RN con su implementación y su prueba, más la tabla de CRUD por tabla. |
+
+---
+
+## Pendientes declarados
+
+| Pendiente | Estándar | Responsable |
+|---|---|---|
+| Commits propios de Cristopher Alexis Castellanos Paz en la Entrega 4 | R4 | Cristopher |
+| Firmas de la certificación y tag `entrega-4` | R5, sección 8 | Ambos integrantes |
+| Aplicar `sql/ddl/003_examen_estado.sql` (y, si faltan, las migraciones de devolución) en Neon y redesplegar Render | S5 | Quien administre Neon y Render |
+| Rotar la contraseña de Neon, que se compartió durante la configuración del despliegue | R6 (buena práctica) | Quien administre Neon |
