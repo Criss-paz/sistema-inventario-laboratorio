@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m %}
+{% block title %}Respaldo — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Respaldo de la base de datos<span class="subtitle">Copia completa de los datos para guardar fuera del servidor (RNF-11)</span></h1>
+</div>
+
+<form class="card" method="post" action="{{ url_for('respaldo.descargar') }}">
+  <h2>Descargar respaldo</h2>
+  <p>Genera el archivo <code>{{ archivo }}</code> con todos los datos del sistema en este momento:
+    catálogos, lotes, el historial completo de movimientos, exámenes y usuarios.
+    Las contraseñas se guardan solo como hash.</p>
+  <p class="hint">Guárdelo fuera de este servidor (USB, unidad de red o nube del laboratorio).
+    Se recomienda al menos una vez por semana y antes de cualquier cambio grande.
+    El archivo contiene datos del laboratorio: no lo comparta.</p>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ i.icono('entradas') }}Descargar respaldo</button>
+  </div>
+</form>
+
+<h2>Contenido actual</h2>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Información</th><th class="num">Registros</th></tr></thead>
+    <tbody>
+      {% for t in tablas %}
+      <tr><td>{{ t.tabla }}</td><td class="num">{{ m.cantidad(t.filas) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>Cómo se restaura</h2>
+<p>La restauración reemplaza <strong>todos</strong> los datos actuales, por eso no se hace desde esta pantalla.
+  La realiza quien administra el servidor, con <code>psql</code>, siguiendo el manual técnico
+  (<code>docs/entrega-4/ENTREGA4_MANUAL_TECNICO.md</code>, sección «Respaldo y restauración»):</p>
+<pre><code>psql -v ON_ERROR_STOP=1 -d inventario_laboratorio -f {{ archivo }}</code></pre>
+<p class="hint">Corre en una sola transacción: si algo falla, la base queda exactamente como estaba.</p>
+{% endblock %}

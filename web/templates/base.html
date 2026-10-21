@@ -37,7 +37,8 @@
                             ('proveedores.listar', 'Proveedores', 'proveedores'),
                             ('categorias.listar', 'Categorías', 'categorias')])] %}
         {% if tiene_rol(ADMIN) %}
-          {% set grupos = grupos + [('Administración', [('usuarios.listar', 'Usuarios y roles', 'usuarios')])] %}
+          {% set grupos = grupos + [('Administración', [('usuarios.listar', 'Usuarios y roles', 'usuarios'),
+                                                ('respaldo.inicio', 'Respaldo', 'respaldo')])] %}
         {% endif %}
         {% for grupo, enlaces in grupos %}
         <p class="menu-grupo">{{ grupo }}</p>

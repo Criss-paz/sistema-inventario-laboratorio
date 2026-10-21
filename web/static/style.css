@@ -314,6 +314,13 @@ code {
   color: var(--ink-2); letter-spacing: 0.01em;
 }
 
+/* Comandos para copiar (pantalla de respaldo) */
+pre {
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px;
+  padding: 0.75rem 1rem; overflow-x: auto; max-width: 100%;
+}
+pre code { white-space: pre; }
+
 /* Número de lote como etiqueta impresa de reactivo: franja de código de
    barras a la izquierda, tipografía mono, borde fino. */
 .lote {
