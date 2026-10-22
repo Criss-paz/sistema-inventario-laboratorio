@@ -24,14 +24,14 @@ Productos de la Entrega 4 (consigna, sección 11):
 - [x] **Manuales técnico y de usuario** (`docs/entrega-4/ENTREGA4_MANUAL_TECNICO.md`, `ENTREGA4_MANUAL_USUARIO.md`).
 - [ ] **Informe final y declaración de integridad**: redactados (`ENTREGA4_INFORME_FINAL.md`, `ENTREGA4_DECLARACION_INTEGRIDAD.md`); falta que la declaración lleve las firmas.
 - [x] **Diagramas ER y relacional actualizados** con la devolución, la baja de exámenes y la corrección de entradas (12 tablas), en editable, PNG y PDF.
-- [ ] **Versión publicada al día**: Neon ya tiene la devolución y la baja de exámenes (21/10/2026) y Render la interfaz nueva. Falta aplicar en Neon la corrección de entradas y la carga de SIGAL (manual técnico, sección 6.3) y redesplegar Render.
+- [x] **Versión publicada al día** (21/10/2026): Neon tiene todas las migraciones, la corrección de entradas y la carga de SIGAL (721 movimientos; 814 productos, 6,562 movimientos e inventario valorizado en Q600,338.34, igual que la instalación desde cero). Antes de cargar se anuló con una devolución la salida de prueba #5840, que había dejado un lote en 0. Render publica la última versión.
 
 ---
 
 ## Antes de firmar
 
 1. Cristopher: revisar los manuales y repetir en la versión publicada, con su usuario, los flujos U-03 a U-07 del manual de usuario, y registrar el resultado con un commit propio (R4).
-2. Quien administre Neon y Render: aplicar las migraciones, redesplegar, verificar y rotar la contraseña de Neon.
+2. Quien administre Neon y Render: rotar la contraseña de Neon (y actualizar `DATABASE_URL` en Render).
 3. Ambos: marcar los puntos pendientes de arriba, firmar esta certificación y la declaración de integridad, y crear el tag:
    ```bash
    git tag -a entrega-4 -m "Entrega 4 — Integración, documentación y defensa oral"
