@@ -291,6 +291,12 @@ psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/dml/005_carga_sigal.sql
 
 Para saber si una base ya tiene la devolución: `SELECT column_name FROM information_schema.columns WHERE table_name = 'movimiento' AND column_name = 'motivo';` (si devuelve una fila, ya está). Antes de aplicar cualquier migración en producción, **descargue un respaldo** (sección 7).
 
+**Lo que pasó al aplicarlas en Neon (21/10/2026)**, por si hay que repetirlo en otra base:
+
+- Sin `psql` a mano, los mismos scripts se pueden pegar en el **SQL Editor** de Neon: no usan comandos de `psql`. Si uno falla, el editor muestra «Failed transaction: ROLLBACK required»; el error está en la última pestaña de resultados, y hay que pulsar **ROLLBACK** antes de volver a intentar.
+- En producción los usuarios se llaman `admin`, `encargado` y `consulta` (sin `.dev`). `005_carga_sigal.sql` acepta cualquiera de los dos nombres del encargado.
+- Una **salida de prueba** hecha en producción (#5840, 1 unidad) había dejado en 0 el lote que SIGAL necesitaba, y la carga se detuvo con «Existencia insuficiente». No se borró, porque el historial es inmutable: se anuló con `sp_registrar_devolucion` y la carga se repitió. Resultado: 814 productos, 6,562 movimientos (incluyen la prueba y su devolución) y Q600,338.34, igual que la instalación desde cero.
+
 `security/002_devolucion.sql` solo contiene `ALTER FUNCTION` y `GRANT` sobre objetos propios, así que lo puede ejecutar el dueño de las tablas (`usuario_app` en local, `neondb_owner` en Neon) sin superusuario.
 
 ---
