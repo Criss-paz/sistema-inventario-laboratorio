@@ -26,7 +26,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | **Objetivo** | Ponerse al día con el repositorio después de la Entrega 3 y determinar qué faltaba para la Entrega 4 según la consigna. |
 | **Prompt utilizado** | "Puedes entrar al repo … y ponerte al día como lo tenemos", seguido del PDF de la consigna: "lo que necesito en la entrega 4, iniciemos". |
 | **Resultado obtenido** | Sincronización del repositorio local (11 commits nuevos de Cristopher y el tag `entrega-3`). Diagnóstico contra la rúbrica de la Entrega 4, tabla por tabla, del CRUD de la aplicación. Dos brechas: `proveedor_producto` solo se llenaba con la carga inicial (aunque la pantalla decía que "los precios se registran con cada entrada") y `examen_laboratorio` no tenía forma de darse de baja. Además, RNF-11 (respaldos) seguía pendiente y faltaban todos los documentos de la entrega. |
-| **Validación del grupo** | Se confirmó en el código que ningún procedimiento ni pantalla escribía en `proveedor_producto` (solo `sql/dml/002_carga_catalogo.sql`). El equipo aprobó cerrar las dos brechas y tomar como referencia de ideas el proyecto SIGAL del integrante José Eduardo Escobar. |
+| **Validación del grupo** | Se confirmó en el código que ningún procedimiento ni pantalla escribía en `proveedor_producto` (solo `sql/dml/002_carga_catalogo.sql`). El equipo aprobó cerrar las dos brechas y tomar como referencia de ideas otro proyecto del integrante José Eduardo Escobar, nacido de este sistema (en adelante, *el proyecto de referencia*). |
 | **Estándares aplicados** | D4 (trazabilidad: cada brecha se ligó a su requerimiento: RF-39, RF-36/37, RNF-11). |
 | **Responsable** | José Eduardo Escobar |
 
@@ -54,8 +54,8 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | **Fecha** | 20/10/2026 |
 | **Herramienta** | Claude Code (Opus) |
 | **Objetivo** | Implementar el respaldo y la restauración de la base, último requerimiento pendiente. |
-| **Prompt utilizado** | El mismo de la entrada anterior, con el repositorio SIGAL como ejemplo ("puedes tomar de ejemplo este repo"). |
-| **Resultado obtenido** | `web/respaldo.py` (capa de servicio, también ejecutable por línea de comandos) y la pantalla Administración → Respaldo, solo para el Administrador. Genera un `.sql` con bloques `COPY` (el formato de `pg_dump`), leído en una sola foto `REPEATABLE READ` de solo lectura. Al restaurar apaga los triggers solo durante la carga, todo en una transacción, y ajusta las identidades. **De SIGAL se tomó la idea**, no el código: SIGAL usa `pg_dump` con un plan B en Python, y aquí se usa directamente el plan B, porque Render no trae un `pg_dump` compatible con Neon 17. |
+| **Prompt utilizado** | El mismo de la entrada anterior, con el repositorio del proyecto de referencia como ejemplo ("puedes tomar de ejemplo este repo"). |
+| **Resultado obtenido** | `web/respaldo.py` (capa de servicio, también ejecutable por línea de comandos) y la pantalla Administración → Respaldo, solo para el Administrador. Genera un `.sql` con bloques `COPY` (el formato de `pg_dump`), leído en una sola foto `REPEATABLE READ` de solo lectura. Al restaurar apaga los triggers solo durante la carga, todo en una transacción, y ajusta las identidades. **Del proyecto de referencia se tomó la idea**, no el código: ese proyecto usa `pg_dump` con un plan B en Python, y aquí se usa directamente el plan B, porque Render no trae un `pg_dump` compatible con Neon 17. |
 | **Validación del grupo** | Se restauró el respaldo en un esquema aislado con tablas y triggers y se comparó tabla por tabla con un hash md5 de todas las filas: **11 de 11 idénticas**, triggers activos otra vez y secuencias en el valor correcto (CP4-13). **Corrección:** la primera versión de la pantalla respondía 403, porque contaba filas de `movimiento`, que el rol administrador no puede leer directamente. Se dejaron los permisos como estaban y se cuenta desde `vw_historial_movimientos`. **Corrección:** `respaldo.py` abría su propia conexión, contra la regla de `db.py`; se movió a `db.conexion_sin_rol()` y se verificó que el archivo generado fuera idéntico. |
 | **Estándares aplicados** | A1 (servicio separado de la ruta), A2 (`RespaldoError` con mensaje para el usuario), A4 (identificadores con `psycopg.sql.Identifier`), A6, S7 (solo datos; la estructura se reinstala desde `sql/`), S8, R6 (`.gitignore` excluye los respaldos descargados). |
 | **Responsable** | José Eduardo Escobar |
@@ -68,9 +68,9 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 |---|---|
 | **Fecha** | 20/10/2026 |
 | **Herramienta** | Claude Code (Opus) |
-| **Objetivo** | Incorporar las protecciones de SIGAL que aplican a este sistema. |
-| **Prompt utilizado** | Continuación de "completa toda la fase 4" con SIGAL como ejemplo. |
-| **Resultado obtenido** | "Cambiar mi contraseña" para los 3 roles, confirmando la actual. Encabezados `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` y HSTS en producción. Rechazo de los POST con `Origin` ajeno, como segunda barrera contra CSRF. **Se descartaron** el bloqueo por intentos fallidos (con 2 procesos de gunicorn, un contador en memoria no sería confiable y una tabla nueva excedía el alcance) y la verificación en dos pasos de SIGAL. Quedan como trabajo futuro en el manual técnico. |
+| **Objetivo** | Incorporar las protecciones del proyecto de referencia que aplican a este sistema. |
+| **Prompt utilizado** | Continuación de "completa toda la fase 4" con el proyecto de referencia como ejemplo. |
+| **Resultado obtenido** | "Cambiar mi contraseña" para los 3 roles, confirmando la actual. Encabezados `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` y HSTS en producción. Rechazo de los POST con `Origin` ajeno, como segunda barrera contra CSRF. **Se descartaron** el bloqueo por intentos fallidos (con 2 procesos de gunicorn, un contador en memoria no sería confiable y una tabla nueva excedía el alcance) y la verificación en dos pasos del proyecto de referencia. Quedan como trabajo futuro en el manual técnico. |
 | **Validación del grupo** | 16 verificaciones: contraseña actual incorrecta, menos de 8 caracteres, confirmación distinta, contraseña igual a la anterior; la contraseña vieja deja de servir y la nueva entra; encabezados presentes; un POST de otro origen recibe 403 sin cambiar nada. Se revisó que la CSP no rompiera los scripts en línea propios. Regresión de las 43 pantallas con los 3 roles: 129 verificaciones, 0 fallas. |
 | **Estándares aplicados** | A1, A2, A3, A6; RNF-04, RNF-17. |
 | **Responsable** | José Eduardo Escobar |
@@ -107,17 +107,17 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 
 ---
 
-### Registro de Bitácora IA — Interfaz con el diseño de SIGAL
+### Registro de Bitácora IA — Interfaz con el diseño del proyecto de referencia
 
 | Campo | Detalle |
 |---|---|
 | **Fecha** | 21/10/2026 |
 | **Herramienta** | Claude Code (Opus) + Playwright con Edge para verificar |
-| **Objetivo** | Que la aplicación tenga el diseño y la experiencia de SIGAL, proyecto del integrante José Eduardo Escobar que nació de este sistema, sin cambiar la base de datos ni la lógica. |
-| **Prompt utilizado** | "Yo necesitaba que lo dejaras similar a SIGAL, ya que SIGAL fue una idea nacida de este proyecto … tomando en cuenta todo lo que tienes ya trabajado en este sistema". Antes de empezar, la IA preguntó el alcance; el equipo eligió **diseño y experiencia** (no los módulos de SIGAL, que habrían cambiado el modelo de datos a días de la entrega) y **conservar el nombre** del sistema. |
-| **Resultado obtenido** | Nueva `style.css` a partir del sistema visual de SIGAL, conservando los nombres de clase de las 40 plantillas: tinta y ámbar, Schibsted Grotesk y JetBrains Mono, tema claro y oscuro. `base.html` con menú oscuro, barra superior con búsqueda `Ctrl K` y menú de usuario. `app.js`, sin librerías: tema, menús, avisos flotantes, búsqueda y fichas emergentes. Panel "Bodega hoy" con indicadores, calendario de vencimientos, *Reponer primero* y actividad reciente, todo desde las vistas de la base. Inicio de sesión dividido; productos con medidor de existencia; ruta `reportes.buscar` (JSON). |
+| **Objetivo** | Que la aplicación tenga el diseño y la experiencia del proyecto de referencia, del integrante José Eduardo Escobar, que nació de este sistema, sin cambiar la base de datos ni la lógica. |
+| **Prompt utilizado** | "Yo necesitaba que lo dejaras similar a [el proyecto de referencia], ya que [ese proyecto] fue una idea nacida de este proyecto … tomando en cuenta todo lo que tienes ya trabajado en este sistema". Antes de empezar, la IA preguntó el alcance; el equipo eligió **diseño y experiencia** (no los módulos del proyecto de referencia, que habrían cambiado el modelo de datos a días de la entrega) y **conservar el nombre** del sistema. |
+| **Resultado obtenido** | Nueva `style.css` a partir del sistema visual del proyecto de referencia, conservando los nombres de clase de las 40 plantillas: tinta y ámbar, Schibsted Grotesk y JetBrains Mono, tema claro y oscuro. `base.html` con menú oscuro, barra superior con búsqueda `Ctrl K` y menú de usuario. `app.js`, sin librerías: tema, menús, avisos flotantes, búsqueda y fichas emergentes. Panel "Bodega hoy" con indicadores, calendario de vencimientos, *Reponer primero* y actividad reciente, todo desde las vistas de la base. Inicio de sesión dividido; productos con medidor de existencia; ruta `reportes.buscar` (JSON). |
 | **Validación del grupo** | Capturas de cada pantalla en claro, oscuro y celular, revisadas una por una. Se corrigió:<br>• un desfase entre las columnas del Panel;<br>• la tabla de productos, demasiado ancha (de 11 a 7 columnas);<br>• un bloque informativo sin estilo en la devolución;<br>• un plural ("0 unidad").<br>Regresión: 183 verificaciones, 0 fallas. `Ctrl K` (incluido `Enter` hacia el kardex), el tema que se recuerda, el menú y las fichas del calendario se probaron en Edge. Los 12 flujos del manual se ejecutaron otra vez con la interfaz nueva (12 de 12) y sus capturas reemplazaron las del manual. Dos fallas de los guiones de prueba (un clic que cayó en un punto del calendario y una lectura de dirección antes de terminar la navegación) se identificaron como errores del guion, no de la aplicación. |
-| **Estándares aplicados** | A1 (estilos y comportamiento en `static/`, sin lógica de negocio), A2 (avisos sin texto técnico), A4 (búsqueda parametrizada), A6; S7 (las cifras del Panel salen de vistas); D1, D3; R6 (la búsqueda exige sesión). La declaración de integridad indica qué se tomó de SIGAL. |
+| **Estándares aplicados** | A1 (estilos y comportamiento en `static/`, sin lógica de negocio), A2 (avisos sin texto técnico), A4 (búsqueda parametrizada), A6; S7 (las cifras del Panel salen de vistas); D1, D3; R6 (la búsqueda exige sesión). La declaración de integridad indica qué se tomó del proyecto de referencia. |
 | **Responsable** | José Eduardo Escobar |
 
 ---
@@ -129,7 +129,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | **Fecha** | 21/10/2026 |
 | **Herramienta** | Claude Code (Opus) |
 | **Objetivo** | Poder corregir los datos de una entrada mal digitada sin eliminarla. |
-| **Prompt utilizado** | "Las entradas tienes que corregir porque no se pueden eliminar, solo corregir datos, entonces enfócate en ello también". La IA mostró cómo lo hace SIGAL (edición directa, sin rastro) y preguntó; el equipo eligió **corregir con registro** para no romper RN-09. |
+| **Prompt utilizado** | "Las entradas tienes que corregir porque no se pueden eliminar, solo corregir datos, entonces enfócate en ello también". La IA mostró cómo lo hace el proyecto de referencia (edición directa, sin rastro) y preguntó; el equipo eligió **corregir con registro** para no romper RN-09. |
 | **Resultado obtenido** | Tabla `correccion_entrada` (ddl/004), triggers/003 (excepción controlada en la inmutabilidad, ajuste del lote por la diferencia, correcciones inmutables), `sp_corregir_entrada` (procedures/003), `vw_correcciones_entrada` (views/005), permisos solo para el Administrador (security/003) y la pantalla *Corregir entrada* con la tabla de correcciones en la ficha. Reglas nuevas RN-25 y RN-26. |
 | **Validación del grupo** | Pruebas en `psql` dentro de `BEGIN … ROLLBACK`: subir, bajar de más (mensaje con el mínimo posible), precio, vencimiento, errores de validación, permisos por rol, y `UPDATE` y `DELETE` directos aun con la variable de sesión activa. **Corrección:** el trigger referenciaba `NEW.id_lote` en una sola condición; al borrar una corrección daba un error técnico en vez del mensaje de inmutabilidad. Se anidaron los `IF`. **Corrección:** la vista quedó al principio dentro del script del procedimiento; se movió a `views/005` (S2). **Error de la prueba automatizada:** una versión suponía valores viejos de la entrada CP4B y registró 2 correcciones reales; quedan en la base de desarrollo, como exige RN-25, y la prueba se corrigió (documentado en los casos de prueba). Prueba final: 16 verificaciones y CP4-15 en Edge. |
 | **Estándares aplicados** | S1–S4 (FK con `RESTRICT`), S6, S7 (el kardex se recalcula desde el historial), S8; A2, A3, A4, A6. |
@@ -137,17 +137,62 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 
 ---
 
-### Registro de Bitácora IA — Inventario al día con los datos de SIGAL
+### Registro de Bitácora IA — Inventario al día: movimientos del 24/09 al 21/10/2026
 
 | Campo | Detalle |
 |---|---|
 | **Fecha** | 21/10/2026 |
 | **Herramienta** | Claude Code (Opus) |
-| **Objetivo** | Cargar lo que el laboratorio registró en SIGAL después del 23/09/2026. |
-| **Prompt utilizado** | "Si yo tengo una base de datos puedes aplicarla? … SIGAL se está trabajando con ello". El equipo entregó un respaldo `pg_dump` de SIGAL y eligió **agregar lo nuevo** (no reemplazar). |
-| **Resultado obtenido** | El respaldo quedó fuera del repositorio: se movió a la carpeta ignorada y se agregó el patrón a `.gitignore`. `sql/dml/generar_carga_sigal.py` reutiliza las reglas de `generar_carga.py` y genera `005_carga_sigal.sql`: 205 entradas, 516 salidas, 108 lotes, 8 productos y 1 proveedor nuevos. También genera `ENTREGA4_REPORTE_CARGA_SIGAL.md`. |
-| **Validación del grupo** | Se confirmó que SIGAL conserva la numeración del papel (código E/S idéntico), para no duplicar. 12 registros antiguos sin equivalente resultaron ser servicios o rechazos de la Entrega 3 y se dejaron fuera. Se revisó que el script no publique nombres de personas (solo áreas y empresas). Se respaldó la base antes de cargar. Resultado: 0 lotes incoherentes; **804 de 813** productos con la misma existencia que SIGAL. Las 9 diferencias se explicaron: 2 entradas rechazadas por vencimiento anterior al ingreso, y 7 productos en los que el contador de SIGAL no coincide con sus propios movimientos (este sistema sí). Instalación desde cero de los 21 pasos: 814 productos, 6,560 movimientos y Q600,338.34. |
+| **Objetivo** | Continuar el inventario real cargado en la Entrega 3 (registro en papel que el equipo pasó a Excel para la entrega de inventario trimestral, ver `ENTREGA3_BITACORA_IA.md`) con lo que el laboratorio registró después del 23/09/2026. Ese tramo ya no se anotó en papel ni en el Excel: el laboratorio lo llevó en el sistema de bodega del proyecto de referencia, con la misma numeración E/S del papel. |
+| **Prompt utilizado** | "Si yo tengo una base de datos puedes aplicarla? … [el sistema de bodega] se está trabajando con ello". El equipo entregó un respaldo `pg_dump` de esa base de datos y eligió **agregar lo nuevo** (no reemplazar). |
+| **Resultado obtenido** | El respaldo quedó fuera del repositorio: se movió a la carpeta ignorada y se agregó el patrón a `.gitignore`. Un generador en `sql/dml/` reutiliza las reglas de `generar_carga.py` (las mismas de la carga del Excel en la Entrega 3: categorías, proveedores, FEFO) y produce el script `005` de `sql/dml/`: 205 entradas, 516 salidas, 108 lotes, 8 productos y 1 proveedor nuevos, y el reporte de la carga en `docs/entrega-4/`. |
+| **Validación del grupo** | Se confirmó que el respaldo conserva la numeración del papel (código E/S idéntico al del Excel de la Entrega 3), para no duplicar. 12 registros antiguos sin equivalente resultaron ser servicios o rechazos de la Entrega 3 y se dejaron fuera. Se revisó que el script no publique nombres de personas (solo áreas y empresas). Se respaldó la base antes de cargar. Resultado: 0 lotes incoherentes; **804 de 813** productos con la misma existencia que la base de origen. Las 9 diferencias se explicaron: 2 entradas rechazadas por vencimiento anterior al ingreso, y 7 productos en los que el contador de existencia de la base de origen no coincide con sus propios movimientos (este sistema sí). Instalación desde cero de los 21 pasos: 814 productos, 6,560 movimientos y Q600,338.34. |
 | **Estándares aplicados** | S2, S3 (script generado con encabezado), S7, S8; R6 (respaldo fuera del repositorio, sin datos personales). |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
+### Registro de Bitácora IA — Número de documento para cada movimiento
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 26/10/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Que cada entrada y salida se identifique como en el laboratorio (E000001, S000001) y no por un número interno, y que la observación no repita de dónde se cargó el dato. |
+| **Prompt utilizado** | "Cómo quito todo eso de las entradas y salidas … solo necesito que diga entrada y el número de entrada E00001 por ejemplo, al igual que salida S00001". La IA propuso dos alcances; el equipo eligió **número propio continuo** (los cargados conservan el suyo y los nuevos siguen el correlativo). |
+| **Resultado obtenido** | `ddl/005_numero_documento.sql`: columna `movimiento.numero_documento` (NOT NULL, UNIQUE, CHECK de formato y de prefijo según el tipo, RN-27), relleno con el número que traía el texto de la observación y limpieza de ese texto (en las salidas queda el área). `triggers/004`: el número de cada movimiento nuevo, con un candado por tipo para que dos registros simultáneos no tomen el mismo y sin huecos si un registro falla. `views/006`: el número en `vw_historial_movimientos`. En la web: columna N.º en historial y lote, título de la ficha, kardex y su CSV, Panel y búsqueda `Ctrl K` por número. |
+| **Validación del grupo** | Antes de migrar se comprobó que ningún código se repetía en el texto de las observaciones, y se respaldó la base. La migración desactiva el trigger de historial inmutable solo dentro de su transacción (único caso, documentado en el script). Una entrada y una salida nuevas, dentro de `BEGIN … ROLLBACK`, recibieron E001793 y S004790. **Corrección:** al probar en `psql`, `CALL` no admite subconsultas como argumento; se usaron variables. Instalación desde cero de 33 pasos: numeración de E000001 a E001790 y ninguna observación con el origen de la carga. En Neon: 0 movimientos sin número. |
+| **Estándares aplicados** | S1, S2 (un script por propósito: ddl, trigger y vista por separado), S3, S6, S8; A1, A4; D1. |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
+### Registro de Bitácora IA — Roles con permisos editables
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 26/10/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Que el administrador pueda dar y quitar accesos a cada rol y crear roles nuevos, en lugar del reparto fijo en el código. |
+| **Prompt utilizado** | "En los roles de usuario no puedo agregar opciones o quitar accesos". La IA mostró cómo lo resuelve el proyecto de referencia (permisos guardados como datos) y preguntó el alcance; el equipo eligió **editar accesos y crear roles**. |
+| **Resultado obtenido** | `ddl/006_permisos.sql`: tablas `permiso` (11 permisos, cada uno con el nivel de PostgreSQL que necesita) y `rol_permiso` (N:M), con el reparto anterior como datos iniciales (RN-28). `procedures/004`: `fn_rol_bd`, que elige el rol de PostgreSQL más bajo que cubre los permisos del rol. `triggers/005`: el rol Administrador no se renombra ni se elimina (RN-29). En la web: `permiso_requerido()` y `tiene_permiso()` reemplazan los roles fijos en las 12 rutas y las plantillas; la tabla de permisos con casillas, y crear, renombrar y eliminar roles. Cada petición lee los permisos de la base: un cambio rige sin volver a iniciar sesión, y un usuario desactivado pierde la sesión. |
+| **Validación del grupo** | Se mantuvieron las dos capas de control de acceso: la app aplica el permiso exacto y la base, por `SET ROLE`, el nivel. Prueba de 31 verificaciones: conceder un permiso a Consulta abre la pantalla sin volver a entrar y sube su rol de BD; quitarlo lo devuelve a 403; un rol con usuarios no se elimina; el Administrador no se renombra; nadie le quita a su propio rol el acceso a esta pantalla. **Corrección:** el primer diseño tomaba el rol de la sesión, que no existe en las sesiones abiertas antes de la actualización; se cambió por el que se lee de la base en cada petición. |
+| **Estándares aplicados** | S1–S4 (FK con `ON DELETE CASCADE` justificado en `rol_permiso`), S6, S8; A1, A2, A3, A6; R6. |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
+### Registro de Bitácora IA — Bitácora de auditoría
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 26/10/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Saber quién hizo qué y cuándo en el sistema. |
+| **Prompt utilizado** | "Necesito también agregar una bitácora, para ver quién hizo qué". |
+| **Resultado obtenido** | `ddl/007_bitacora.sql`: tabla `bitacora` (RN-30). `triggers/006`: un trigger genérico `SECURITY DEFINER` en 12 tablas que guarda la fila creada o eliminada y, al modificar, solo los campos que cambiaron con su valor anterior y nuevo; nunca la contraseña. La app informa el usuario en cada conexión (`app.id_usuario`) y registra inicios de sesión, intentos fallidos, cierres y descargas de respaldo. `views/007` y la pantalla Administración → Bitácora, con filtros, frases legibles ("Concedió «Registrar salidas» al rol …") y CSV. La bitácora no se modifica ni se borra. El respaldo incluye las 3 tablas nuevas. |
+| **Validación del grupo** | Se decidió auditar en la base y no solo en la app, para que quede registrado aunque el cambio se haga fuera de la aplicación (aparece como "Sistema"). Se excluyó la existencia de los lotes, que ya registran los movimientos, para no llenar la bitácora con cada entrada y salida dos veces. Se comprobó que ningún registro contiene el hash de una contraseña y que un `UPDATE` directo se rechaza. **Correcciones:** un rol eliminado aparecía como "rol #6"; ahora su nombre se toma de la propia bitácora. Una contraseña cambiada mostraba un valor anterior vacío; ahora solo dice "(cambiada)". En Neon se aplicaron las 3 migraciones en una sola ejecución del SQL Editor (68 instrucciones sin error) antes del redespliegue. |
+| **Estándares aplicados** | S2, S3, S6, S8; A1, A2, A4, A6; R6 (sin contraseñas ni hashes en la bitácora). |
 | **Responsable** | José Eduardo Escobar |
 
 ---
@@ -157,7 +202,6 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | Acción | Responsable |
 |---|---|
 | Revisión del manual de usuario contra la versión publicada en Render, y su registro aquí | Cristopher Alexis Castellanos Paz |
-| Aplicación de `sql/ddl/003_examen_estado.sql` en Neon y redespliegue en Render | Quien administre las cuentas (José Eduardo Escobar) |
 
 ---
 
@@ -168,7 +212,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | 1 — Análisis, propuesta y diseño conceptual | `docs/bitacora-ia/Bitacora-IA.md` | 5 actividades | IA como apoyo de análisis y redacción | Equipo |
 | 2 — Diseño lógico e implementación base | `docs/entrega-2/Bitacora-IA.md` | 13 | Claude Code (Opus) | José Eduardo Escobar, Cristopher Alexis Castellanos Paz |
 | 3 — Implementación avanzada, seguridad y pruebas | `docs/bitacora-ia/ENTREGA3_BITACORA_IA.md` | 10 | Claude, Claude Code (Opus) | José Eduardo Escobar (8), Cristopher Alexis Castellanos Paz (2) |
-| 4 — Integración, documentación y defensa | este archivo | 9 | Claude Code (Opus), Playwright | José Eduardo Escobar |
+| 4 — Integración, documentación y defensa | este archivo | 12 | Claude Code (Opus), Playwright | José Eduardo Escobar |
 
 ### Para qué se usó la IA en cada etapa
 
@@ -177,7 +221,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | Análisis (E1) | Ordenar el problema, redactar requerimientos, proponer entidades | Alcance del sistema; qué módulos sí y cuáles no |
 | Diseño (E2) | Modelo relacional, normalización, diccionario, DDL, primeros CRUD | PostgreSQL como SGBD; normalización en hoja de cálculo, como la enseñó el catedrático |
 | Implementación (E3) | Triggers, procedimientos, roles, carga de los datos reales, web al 70%, despliegue | Usar el inventario real; qué errores del papel corregir y cuáles rechazar; anonimizar proveedores individuales; publicar en Render y Neon |
-| Cierre (E4) | Completar el CRUD, respaldo, seguridad, interfaz de SIGAL, corrección de entradas, carga de SIGAL, pruebas en navegador, manuales | Baja lógica en lugar de borrado; no ofrecer la restauración desde la app; qué protecciones de SIGAL aplicar y cuáles no; diseño de SIGAL sí, módulos no; corregir entradas con registro y no con edición directa; agregar (no reemplazar) los datos de SIGAL |
+| Cierre (E4) | Completar el CRUD, respaldo, seguridad, interfaz nueva, corrección de entradas, inventario al día (24/09 al 21/10), número de documento, permisos editables, bitácora de auditoría, pruebas en navegador, manuales | Baja lógica en lugar de borrado; no ofrecer la restauración desde la app; qué protecciones del proyecto de referencia aplicar y cuáles no; su diseño sí, sus módulos no; corregir entradas con registro y no con edición directa; agregar (no reemplazar) los movimientos nuevos |
 
 ### Errores de la IA detectados por la validación del equipo
 
@@ -192,6 +236,8 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | 4 | Etiquetas y afirmaciones de los documentos que no coincidían con el sistema | Contraste de cada afirmación con la interfaz y el código |
 | 4 | Trigger de inmutabilidad con un error técnico al borrar una corrección | Prueba de `DELETE` en `psql` |
 | 4 | Prueba automatizada que registró correcciones reales por suponer valores viejos | Conteo de correcciones antes y después |
+| 4 | Control de permisos que dependía de un dato de sesión inexistente en sesiones viejas | Revisión del flujo de sesiones abiertas antes de la actualización |
+| 4 | Bitácora con "rol #6" y un valor anterior vacío en las contraseñas | Revisión visual de la pantalla en el navegador |
 
 ### Lección del proyecto
 

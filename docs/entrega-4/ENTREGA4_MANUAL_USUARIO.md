@@ -1,7 +1,7 @@
 # Manual de usuario
 
 **Sistema Web de Gestión y Control de Inventario — Laboratorio Privado Quetzaltenango**
-Versión 1.1 · Entrega 4 · octubre de 2026 (interfaz con el diseño de SIGAL)
+Versión 1.2 · Entrega 4 · octubre de 2026 (interfaz con el diseño de SIGAL; número de documento, roles editables y bitácora)
 
 Este manual explica cómo usar el sistema en el trabajo diario del laboratorio: registrar lo que entra y sale de bodega, saber qué hay, qué se está acabando y qué está por vencer, y sacar reportes. Está escrito para el personal del laboratorio; no hace falta saber de computación ni de bases de datos.
 
@@ -22,7 +22,7 @@ Cada procedimiento tiene un código (**U-01**, **U-02**…). El mismo código ap
 9. [Productos y categorías](#9-productos-y-categorías) — U-08
 10. [Proveedores y sus precios](#10-proveedores-y-sus-precios) — U-09
 11. [Exámenes y los insumos que consumen](#11-exámenes-y-los-insumos-que-consumen) — U-10
-12. [Usuarios y roles](#12-usuarios-y-roles) — U-11
+12. [Usuarios, roles y bitácora](#12-usuarios-roles-y-bitácora) — U-11, U-14, U-15
 13. [Respaldo de la información](#13-respaldo-de-la-información) — U-12
 14. [Mensajes del sistema y qué hacer](#14-mensajes-del-sistema-y-qué-hacer)
 15. [Preguntas frecuentes](#15-preguntas-frecuentes)
@@ -39,9 +39,11 @@ Cada procedimiento tiene un código (**U-01**, **U-02**…). El mismo código ap
 
 > El servicio gratuito donde está publicado el sistema se "duerme" tras 15 minutos sin uso. La primera vez que se abre después de eso tarda alrededor de 50 segundos en cargar; luego funciona con normalidad.
 
-### Los tres roles
+### Roles y permisos
 
 Cada usuario tiene un rol, y el rol decide qué puede hacer. El menú solo muestra lo que el rol permite, y si alguien escribe a mano la dirección de una pantalla que no le corresponde, el sistema responde **"Acceso no permitido"**.
+
+El sistema trae tres roles. Así vienen sus permisos; el administrador los puede cambiar y puede crear roles nuevos (U-14):
 
 | Puede… | Administrador | Encargado de inventario | Usuario de consulta |
 |---|:---:|:---:|:---:|
@@ -50,7 +52,9 @@ Cada usuario tiene un rol, y el rol decide qué puede hacer. El menú solo muest
 | Registrar entradas, salidas y devoluciones | ✔ | ✔ | — |
 | Crear y editar productos, categorías, proveedores y exámenes | ✔ | — | — |
 | Corregir una entrada mal digitada, o el número o el vencimiento de un lote | ✔ | — | — |
-| Administrar usuarios y descargar el respaldo | ✔ | — | — |
+| Administrar usuarios y roles, ver la bitácora y descargar el respaldo | ✔ | — | — |
+
+Consultar y cambiar la propia contraseña lo pueden todos los roles. El **Administrador** tiene siempre todos los permisos.
 
 ### Cómo está organizada la pantalla
 
@@ -58,7 +62,7 @@ A la izquierda está el **menú**, sobre fondo oscuro y agrupado por tarea:
 
 - **Operación:** Panel, Movimientos, Lotes y Reportes. Es lo que se usa todos los días.
 - **Catálogos:** Productos, Exámenes, Proveedores y Categorías.
-- **Administración** (solo el administrador): Usuarios y roles, y Respaldo.
+- **Administración** (según los permisos del rol): Usuarios y roles, Bitácora y Respaldo.
 
 La opción en la que está aparece resaltada, con su ícono en ámbar. Abajo del menú, el punto verde **Conectado** indica que el sistema responde.
 
@@ -66,7 +70,7 @@ Arriba está la **barra superior**:
 
 | Elemento | Para qué sirve |
 |---|---|
-| **Buscar producto o pantalla** (o las teclas `Ctrl` + `K`) | Ir directo a una pantalla o al kardex de un producto escribiendo parte de su nombre o código (sección 3) |
+| **Buscar producto o pantalla** (o las teclas `Ctrl` + `K`) | Ir directo a una pantalla, al kardex de un producto o a un movimiento por su número (sección 3) |
 | **Sol / luna** | Cambiar entre tema claro y oscuro. El navegador lo recuerda |
 | **Su nombre y rol** (con sus iniciales en un círculo) | Abre el menú de usuario: **Cambiar mi contraseña** y **Cerrar sesión** |
 
@@ -132,7 +136,7 @@ La columna del mes actual dice **hoy**. Al pasar el cursor sobre un punto (o toc
 
 **Actividad reciente.** Las entradas (↓), salidas (↑) y devoluciones (↩) de los últimos 14 días. Clic en una para ver su detalle.
 
-El encargado y el administrador ven además los botones **Registrar salida** y **Registrar entrada**.
+Quien tiene permiso para registrar ve además los botones **Registrar salida** y **Registrar entrada**.
 
 ![Panel del administrador](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-01c-inicio-admin.png)
 
@@ -141,10 +145,13 @@ El encargado y el administrador ven además los botones **Registrar salida** y *
 Presione `Ctrl` + `K` (o haga clic en **Buscar producto o pantalla**) y escriba parte de un nombre o código:
 - **Pantallas:** lleva a esa sección del menú.
 - **Productos:** muestra su existencia y abre su kardex.
+- **Movimientos:** escriba el número de una entrada, salida o devolución (`E1790` o `E001790`, `S4748`, `D1`) y se abre su ficha.
 
 Muévase con las flechas, abra con `Enter` y cierre con `Esc`.
 
 ![Búsqueda rápida](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-14-busqueda.png)
+
+![Búsqueda por número de movimiento](../casos-prueba/evidencias-entrega-4/numeracion-roles-bitacora/CP4-17b-busqueda-por-numero.png)
 
 ---
 
@@ -152,7 +159,9 @@ Muévase con las flechas, abra con `Enter` y cierre con `Esc`.
 
 Una **entrada** es todo lo que llega a la bodega: una compra, una donación, una reposición. Cada entrada crea un **lote** nuevo o suma a uno que ya existe.
 
-*Roles: Administrador y Encargado de inventario.*
+**Número de documento.** Cada movimiento tiene su número, que el sistema asigna solo y en orden: **E** para las entradas (E001791, E001792…), **S** para las salidas y **D** para las devoluciones. Los movimientos del registro en papel y de SIGAL conservan el número que tenían. Es el número que se ve en el historial, en la ficha, en el kardex y en los reportes, y con el que se busca un movimiento.
+
+*Permiso: Registrar entradas (lo tienen el Administrador y el Encargado de inventario).*
 
 ### U-03 Registrar una entrada
 
@@ -163,7 +172,7 @@ Una **entrada** es todo lo que llega a la bodega: una compra, una donación, una
 5. **Fecha de vencimiento:** la del empaque. Es **obligatoria** para los productos marcados como "requiere vencimiento" (reactivos, por ejemplo); el sistema no deja registrar la entrada sin ella.
 6. **Cantidad** y **precio unitario** de compra (en quetzales, hasta 2 decimales).
 7. **Observación** (opcional): número de factura, quién recibió, etc.
-8. Presione **Registrar entrada**. Aparece, por ejemplo, *"Entrada registrada: 20 de REACTIVO DE PRUEBA CP4B en el lote CP4B-A."* y se abre el detalle del movimiento.
+8. Presione **Registrar entrada**. Aparece, por ejemplo, *"Entrada E001793 registrada: 20 de REACTIVO DE PRUEBA CP4B en el lote CP4B-A."* y se abre la ficha de la entrada.
 
 ![Formulario de entrada](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-05a-entrada.png)
 
@@ -171,13 +180,13 @@ La existencia del lote sube automáticamente. La fecha, la hora y el nombre de q
 
 ### U-13 Corregir una entrada mal digitada
 
-*Solo el Administrador.* Una entrada **no se elimina**; si tiene un dato equivocado (cantidad, precio, proveedor, número de lote o vencimiento), se **corrige**, y la corrección queda registrada.
+*Permiso: Corregir entradas (por defecto, solo el Administrador).* Una entrada **no se elimina**; si tiene un dato equivocado (cantidad, precio, proveedor, número de lote o vencimiento), se **corrige**, y la corrección queda registrada.
 
-1. Abra la entrada: **Movimientos → pestaña Entradas** → clic en su fecha.
+1. Abra la entrada: **Movimientos → pestaña Entradas** → clic en su número (o búsquela con `Ctrl` + `K`).
 2. Presione **Corregir entrada**. El formulario viene con los datos registrados.
 3. Cambie solo lo que está mal.
 4. **Motivo:** explique por qué (mínimo 10 caracteres), por ejemplo *"La factura dice 22 unidades y se digitó 20"*.
-5. Presione **Guardar corrección**. Aparece *"Entrada #… corregida: 2 datos. El registro original y la corrección quedan en el historial."*
+5. Presione **Guardar corrección**. Aparece *"Entrada E001790 corregida: 2 datos. El registro original y la corrección quedan en el historial."*
 
 ![Corregir una entrada](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-15a-corregir-entrada.png)
 
@@ -198,15 +207,15 @@ No se corrige el **producto** de una entrada. Si se registró en el producto equ
 
 Una **salida** es lo que se saca de bodega para usarse: reactivos para un examen, material para un área, etc.
 
-*Roles: Administrador y Encargado de inventario.*
+*Permiso: Registrar salidas (lo tienen el Administrador y el Encargado de inventario).*
 
 ### U-04 Registrar una salida
 
 1. En el **Panel** presione **Registrar salida**.
 2. **Producto:** escríbalo y elíjalo de la lista. Debajo aparece la **existencia utilizable** (lo que hay en lotes no vencidos), para que sepa cuánto puede sacar.
 3. **Cantidad** que sale.
-4. **Observación** (opcional): para qué área o examen.
-5. Presione **Registrar salida**.
+4. **Observación** (opcional): para qué área o examen. Se muestra en la columna *Área o motivo* del historial.
+5. Presione **Registrar salida**. Aparece *"Salida S004790 registrada: …"* con su número.
 
 ![Formulario de salida](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-06a-salida.png)
 
@@ -220,15 +229,15 @@ Si se pide más de lo que hay, la salida **no se registra** y aparece, por ejemp
 
 Los movimientos **no se pueden editar ni borrar**: es lo que garantiza que el historial sea confiable. Si una salida se registró por error (otra cantidad, otro producto, un examen que se canceló), se corrige con una **devolución**, que repone las unidades al mismo lote del que salieron. La salida original no desaparece: ambos movimientos quedan en el historial, enlazados.
 
-*Roles: Administrador y Encargado de inventario.*
+*Permiso: Devolver salidas (lo tienen el Administrador y el Encargado de inventario).*
 
 ### U-05 Devolver una salida
 
-1. Abra la salida: **Movimientos → pestaña Salidas** → haga clic en la fecha de la salida (o desde *Actividad reciente* en el Panel).
+1. Abra la salida: **Movimientos → pestaña Salidas** → haga clic en su número (o desde *Actividad reciente* en el Panel).
 2. Presione **Devolver esta salida**.
 3. **Motivo:** explique por qué se devuelve (mínimo 10 caracteres). Es obligatorio y queda guardado.
 4. **Cuánto devolver de cada lote:** viene propuesto el total que salió de cada lote. Bájelo si solo devuelve una parte, o déjelo en cero en los lotes que no devuelve.
-5. Presione **Registrar devolución**. Aparece *"Devolución registrada: 3 devuelto a 1 lote(s). La salida #5884 queda corregida y ambos movimientos permanecen en el historial."*
+5. Presione **Registrar devolución**. Aparece *"Devolución D000003 registrada: 3 devuelto a 1 lote(s). La salida S004789 queda corregida y ambos movimientos permanecen en el historial."* La ficha de la devolución dice qué salida corrige, por su número.
 
 ![Devolución de una salida](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-06c-devolucion.png)
 
@@ -244,13 +253,13 @@ No se puede devolver más de lo que salió, ni devolver dos veces lo mismo: el s
 
 1. En el menú, **Lotes**. Las pestañas separan los lotes **Con existencia**, los que **Vencen en 90 días**, los **Vencidos con existencia** y **Todos**.
 2. Busque por producto, código o número de lote.
-3. Haga clic en el número de lote para ver su ficha: existencia, vencimiento, proveedor, fecha de ingreso y **todos sus movimientos**, con el signo **+** para lo que entró o se devolvió y **−** para lo que salió.
+3. Haga clic en el número de lote para ver su ficha: existencia, vencimiento, proveedor, fecha de ingreso y **todos sus movimientos**, cada uno con su número (E/S/D), con el signo **+** para lo que entró o se devolvió y **−** para lo que salió.
 
 ![Ficha de un lote](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-06e-ficha-lote.png)
 
 La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de sus entradas, salidas y devoluciones. Por eso la ficha dice "la existencia es entradas – salidas de esta lista".
 
-**Corregir datos de un lote** (solo administrador): en la ficha, **Corregir datos** permite corregir el número de lote o la fecha de vencimiento si se digitaron mal, o dar de baja el lote. La cantidad no se puede editar.
+**Corregir datos de un lote** (permiso *Corregir datos de un lote*; por defecto, el administrador): en la ficha, **Corregir datos** permite corregir el número de lote o la fecha de vencimiento si se digitaron mal, o dar de baja el lote. La cantidad no se puede editar.
 
 ---
 
@@ -287,7 +296,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 
 ## 9. Productos y categorías
 
-*Consultar: todos los roles. Crear, editar y desactivar: Administrador.*
+*Consultar: todos los roles. Crear, editar y desactivar: permiso Productos y categorías (por defecto, el Administrador).*
 
 ### U-08 Crear un producto
 
@@ -312,7 +321,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 
 ## 10. Proveedores y sus precios
 
-*Consultar: todos los roles. Crear, editar, asignar productos y desactivar: Administrador.*
+*Consultar: todos los roles. Crear, editar, asignar productos y desactivar: permiso Proveedores y precios (por defecto, el Administrador).*
 
 ### U-09 Registrar un proveedor y los productos que suministra
 
@@ -330,7 +339,7 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 
 ## 11. Exámenes y los insumos que consumen
 
-*Consultar: todos los roles. Crear, editar, asignar insumos y dar de baja: Administrador.*
+*Consultar: todos los roles. Crear, editar, asignar insumos y dar de baja: permiso Exámenes (por defecto, el Administrador).*
 
 ### U-10 Registrar un examen y sus insumos
 
@@ -345,9 +354,9 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 
 ---
 
-## 12. Usuarios y roles
+## 12. Usuarios, roles y bitácora
 
-*Solo Administrador.*
+*Permiso: Usuarios y roles, y Ver la bitácora (por defecto, el Administrador).*
 
 ### U-11 Crear, modificar y desactivar un usuario
 
@@ -358,9 +367,37 @@ La existencia de un lote **nunca se escribe a mano**: siempre es el resultado de
 ![Nuevo usuario](../casos-prueba/evidencias-entrega-4/interfaz-sigal/CP4-09a-nuevo-usuario.png)
 
 - **Cambiar el rol o asignar una contraseña nueva** (por ejemplo, si alguien la olvidó): **Editar** en la fila del usuario. Si deja la contraseña vacía, no se cambia.
-- **Desactivar:** el usuario ya no puede entrar, pero sus movimientos siguen mostrando su nombre. No se puede desactivar a sí mismo ni cambiar su propio rol, y el sistema no permite dejar el sistema sin ningún administrador activo.
+- **Desactivar:** el usuario ya no puede entrar, pero sus movimientos siguen mostrando su nombre. Si tenía la sesión abierta, el sistema lo saca en la siguiente página que abra. No se puede desactivar a sí mismo ni cambiar su propio rol, y el sistema no permite dejar el sistema sin ningún administrador activo.
 
-La misma pantalla muestra la tabla de permisos de cada rol.
+### U-14 Definir qué puede hacer cada rol
+
+Debajo de la lista de usuarios está la tabla **Roles y permisos**: una fila por permiso y una columna por rol.
+
+1. **Dar o quitar un permiso:** marque o desmarque la casilla del rol en la fila del permiso y presione **Guardar permisos**. Aparece, por ejemplo, *"Permisos guardados (1 cambio). Rigen desde la próxima página que abra cada usuario."* No hace falta que el usuario vuelva a iniciar sesión.
+2. **Crear un rol** (por ejemplo, *Jefe de técnicos*): presione **Nuevo rol**, escriba el nombre y una descripción, marque sus permisos y presione **Crear rol**. Después asígnelo a los usuarios con **Editar** (U-11).
+3. **Renombrar un rol o cambiar sus permisos:** haga clic en el nombre del rol, en el encabezado de la tabla.
+4. **Eliminar un rol:** en esa misma pantalla, **Eliminar rol**. Solo se puede si ningún usuario lo tiene asignado, ni siquiera uno desactivado.
+
+![Tabla de roles y permisos](../casos-prueba/evidencias-entrega-4/numeracion-roles-bitacora/CP4-18a-tabla-de-permisos.png)
+
+![Nuevo rol](../casos-prueba/evidencias-entrega-4/numeracion-roles-bitacora/CP4-18b-formulario-rol-nuevo.png)
+
+Los permisos que se pueden conceder son: registrar entradas, registrar salidas, devolver salidas, corregir entradas, corregir datos de un lote, productos y categorías, proveedores y precios, exámenes, usuarios y roles, descargar respaldo y ver la bitácora. Consultar lo pueden todos.
+
+El rol **Administrador** tiene siempre todos los permisos: su columna no tiene casillas, y no se puede renombrar ni eliminar. Tampoco puede quitarle a su propio rol el permiso *Usuarios y roles*, porque se quedaría sin acceso a esta pantalla.
+
+### U-15 Consultar la bitácora
+
+La bitácora registra **quién hizo qué y cuándo**: cada producto, proveedor, examen, lote, usuario o rol que se crea, modifica o elimina; cada entrada, salida, devolución y corrección; cada inicio y cierre de sesión (también los intentos fallidos) y cada descarga de respaldo.
+
+1. **Administración → Bitácora.** Aparece lo más reciente primero.
+2. Filtre por **usuario**, **acción** (creó, modificó, eliminó, inició sesión…), **sobre qué** (producto, movimiento, rol…), **texto** (un nombre o un número) y **fechas**, y presione **Filtrar**.
+3. La columna **Detalle** muestra, en una modificación, cada dato que cambió con su valor anterior tachado y el nuevo; por ejemplo *estado: sí → no*. En un movimiento, el enlace abre su ficha.
+4. **Descargar CSV** guarda lo filtrado para abrirlo en Excel.
+
+![Bitácora](../casos-prueba/evidencias-entrega-4/numeracion-roles-bitacora/CP4-19a-bitacora.png)
+
+La bitácora **no se puede modificar ni borrar**, ni siquiera el administrador. Nunca guarda contraseñas: de un cambio de contraseña solo registra que se cambió.
 
 ---
 
@@ -389,7 +426,9 @@ El archivo contiene información del laboratorio y de sus proveedores: trátelo 
 | Mensaje | Qué pasó | Qué hacer |
 |---|---|---|
 | *Usuario o contraseña incorrectos.* | Datos mal escritos, o el usuario está desactivado | Revise mayúsculas y minúsculas. Si persiste, consulte al administrador |
-| *Acceso no permitido* | Su rol no tiene permiso para esa pantalla | Es normal; pida a alguien con el rol adecuado |
+| *Acceso no permitido* | Su rol no tiene permiso para esa acción | Si la necesita en su trabajo, pídale al administrador que se la conceda a su rol (U-14) |
+| *Su usuario ya no está activo.* | El administrador lo desactivó mientras tenía la sesión abierta | Consulte con el administrador |
+| *El rol "…" tiene N usuarios… Asígneles otro rol antes de eliminarlo.* | Se intentó eliminar un rol en uso | Cambie el rol de esos usuarios (U-11) y vuelva a intentarlo |
 | *Existencia insuficiente de "…": disponible X (sin contar lotes vencidos), solicitado Y.* | Se intentó sacar más de lo que hay en lotes vigentes | Corrija la cantidad o registre primero la entrada pendiente |
 | *El producto "…" requiere fecha de vencimiento en sus lotes.* | Falta la fecha en una entrada de un producto que caduca | Escriba la fecha del empaque |
 | *Ya existe un producto con el código "…".* (o NIT, usuario, número de lote) | El dato debe ser único | Use otro código o busque el registro que ya existe |
@@ -412,6 +451,12 @@ Porque sus lotes están vencidos. La existencia "utilizable" no cuenta los lotes
 
 **¿Se puede borrar un producto, un proveedor o un usuario?**
 No; se **desactivan**. Así sus movimientos pasados siguen mostrando a quién o a qué se refieren.
+
+**¿Cómo sé quién registró o cambió algo?**
+En la ficha de cada movimiento aparece quién lo registró. Para todo lo demás (quién cambió un precio, desactivó un usuario o dio un permiso), use la **Bitácora** (U-15).
+
+**Necesito que una persona pueda registrar salidas pero no entradas. ¿Se puede?**
+Sí. Cree un rol con solo el permiso *Registrar salidas* (U-14) y asígneselo.
 
 **¿Qué pasa si se va la luz o el internet mientras registro algo?**
 Cada movimiento se guarda completo o no se guarda: nunca queda a medias. Revise el historial de Movimientos para saber si quedó registrado antes de volver a intentarlo.

@@ -1,0 +1,48 @@
+-- CP4-17 a CP4-19: pruebas automáticas (Flask test_client contra la base de desarrollo)
+-- Fecha: 26/10/2026 10:11 · ejecutadas con apoyo de Claude Code (ver bitácora IA)
+
+## CP4-17 Número de documento
+OK    Ctrl K: e1790 lleva a la entrada E001790
+OK    ficha: título con número y sin "(SIGAL)"
+OK    historial: busca por número y muestra el área
+OK    historial de salidas sin texto de origen
+OK    ficha de lote con N.º
+OK    kardex muestra "Salida S004439"
+OK    kardex CSV con N.º
+OK    devolución: número y salida corregida por número
+OK    panel abre
+FALLAS: []
+
+## CP4-18 y CP4-19 Roles, permisos y bitácora
+OK    bitácora: 3 inicios de sesión
+OK    encargado: registrar entrada
+OK    encargado: 403 en productos
+OK    consulta: 403 en entrada
+OK    consulta: ve el historial
+OK    consulta: no ve el botón de registrar
+OK    bitácora: solo admin
+OK    menú: Bitácora solo admin
+OK    tabla: casillas editables, Admin fijo
+OK    conceder PRODUCTOS a consulta: 1 cambio
+OK    consulta: ahora entra a nuevo producto (sin volver a iniciar sesión)
+OK    BD: consulta sube a rol_administrador
+OK    quitar PRODUCTOS: consulta vuelve a 403
+OK    BD: consulta vuelve a rol_consulta
+OK    bitácora: concedió y quitó (2 filas)
+OK    bitácora: frases de permisos
+OK    crear rol con 1 permiso
+OK    rol nuevo: nivel encargado
+OK    nombre de rol repetido
+OK    editar rol: nombre y permisos
+OK    eliminar rol sin usuarios
+OK    no elimina un rol con usuarios
+OK    Administrador no se renombra
+OK    Administrador no se elimina
+OK    desactivado: la sesión abierta deja de valer
+OK    bitácora: intento fallido
+OK    bitácora: desactivar y activar usuario
+OK    bitácora: cierre de sesión con responsable
+OK    bitácora: CSV
+OK    bitácora: nunca guarda el hash
+OK    bitácora inmutable (UPDATE rechazado)
+FALLAS: []

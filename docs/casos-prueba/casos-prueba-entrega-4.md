@@ -5,6 +5,7 @@ La Entrega 4 se revisa con tres pruebas funcionales: **la aplicación completa o
 - **CP4-01 a CP4-12** recorren, en el navegador, cada flujo del manual de usuario (`docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md`, flujos U-01 a U-12), con los tres roles. Juntos tocan los 11 módulos y el CRUD de todas las tablas principales.
 - **CP4-13** prueba el respaldo y la restauración (RNF-11).
 - **CP4-14** instala la base desde cero siguiendo `INSTALL.md`.
+- **CP4-15 a CP4-19** prueban lo que se agregó después: corrección de entradas, carga de SIGAL, número de documento, roles con permisos editables y bitácora.
 
 Los casos de las entregas 2 y 3 siguen vigentes (`casos-prueba-entrega-2.md`, `casos-prueba-entrega-3.md`). La regresión de esta entrega confirma que no se rompió nada de lo anterior (ver el final del documento).
 
@@ -80,6 +81,18 @@ El 21/10/2026 la interfaz adoptó el diseño de SIGAL: menú oscuro, barra super
 
 **12 de 12 casos aprobados también con la interfaz nueva, más CP4-15 y CP4-16.** Capturas en `evidencias-entrega-4/interfaz-sigal/` (son las que ilustran el manual de usuario) y respuestas del sistema en `interfaz-sigal/CP4-resultados.json`. La regresión automatizada se repitió después del cambio: 183 verificaciones, 0 fallas.
 
+## Tercera ronda: número de documento, roles y bitácora (26/10/2026)
+
+El 26/10/2026 se agregaron tres funciones a pedido del laboratorio: cada movimiento con su número (E/S/D), permisos que el administrador edita por rol y una bitácora de auditoría. Se probaron con el cliente de pruebas de Flask (40 verificaciones) y en Edge.
+
+| ID | Flujo del manual | Requerimientos | Resultado obtenido (26/10/2026) | Evidencia | Estado |
+|---|---|---|---|---|---|
+| **CP4-17** | U-03, U-04 y búsqueda: número de documento | RN-27 | Los movimientos cargados conservan el número del papel y de SIGAL: el historial muestra la columna N.º (`S004789`, `S004788`…) y en las salidas solo el área, sin "(SIGAL)" ni "(registro en papel)". `Ctrl K` con "e1790" encuentra **Entrada E001790** y `Enter` abre su ficha, titulada así. El kardex y su CSV muestran "Salida S004439". Una entrada y una salida nuevas, dentro de `BEGIN … ROLLBACK`, reciben **E001793** y **S004790**: el siguiente del correlativo. | [a](evidencias-entrega-4/numeracion-roles-bitacora/CP4-17a-historial-con-numero.png), [b](evidencias-entrega-4/numeracion-roles-bitacora/CP4-17b-busqueda-por-numero.png), [c](evidencias-entrega-4/numeracion-roles-bitacora/CP4-17c-ficha-entrada-E001790.png), [resultados](evidencias-entrega-4/numeracion-roles-bitacora/CP4-17-a-19-resultados.txt) | ✅ Pasó |
+| **CP4-18** | U-14 Roles y permisos | RN-28, RN-29, RF-04, RF-05 | La tabla de Usuarios y roles muestra casillas por rol; el Administrador, fijo con todo. Al darle "Productos y categorías" al Usuario de consulta, **la sesión ya abierta** de `consulta.dev` entra a Nuevo producto y su rol de BD sube a `rol_administrador`; al quitárselo vuelve a 403 y a `rol_consulta`. Rol nuevo con 1 permiso → nivel `rol_encargado`; renombrado y con Bitácora → `rol_administrador`; eliminado (sin usuarios). No se elimina un rol con usuarios; el Administrador no se renombra ni se elimina. Un usuario desactivado pierde la sesión en la siguiente página. El usuario de consulta recibe 403 en Registrar entrada, con el mensaje que indica pedirle el permiso al administrador. | [a](evidencias-entrega-4/numeracion-roles-bitacora/CP4-18a-tabla-de-permisos.png), [b](evidencias-entrega-4/numeracion-roles-bitacora/CP4-18b-formulario-rol-nuevo.png), [c](evidencias-entrega-4/numeracion-roles-bitacora/CP4-18c-consulta-sin-permiso.png) | ✅ Pasó |
+| **CP4-19** | U-15 Bitácora | RN-30 | Quedan registrados los 3 inicios de sesión, el intento fallido (usuario inexistente), el cierre de sesión con su responsable, conceder y quitar un permiso ("Concedió «Productos y categorías» al rol Usuario de consulta"), crear, renombrar y eliminar un rol, desactivar y reactivar un usuario (estado sí → no → sí). El CSV se descarga. Ningún registro guarda el hash de la contraseña (solo "contraseña: (cambiada)"). Un `UPDATE` directo a la bitácora se rechaza: *"La bitácora no se puede modificar ni borrar."* | [a](evidencias-entrega-4/numeracion-roles-bitacora/CP4-19a-bitacora.png), [b](evidencias-entrega-4/numeracion-roles-bitacora/CP4-19b-bitacora-modificaciones.png), [c](evidencias-entrega-4/numeracion-roles-bitacora/CP4-19c-bitacora-permisos.png) | ✅ Pasó |
+
+**3 de 3 casos aprobados.** La instalación desde cero se repitió con los 33 scripts (CP4-14, actualizado): mismos totales, Q600,338.34, numeración de E000001 a E001790 y ninguna observación con el origen de la carga. En producción (Neon) se aplicaron las migraciones el 26/10/2026: 0 movimientos sin número, última entrada E001790, última salida S004788 (la salida de prueba #5840 recibió el suyo) y 14 permisos asignados.
+
 ## Defectos encontrados al ejecutar los casos
 
 Las pruebas encontraron tres defectos, que se corrigieron antes de cerrar estos resultados:
@@ -104,7 +117,10 @@ Después de todos los cambios de la Entrega 4 se volvió a recorrer la aplicaci�
 | Respaldo: pantalla, descarga, contenido, permisos | 12 | 0 fallas |
 | Seguridad: cambio de contraseña, encabezados HTTP, POST desde otro origen | 16 | 0 fallas |
 | Corrección de entradas: botón y formulario solo para el Administrador, validaciones de la app y mensajes de la base, 403 para los otros roles, sin dejar correcciones | 16 | 0 fallas |
+| Número de documento: ficha, historial, búsqueda por número, lote, kardex y su CSV, devolución, Panel | 9 | 0 fallas |
+| Roles, permisos y bitácora (CP4-18 y CP4-19) | 31 | 0 fallas |
+| **Total** | **239** | **0 fallas** |
 
-Cada prueba deshace lo que crea (quita el producto asignado, reactiva el examen, devuelve la contraseña original) y su última verificación comprueba que la base quedó como estaba.
+Cada prueba deshace lo que crea (quita el producto asignado, reactiva el examen, devuelve la contraseña original, devuelve los permisos y elimina el rol de prueba) y su última verificación comprueba que la base quedó como estaba. Lo único que permanece es lo que debe permanecer: las filas que esas acciones dejan en la bitácora (RN-30).
 
 **Nota sobre la base de desarrollo.** Una primera versión de la prueba automatizada de la corrección suponía que la entrada CP4B seguía en 20 unidades a Q50. Después de CP4-15 ya no era así, de modo que su verificación "sin cambios" registró 2 correcciones reales: la entrada volvió a 20 a Q50, con el motivo "Sin cambiar ningún dato". Como exige RN-25, esas correcciones no se pueden borrar y quedan en la base de desarrollo, sobre datos de prueba. La prueba se corrigió para leer los valores actuales y ya no escribe nada.
