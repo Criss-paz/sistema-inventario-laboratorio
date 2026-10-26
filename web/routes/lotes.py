@@ -8,7 +8,7 @@ el vencimiento o darlo de baja, pero NUNCA la existencia: su rol de base de
 datos no tiene UPDATE sobre cantidad_disponible (sql/security/001_roles.sql);
 la existencia solo cambia por movimientos.
 
-Consultar: todos los roles. Corregir: Administrador.
+Consultar: todos los roles. Corregir: permiso EDITAR_LOTES.
 """
 import datetime as dt
 
@@ -17,7 +17,7 @@ import psycopg
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from db import query_all, query_one, query_page, execute, mensaje_error
-from routes.auth import login_required, rol_requerido, ADMIN
+from routes.auth import login_required, permiso_requerido
 
 bp = Blueprint("lotes", __name__, url_prefix="/lotes")
 
@@ -91,7 +91,7 @@ def detalle(id_lote):
 
 
 @bp.route("/<int:id_lote>/editar", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("EDITAR_LOTES")
 def editar(id_lote):
     lote = query_one(
         """

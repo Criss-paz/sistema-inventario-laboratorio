@@ -5,7 +5,7 @@
 {% block content %}
 <div class="top-actions">
   <h1>Exámenes<span class="subtitle">Insumos que consume cada examen y cuántos alcanzan con la existencia actual</span></h1>
-  {% if tiene_rol(ADMIN) %}
+  {% if tiene_permiso('EXAMENES') %}
   <a class="btn btn-primary" href="{{ url_for('examenes.nuevo') }}">{{ i.icono('mas') }}Nuevo examen</a>
   {% endif %}
 </div>
@@ -20,7 +20,7 @@
   <table>
     <thead>
       <tr><th>Código</th><th>Examen</th><th>Descripción</th><th class="num">Insumos</th><th class="num">Alcanzan para</th><th>Estado</th>
-        {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
+        {% if tiene_permiso('EXAMENES') %}<th>Acciones</th>{% endif %}</tr>
     </thead>
     <tbody>
       {% for e in examenes %}
@@ -39,7 +39,7 @@
             <span class="badge badge-off">De baja</span>
           {% endif %}
         </td>
-        {% if tiene_rol(ADMIN) %}
+        {% if tiene_permiso('EXAMENES') %}
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('examenes.editar', id_examen=e.id_examen) }}">Editar</a>
           <form method="post" action="{{ url_for('examenes.alternar_estado', id_examen=e.id_examen) }}"

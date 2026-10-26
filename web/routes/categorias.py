@@ -13,7 +13,7 @@ import psycopg
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from db import query_all, query_one, execute
-from routes.auth import login_required, rol_requerido, ADMIN
+from routes.auth import login_required, permiso_requerido
 
 bp = Blueprint("categorias", __name__, url_prefix="/categorias")
 
@@ -28,7 +28,7 @@ def listar():
 
 
 @bp.route("/nueva", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PRODUCTOS")
 def nueva():
     if request.method == "GET":
         return render_template("categorias/form.html", categoria=None)
@@ -59,7 +59,7 @@ def nueva():
 
 
 @bp.route("/<int:id_categoria>/editar", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PRODUCTOS")
 def editar(id_categoria):
     categoria = query_one(
         "SELECT id_categoria, nombre, descripcion, estado FROM categoria WHERE id_categoria = %s",
@@ -96,7 +96,7 @@ def editar(id_categoria):
 
 
 @bp.route("/<int:id_categoria>/alternar-estado", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PRODUCTOS")
 def alternar_estado(id_categoria):
     """Baja/alta lógica — no hay DELETE físico (ver docstring del módulo)."""
     categoria = query_one("SELECT estado FROM categoria WHERE id_categoria = %s", (id_categoria,))

@@ -1,7 +1,7 @@
 """
 routes/respaldo.py — Respaldo de la base de datos (RNF-11).
 
-Solo el Administrador. La pantalla explica qué incluye el respaldo y cómo se
+Solo con el permiso RESPALDO. La pantalla explica qué incluye el respaldo y cómo se
 restaura; el botón descarga un .sql generado por respaldo.py (capa de
 servicio). La restauración NO se ofrece desde la app a propósito: reemplaza
 todos los datos, así que se hace con psql siguiendo el manual técnico, por
@@ -10,16 +10,16 @@ alguien con acceso al servidor de base de datos.
 from flask import Blueprint, Response, render_template, flash, redirect, url_for, session
 
 import respaldo
-from db import query_all
-from routes.auth import rol_requerido, ADMIN
+from db import query_all, execute
+from routes.auth import permiso_requerido
 
 bp = Blueprint("respaldo", __name__, url_prefix="/respaldo")
 
 
 @bp.route("/")
-@rol_requerido(ADMIN)
+@permiso_requerido("RESPALDO")
 def inicio():
-    # Conteos con el rol del Administrador (SET ROLE), solo para informar. El
+    # Conteos con el rol de BD del usuario (SET ROLE), solo para informar. El
     # historial se cuenta por la vista: ningún rol lee movimiento directamente.
     tablas = query_all(
         """
@@ -36,7 +36,7 @@ def inicio():
 
 
 @bp.route("/descargar", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("RESPALDO")
 def descargar():
     try:
         contenido, _ = respaldo.generar(generado_por=session.get("nombre_usuario", "Administrador"))
@@ -45,6 +45,10 @@ def descargar():
         # error técnico original queda encadenado en el log del servidor.
         flash(str(exc), "danger")
         return redirect(url_for("respaldo.inicio"))
+    try:
+        execute("SELECT fn_registrar_evento('DESCARGAR_RESPALDO', %s)", (respaldo.nombre_archivo(),))
+    except Exception:
+        pass  # la bitácora no debe impedir el respaldo
     return Response(
         contenido,
         mimetype="application/sql",

@@ -562,6 +562,21 @@ body.login-page #flash-stack { top: 20px; bottom: auto; }
 .permitido { display: inline-flex; color: var(--st-green); }
 .denegado { color: var(--line-strong); font-weight: 700; }
 .permisos td:first-child { color: var(--text); }
+.permisos td:first-child .hint, .permisos th .hint { display: block; font-weight: 400; }
+.permisos th a { color: inherit; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 3px; }
+.permisos td.centro input[type="checkbox"] { margin: 0 auto; cursor: pointer; }
+.permisos-rol { border: 0; padding: 0; margin: 20px 0 0; }
+.permisos-rol legend { font-weight: 600; font-size: 14px; padding: 0; }
+.permisos-rol .check { align-items: flex-start; margin-top: 12px; }
+.permisos-rol .check input { margin-top: 2px; }
+.zona-peligro { margin-top: 16px; border-color: var(--st-red-line); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.zona-peligro p { margin: 0; }
+
+/* ============ Bitácora ============ */
+.bitacora-cambios { margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.bitacora-cambios li + li { margin-top: 2px; }
+.bitacora-cambios b { font-weight: 600; }
+.bitacora-cambios .antes { color: var(--muted); text-decoration: line-through; }
 
 /* ============ Reportes ============ */
 .reporte-resumen { grid-template-columns: minmax(0, 36rem); margin-bottom: 8px; }

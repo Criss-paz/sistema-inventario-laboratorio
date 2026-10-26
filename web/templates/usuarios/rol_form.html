@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% set editando = rol and rol.id_rol %}
+{% block title %}{{ 'Editar rol' if editando else 'Nuevo rol' }}{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>{{ 'Rol: ' ~ rol.nombre if editando else 'Nuevo rol' }}
+    <span class="subtitle">{% if es_admin %}El Administrador tiene siempre todos los permisos y no se puede renombrar ni eliminar; solo se edita su descripción.{% else %}Un rol agrupa lo que pueden hacer sus usuarios. Consultar inventario, lotes, historial y reportes lo pueden todos.{% endif %}</span></h1>
+  <a class="btn btn-sm" href="{{ url_for('usuarios.listar') }}#roles">{{ i.icono('volver') }}Usuarios y roles</a>
+</div>
+
+<form class="card" method="post" autocomplete="off">
+  <label for="nombre">Nombre del rol</label>
+  <input type="text" id="nombre" name="nombre" required minlength="3" maxlength="50" {{ 'readonly' if es_admin else 'autofocus' }}
+         value="{{ rol.nombre if rol else '' }}" placeholder="Ej. Jefe de técnicos">
+
+  <label for="descripcion">Descripción <span class="hint">(opcional)</span></label>
+  <input type="text" id="descripcion" name="descripcion" maxlength="255" value="{{ (rol.descripcion or '') if rol else '' }}">
+
+  <fieldset class="permisos-rol">
+    <legend>Permisos</legend>
+    {% for p in permisos %}
+    <label class="check">
+      <input type="checkbox" name="p_{{ p.codigo }}" value="1"
+             {{ 'checked' if es_admin or p.codigo in marcados else '' }} {{ 'disabled' if es_admin else '' }}>
+      <span><strong>{{ p.nombre }}</strong> <span class="hint">{{ p.descripcion }}</span></span>
+    </label>
+    {% endfor %}
+  </fieldset>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{{ 'Guardar cambios' if editando else 'Crear rol' }}</button>
+    <a class="btn" href="{{ url_for('usuarios.listar') }}#roles">Cancelar</a>
+  </div>
+</form>
+
+{% if editando and not es_admin %}
+<form class="card zona-peligro" method="post" action="{{ url_for('usuarios.rol_eliminar', id_rol=rol.id_rol) }}"
+      onsubmit="return confirm({{ ('¿Eliminar el rol «' ~ rol.nombre ~ '»?')|tojson }});">
+  <p><strong>Eliminar el rol</strong><br>
+    <span class="hint">{% if usuarios_rol %}Tiene {{ usuarios_rol }} {{ 'usuario' if usuarios_rol == 1 else 'usuarios' }}: asígneles otro rol antes de eliminarlo.{% else %}No tiene usuarios. Queda registrado en la bitácora.{% endif %}</span></p>
+  <button type="submit" class="btn btn-danger" {{ 'disabled' if usuarios_rol else '' }}>Eliminar rol</button>
+</form>
+{% endif %}
+{% endblock %}

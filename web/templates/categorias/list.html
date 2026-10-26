@@ -4,7 +4,7 @@
 {% block content %}
 <div class="top-actions">
   <h1>Categorías<span class="subtitle">Clasificación de los productos del inventario</span></h1>
-  {% if tiene_rol(ADMIN) %}
+  {% if tiene_permiso('PRODUCTOS') %}
   <a class="btn btn-primary" href="{{ url_for('categorias.nueva') }}">{{ i.icono('mas') }}Nueva categoría</a>
   {% endif %}
 </div>
@@ -27,7 +27,7 @@
 <div class="table-wrap">
   <table>
     <thead>
-      <tr><th>Nombre</th><th>Descripción</th><th>Estado</th>{% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
+      <tr><th>Nombre</th><th>Descripción</th><th>Estado</th>{% if tiene_permiso('PRODUCTOS') %}<th>Acciones</th>{% endif %}</tr>
     </thead>
     <tbody>
       {% for c in categorias %}
@@ -41,7 +41,7 @@
             <span class="badge badge-off">Inactiva</span>
           {% endif %}
         </td>
-        {% if tiene_rol(ADMIN) %}
+        {% if tiene_permiso('PRODUCTOS') %}
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('categorias.editar', id_categoria=c.id_categoria) }}">Editar</a>
           <form method="post" action="{{ url_for('categorias.alternar_estado', id_categoria=c.id_categoria) }}"
@@ -57,7 +57,7 @@
           <div class="empty-state">
             {{ i.icono('categorias', 'empty-icon') }}
             <p>No hay categorías registradas todavía.</p>
-            {% if tiene_rol(ADMIN) %}
+            {% if tiene_permiso('PRODUCTOS') %}
             <a class="btn btn-primary btn-sm" href="{{ url_for('categorias.nueva') }}">Crear la primera categoría</a>
             {% endif %}
           </div>

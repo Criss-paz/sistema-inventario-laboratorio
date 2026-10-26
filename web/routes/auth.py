@@ -3,27 +3,30 @@ routes/auth.py — Login, logout y control de acceso por rol.
 RF-01 (iniciar sesión), RF-02 (cerrar sesión), RF-05 (acceso según rol),
 RNF-03/04/05/06/17. Además, cada usuario puede cambiar su propia contraseña.
 
-El acceso por rol se controla en dos capas:
-  1. Aquí, en la app: rol_requerido() bloquea la ruta y las plantillas
-     ocultan lo que el rol no puede hacer.
-  2. En la base: db.get_db() adopta el rol de BD con SET ROLE, así que
-     PostgreSQL niega la operación aunque la capa 1 fallara.
+El acceso se controla en dos capas:
+  1. Aquí, en la app: permiso_requerido() bloquea la ruta y las plantillas
+     ocultan lo que el rol no tiene permitido (tiene_permiso).
+  2. En la base: db.get_db() adopta con SET ROLE el rol de PostgreSQL que
+     cubre los permisos del rol, así que PostgreSQL niega la operación
+     aunque la capa 1 fallara.
 
-Qué puede hacer cada rol (igual que sql/security/001_roles.sql):
-  Administrador            todo: catálogos, lotes, movimientos, reportes
-  Encargado de inventario  consultar + registrar entradas y salidas
-  Usuario de consulta      solo consultar
+Los permisos de cada rol son datos (tablas permiso y rol_permiso, RN-28)
+que el Administrador define en Usuarios y roles. Consultar inventario,
+lotes, historial y reportes lo pueden todos. El rol Administrador tiene
+siempre todos los permisos (RN-29).
+
+Los inicios de sesión (correctos y fallidos) y los cierres quedan en la
+bitácora (RN-30).
 """
 from functools import wraps
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, abort
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import query_one, conexion_sin_rol, ROL_BD
+from db import query_one, execute, conexion_sin_rol, permisos_actuales
 
+# El único rol con nombre fijo: tiene siempre todos los permisos (RN-29).
 ADMIN = "Administrador"
-ENCARGADO = "Encargado de inventario"
-CONSULTA = "Usuario de consulta"
 
 bp = Blueprint("auth", __name__)
 
@@ -41,22 +44,35 @@ def login_required(view):
     return wrapped
 
 
-def rol_requerido(*roles):
-    """Decorador: exige sesión activa y que el rol del usuario esté en `roles`."""
+def permiso_requerido(codigo):
+    """Decorador: exige sesión activa y que el rol del usuario tenga `codigo`
+    (tabla permiso: REGISTRAR_ENTRADAS, PRODUCTOS, USUARIOS, ...)."""
     def decorador(view):
         @wraps(view)
         @login_required
         def wrapped(*args, **kwargs):
-            if session.get("nombre_rol") not in roles:
+            if codigo not in permisos_actuales():
                 abort(403)
             return view(*args, **kwargs)
         return wrapped
     return decorador
 
 
-def tiene_rol(*roles):
-    """Para las plantillas: ¿el usuario en sesión tiene alguno de `roles`?"""
-    return session.get("nombre_rol") in roles
+def tiene_permiso(*codigos):
+    """Para las plantillas: ¿el rol del usuario tiene alguno de `codigos`?"""
+    return bool(permisos_actuales() & set(codigos))
+
+
+def _bitacora_sesion(accion, id_usuario, referencia):
+    """Inicio de sesión correcto o fallido (RN-30). Se escribe con la
+    conexión de usuario_app de esta petición: todavía no hay rol adoptado."""
+    try:
+        execute(
+            "INSERT INTO bitacora (id_usuario, accion, entidad, referencia) VALUES (%s, %s, 'sesion', %s)",
+            (id_usuario, accion, referencia[:150]),
+        )
+    except Exception:
+        pass  # la bitácora no debe impedir entrar
 
 
 @bp.route("/login", methods=["GET", "POST"])
@@ -94,13 +110,13 @@ def login():
     # (RNF-17: evitar accesos no autorizados / fuga de información de login).
     error_generico = "Usuario o contraseña incorrectos."
 
-    if row is None or not row["estado"] or row["nombre_rol"] not in ROL_BD:
+    if row is None or not row["estado"] or not check_password_hash(row["password_hash"], password_input):
+        _bitacora_sesion("SESION_FALLIDA", row["id_usuario"] if row else None,
+                         f'Intento con el usuario "{usuario_input[:60]}"')
         flash(error_generico, "danger")
         return render_template("login.html"), 401
 
-    if not check_password_hash(row["password_hash"], password_input):
-        flash(error_generico, "danger")
-        return render_template("login.html"), 401
+    _bitacora_sesion("INICIAR_SESION", row["id_usuario"], usuario_input)
 
     session["id_usuario"] = row["id_usuario"]
     session["nombre_usuario"] = row["nombre"]
@@ -115,6 +131,11 @@ def login():
 
 @bp.route("/logout", methods=["POST"])
 def logout():
+    if "id_usuario" in session:
+        try:
+            execute("SELECT fn_registrar_evento('CERRAR_SESION')")
+        except Exception:
+            pass  # la bitácora no debe impedir salir
     session.clear()
     flash("Sesión cerrada.", "info")
     return redirect(url_for("auth.login"))
@@ -155,6 +176,7 @@ def cambiar_contrasena():
 
     try:
         with conexion_sin_rol() as conn:
+            conn.execute("SELECT set_config('app.id_usuario', %s, false)", (str(session["id_usuario"]),))
             fila = conn.execute(
                 "SELECT password_hash FROM usuario WHERE id_usuario = %s AND estado",
                 (session["id_usuario"],),

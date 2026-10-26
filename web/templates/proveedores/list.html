@@ -5,7 +5,7 @@
 {% block content %}
 <div class="top-actions">
   <h1>Proveedores<span class="subtitle">Empresas que suministran insumos al laboratorio</span></h1>
-  {% if tiene_rol(ADMIN) %}
+  {% if tiene_permiso('PROVEEDORES') %}
   <a class="btn btn-primary" href="{{ url_for('proveedores.nuevo') }}">{{ i.icono('mas') }}Nuevo proveedor</a>
   {% endif %}
 </div>
@@ -40,7 +40,7 @@
         </td>
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('proveedores.detalle', id_proveedor=pr.id_proveedor) }}">Ver</a>
-          {% if tiene_rol(ADMIN) %}
+          {% if tiene_permiso('PROVEEDORES') %}
           <a class="btn btn-sm" href="{{ url_for('proveedores.editar', id_proveedor=pr.id_proveedor) }}">Editar</a>
           <form method="post" action="{{ url_for('proveedores.alternar_estado', id_proveedor=pr.id_proveedor) }}"
                 onsubmit="return confirm({{ ('¿Desactivar el proveedor ' if pr.estado else '¿Activar el proveedor ')|tojson }} + {{ pr.nombre|tojson }} + '?');">

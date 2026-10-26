@@ -14,8 +14,8 @@ movimiento, así que no hay otro camino (sql/security/001_roles.sql).
 Si una regla se viola, el procedimiento o el trigger lanza un mensaje
 (SQLSTATE P0001) que se muestra tal cual al usuario (db.mensaje_error).
 
-Consultar historial: todos los roles. Registrar: Administrador y Encargado.
-Corregir una entrada: solo Administrador.
+Consultar historial: todos los roles. Registrar entradas, salidas y
+devoluciones y corregir entradas: según los permisos del rol (RN-28).
 """
 import datetime as dt
 from decimal import Decimal, InvalidOperation
@@ -23,7 +23,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 
 from db import query_all, query_one, query_page, call_procedure, mensaje_error
-from routes.auth import login_required, rol_requerido, ADMIN, ENCARGADO
+from routes.auth import login_required, permiso_requerido
 
 bp = Blueprint("movimientos", __name__, url_prefix="/movimientos")
 
@@ -183,7 +183,7 @@ def detalle(id_movimiento):
 
 
 @bp.route("/entrada", methods=["GET", "POST"])
-@rol_requerido(ADMIN, ENCARGADO)
+@permiso_requerido("REGISTRAR_ENTRADAS")
 def entrada():
     proveedores = query_all("SELECT id_proveedor, nombre FROM proveedor WHERE estado ORDER BY nombre")
     contexto = {"productos": _productos_activos(), "proveedores": proveedores, "form": request.form}
@@ -235,7 +235,7 @@ def entrada():
 
 
 @bp.route("/salida", methods=["GET", "POST"])
-@rol_requerido(ADMIN, ENCARGADO)
+@permiso_requerido("REGISTRAR_SALIDAS")
 def salida():
     contexto = {"productos": _productos_activos(), "form": request.form}
     if request.method == "GET":
@@ -269,7 +269,7 @@ def salida():
 
 
 @bp.route("/<int:id_movimiento>/devolucion", methods=["GET", "POST"])
-@rol_requerido(ADMIN, ENCARGADO)
+@permiso_requerido("DEVOLVER_SALIDAS")
 def devolucion(id_movimiento):
     """Devuelve al inventario lo que sacó una salida equivocada (RN-19 a RN-22).
 
@@ -353,7 +353,7 @@ def devolucion(id_movimiento):
 
 
 @bp.route("/<int:id_movimiento>/corregir", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("CORREGIR_ENTRADAS")
 def corregir(id_movimiento):
     """Corrige una entrada mal digitada sin borrarla (RN-25, RN-26).
 
@@ -441,7 +441,7 @@ def corregir(id_movimiento):
 
 
 @bp.route("/existencia")
-@rol_requerido(ADMIN, ENCARGADO)
+@permiso_requerido("REGISTRAR_SALIDAS")
 def existencia():
     """Ayuda del formulario de salida: existencia utilizable del producto."""
     producto = _producto_por_texto(request.args.get("producto"))

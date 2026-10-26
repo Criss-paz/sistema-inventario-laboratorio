@@ -6,10 +6,13 @@ propia conexión ni concatena SQL a mano: todas las consultas se ejecutan
 parametrizadas (A4 — previene inyección SQL) a través de las funciones de
 este módulo.
 
-Control de acceso en la base (Entrega 3): la app se conecta como
-usuario_app y, cuando hay sesión, adopta con SET ROLE el rol de base de
-datos del usuario (sql/security/001_roles.sql). Así PostgreSQL aplica los
-permisos aunque la interfaz tuviera un error (defensa en profundidad).
+Control de acceso en la base: la app se conecta como usuario_app y, cuando
+hay sesión, lee los permisos del rol del usuario (tablas permiso y
+rol_permiso, RN-28) y adopta con SET ROLE el rol de PostgreSQL que los cubre
+(fn_rol_bd, sql/procedures/004_permisos.sql). Así PostgreSQL aplica el nivel
+de permisos aunque la interfaz tuviera un error (defensa en profundidad).
+También informa en la conexión quién es el usuario (app.id_usuario), para
+que los triggers de la bitácora registren al responsable (RN-30).
 
 Driver: psycopg (v3), no psycopg2 — psycopg2-binary no tiene wheel
 precompilado para Python 3.14 en Windows (pide Visual C++ Build Tools);
@@ -22,12 +25,27 @@ from flask import g, current_app, session
 
 from config import Config
 
-# Rol de la aplicación (tabla `rol`) → rol de base de datos.
-ROL_BD = {
-    "Administrador": "rol_administrador",
-    "Encargado de inventario": "rol_encargado",
-    "Usuario de consulta": "rol_consulta",
-}
+# Los únicos roles de PostgreSQL que la app puede adoptar.
+ROLES_BD = {"rol_administrador", "rol_encargado", "rol_consulta"}
+
+
+class SesionInvalida(Exception):
+    """El usuario de la sesión ya no existe o fue desactivado."""
+
+
+def _acceso(conn, id_usuario):
+    """Rol, permisos y rol de BD del usuario, leídos como usuario_app (antes
+    de SET ROLE). El Administrador tiene siempre todos los permisos (RN-29)."""
+    return conn.execute(
+        """
+        SELECT r.id_rol, r.nombre AS rol, fn_rol_bd(r.id_rol) AS rol_bd,
+               CASE WHEN r.nombre = 'Administrador' THEN ARRAY(SELECT codigo FROM permiso)
+                    ELSE ARRAY(SELECT codigo FROM rol_permiso WHERE id_rol = r.id_rol) END AS permisos
+        FROM usuario u JOIN rol r ON r.id_rol = u.id_rol
+        WHERE u.id_usuario = %s AND u.estado
+        """,
+        (id_usuario,),
+    ).fetchone()
 
 
 def get_db():
@@ -51,17 +69,27 @@ def get_db():
                 row_factory=dict_row,
             )
         if "id_usuario" in session:
-            rol_bd = ROL_BD.get(session.get("nombre_rol"))
-            if rol_bd is None:
+            acceso = _acceso(conn, session["id_usuario"])
+            if acceso is None or acceso["rol_bd"] not in ROLES_BD:
                 conn.close()
                 # Nunca seguir con los privilegios completos de usuario_app.
-                raise PermissionError("El rol de la sesión no tiene rol de base de datos.")
-            conn.execute(pgsql.SQL("SET ROLE {}").format(pgsql.Identifier(rol_bd)))
+                raise SesionInvalida()
+            g.acceso = {"id_rol": acceso["id_rol"], "rol": acceso["rol"], "permisos": frozenset(acceso["permisos"])}
+            conn.execute("SELECT set_config('app.id_usuario', %s, false)", (str(session["id_usuario"]),))
+            conn.execute(pgsql.SQL("SET ROLE {}").format(pgsql.Identifier(acceso["rol_bd"])))
             # commit inmediato: un SET dentro de una transacción que después
             # se revierte (rollback por error) se pierde junto con ella.
             conn.commit()
         g.db = conn
     return g.db
+
+
+def permisos_actuales():
+    """Permisos del usuario en sesión (vacío sin sesión)."""
+    if "id_usuario" not in session:
+        return frozenset()
+    get_db()
+    return g.acceso["permisos"]
 
 
 def conexion_sin_rol():
@@ -72,7 +100,8 @@ def conexion_sin_rol():
     así que lo que necesita ese dato usa esta conexión. Solo la usan:
       - el login (antes de que exista sesión, vía get_db);
       - cambiar_contrasena (routes/auth.py), siempre sobre el usuario de la
-        propia sesión, que está firmada por la app;
+        propia sesión, que está firmada por la app (informa app.id_usuario
+        para que la bitácora registre el cambio a su nombre);
       - el respaldo (respaldo.py), restringido al Administrador y de solo
         lectura.
     Lee Config y no current_app para que respaldo.py funcione también desde
@@ -129,6 +158,20 @@ def execute(sql, params=None):
     try:
         with conn.cursor() as cur:
             cur.execute(sql, params or ())
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def execute_many(sentencias):
+    """Varias sentencias [(sql, params), ...] en UNA transacción: o se
+    aplican todas o ninguna (por ejemplo, los permisos de un rol)."""
+    conn = get_db()
+    try:
+        with conn.cursor() as cur:
+            for sql, params in sentencias:
+                cur.execute(sql, params or ())
         conn.commit()
     except Exception:
         conn.rollback()

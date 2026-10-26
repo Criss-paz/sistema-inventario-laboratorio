@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m %}
+{% block title %}Bitácora — Inventario Laboratorio{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Bitácora<span class="subtitle">Quién hizo qué y cuándo: cada cambio de datos, cada movimiento y cada inicio de sesión. No se puede modificar ni borrar.</span></h1>
+  {% set args = request.args.to_dict() %}{% set _ = args.update({'formato': 'csv'}) %}{% set _ = args.pop('pagina', None) %}
+  <a class="btn" href="{{ url_for('bitacora.listar', **args) }}">{{ i.icono('abajo') }}Descargar CSV</a>
+</div>
+
+<form class="filtros" method="get">
+  <select name="usuario" aria-label="Usuario">
+    <option value="">Todos los usuarios</option>
+    {% for u in usuarios %}<option value="{{ u.id_usuario }}" {{ 'selected' if filtro.get('usuario') == u.id_usuario|string else '' }}>{{ u.nombre }}</option>{% endfor %}
+    <option value="sistema" {{ 'selected' if filtro.get('usuario') == 'sistema' else '' }}>Sistema (fuera de la app)</option>
+  </select>
+  <select name="accion" aria-label="Acción">
+    <option value="">Todas las acciones</option>
+    {% for clave, texto in acciones.items() %}<option value="{{ clave }}" {{ 'selected' if filtro.get('accion') == clave else '' }}>{{ texto }}</option>{% endfor %}
+  </select>
+  <select name="entidad" aria-label="Sobre qué">
+    <option value="">Todo</option>
+    {% for clave, texto in entidades.items() %}<option value="{{ clave }}" {{ 'selected' if filtro.get('entidad') == clave else '' }}>{{ texto }}</option>{% endfor %}
+  </select>
+  <input type="search" name="q" value="{{ filtro.get('q', '') }}" maxlength="100" placeholder="Nombre, número o dato">
+  <label>Desde <input type="date" name="desde" value="{{ filtro.get('desde', '') }}"></label>
+  <label>Hasta <input type="date" name="hasta" value="{{ filtro.get('hasta', '') }}"></label>
+  <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+  {% if filtro %}<a class="btn btn-sm" href="{{ url_for('bitacora.listar') }}">Limpiar</a>{% endif %}
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Sobre</th><th>Detalle</th></tr></thead>
+    <tbody>
+      {% for r in registros %}
+      <tr>
+        <td class="fecha">{{ r.fecha.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+        <td class="quien">{{ r.usuario }}</td>
+        <td><span class="tag {{ r.tono }}">{{ r.accion }}</span></td>
+        <td>{% if r.enlace %}<a href="{{ r.enlace }}">{{ r.que }}</a>{% else %}{{ r.que or '—' }}{% endif %}</td>
+        <td>
+          {% if r.cambios %}
+          <ul class="bitacora-cambios">
+            {% for campo, antes, despues in r.cambios %}
+            <li><b>{{ campo }}:</b> {% if antes is not none %}<span class="antes">{{ antes }}</span> → {% endif %}{{ despues }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}<span class="faint">—</span>{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr class="empty-row"><td colspan="5">{{ i.vacio('No hay registros con esos filtros.', 'bitacora') }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{{ m.paginacion(total, pagina) }}
+{% endblock %}

@@ -11,10 +11,10 @@
     {% elif tipo == 'DEVOLUCION' %}Salidas corregidas: cada devolución repone la existencia del lote y deja escrito su motivo.
     {% else %}Historial completo de entradas y salidas. No se puede modificar ni borrar (RN-09).{% endif %}
   </span></h1>
-  {% if tiene_rol(ADMIN, ENCARGADO) %}
+  {% if tiene_permiso('REGISTRAR_ENTRADAS', 'REGISTRAR_SALIDAS') %}
   <div class="actions">
-    {% if tipo in ['', 'ENTRADA'] %}<a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">{{ i.icono('mas') }}Registrar entrada</a>{% endif %}
-    {% if tipo in ['', 'SALIDA'] %}<a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">{{ i.icono('menos') }}Registrar salida</a>{% endif %}
+    {% if tipo in ['', 'ENTRADA'] and tiene_permiso('REGISTRAR_ENTRADAS') %}<a class="btn btn-primary" href="{{ url_for('movimientos.entrada') }}">{{ i.icono('mas') }}Registrar entrada</a>{% endif %}
+    {% if tipo in ['', 'SALIDA'] and tiene_permiso('REGISTRAR_SALIDAS') %}<a class="btn btn-primary" href="{{ url_for('movimientos.salida') }}">{{ i.icono('menos') }}Registrar salida</a>{% endif %}
   </div>
   {% endif %}
 </div>

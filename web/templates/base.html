@@ -42,10 +42,11 @@
                             ('examenes.listar', 'Exámenes', 'examenes'),
                             ('proveedores.listar', 'Proveedores', 'proveedores'),
                             ('categorias.listar', 'Categorías', 'categorias')])] %}
-        {% if tiene_rol(ADMIN) %}
-          {% set grupos = grupos + [('Administración', [('usuarios.listar', 'Usuarios y roles', 'usuarios'),
-                                                ('respaldo.inicio', 'Respaldo', 'respaldo')])] %}
-        {% endif %}
+        {% set admin = [] %}
+        {% if tiene_permiso('USUARIOS') %}{% set admin = admin + [('usuarios.listar', 'Usuarios y roles', 'usuarios')] %}{% endif %}
+        {% if tiene_permiso('BITACORA') %}{% set admin = admin + [('bitacora.listar', 'Bitácora', 'bitacora')] %}{% endif %}
+        {% if tiene_permiso('RESPALDO') %}{% set admin = admin + [('respaldo.inicio', 'Respaldo', 'respaldo')] %}{% endif %}
+        {% if admin %}{% set grupos = grupos + [('Administración', admin)] %}{% endif %}
         {% for grupo, enlaces in grupos %}
         <p class="menu-grupo">{{ grupo }}</p>
         <ul>

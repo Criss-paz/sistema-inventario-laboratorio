@@ -11,35 +11,55 @@ werkzeug.security, la misma librería que la valida en el login.
 
 "Eliminar" es baja lógica (estado): el usuario conserva su historial de
 movimientos (RN-08, RN-09).
+
+Roles y permisos (RN-28, RN-29): el administrador crea roles y marca qué
+puede hacer cada uno (tablas permiso y rol_permiso). El rol Administrador
+tiene siempre todos los permisos y no se renombra ni se elimina; un rol con
+usuarios no se elimina. Cada cambio queda en la bitácora (RN-30).
 """
 import re
 
 import psycopg
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, g, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash
 
-from db import query_all, query_one, execute, mensaje_error
-from routes.auth import rol_requerido, ADMIN
+from db import get_db, query_all, query_one, execute, execute_many, mensaje_error
+from routes.auth import permiso_requerido, ADMIN
 
 bp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
 
 USUARIO = re.compile(r"[a-z0-9._-]{3,50}")
 LARGO_MINIMO_CLAVE = 8
 
-# Lo que cada rol puede hacer, para mostrarlo junto a la lista. Es el mismo
-# reparto que aplican rol_requerido() en la app y los GRANT en la base.
-PERMISOS = [
-    ("Consultar inventario, lotes, historial y reportes", True, True, True),
-    ("Registrar entradas y salidas", True, True, False),
-    ("Crear y editar productos, categorías, proveedores y exámenes", True, False, False),
-    ("Corregir datos de un lote (nunca su existencia)", True, False, False),
-    ("Administrar usuarios y roles", True, False, False),
-]
+
+
+def _mi_rol():
+    """id_rol del usuario en sesión, leído de la base en esta petición."""
+    get_db()
+    return g.acceso["id_rol"]
 
 
 def _roles():
     return query_all("SELECT id_rol, nombre, descripcion FROM rol ORDER BY id_rol")
+
+
+def _permisos():
+    return query_all("SELECT codigo, nombre, descripcion FROM permiso ORDER BY orden")
+
+
+def _concedidos():
+    """{id_rol: {códigos}} de todos los roles."""
+    concedidos = {}
+    for f in query_all("SELECT id_rol, codigo FROM rol_permiso"):
+        concedidos.setdefault(f["id_rol"], set()).add(f["codigo"])
+    return concedidos
+
+
+def _sentencias_permisos(id_rol, antes, despues):
+    """INSERT/DELETE para pasar el rol de `antes` a `despues` (solo lo que cambia)."""
+    return ([("DELETE FROM rol_permiso WHERE id_rol = %s AND codigo = %s", (id_rol, c)) for c in sorted(antes - despues)]
+            + [("INSERT INTO rol_permiso (id_rol, codigo) VALUES (%s, %s)", (id_rol, c)) for c in sorted(despues - antes)])
 
 
 def _es_ultimo_admin_activo(id_usuario):
@@ -80,7 +100,7 @@ def _validar(form, nuevo):
 
 
 @bp.route("/")
-@rol_requerido(ADMIN)
+@permiso_requerido("USUARIOS")
 def listar():
     # Columnas explícitas: el rol de BD no puede leer password_hash.
     usuarios = query_all(
@@ -102,11 +122,154 @@ def listar():
         ORDER BY r.id_rol
         """
     )
-    return render_template("usuarios/list.html", usuarios=usuarios, roles=roles, permisos=PERMISOS)
+    return render_template("usuarios/list.html", usuarios=usuarios, roles=roles,
+                           permisos=_permisos(), concedidos=_concedidos())
+
+
+@bp.route("/roles/permisos", methods=["POST"])
+@permiso_requerido("USUARIOS")
+def guardar_permisos():
+    """Guarda la tabla de permisos completa (casillas p_<id_rol>_<código>)."""
+    codigos = {p["codigo"] for p in _permisos()}
+    concedidos = _concedidos()
+    sentencias = []
+    for rol in _roles():
+        if rol["nombre"] == ADMIN:
+            continue  # siempre tiene todo (RN-29)
+        marcados = {c for c in codigos if request.form.get(f"p_{rol['id_rol']}_{c}")}
+        if rol["id_rol"] == _mi_rol() and "USUARIOS" not in marcados:
+            flash(f'No puede quitarle "Usuarios y roles" a su propio rol ({rol["nombre"]}): '
+                  "se quedaría sin acceso a esta pantalla.", "danger")
+            return redirect(url_for("usuarios.listar"))
+        sentencias += _sentencias_permisos(rol["id_rol"], concedidos.get(rol["id_rol"], set()), marcados)
+    if not sentencias:
+        flash("No cambió ningún permiso.", "info")
+        return redirect(url_for("usuarios.listar"))
+    try:
+        execute_many(sentencias)
+    except Exception as exc:
+        flash(mensaje_error(exc, "No se pudieron guardar los permisos. Intente más tarde."), "danger")
+        return redirect(url_for("usuarios.listar"))
+    flash(f"Permisos guardados ({len(sentencias)} {'cambio' if len(sentencias) == 1 else 'cambios'}). "
+          "Rigen desde la próxima página que abra cada usuario.", "success")
+    return redirect(url_for("usuarios.listar"))
+
+
+def _validar_rol(form):
+    datos = {"nombre": (form.get("nombre") or "").strip(), "descripcion": (form.get("descripcion") or "").strip()}
+    errores = []
+    if not 3 <= len(datos["nombre"]) <= 50:
+        errores.append("El nombre del rol debe tener de 3 a 50 caracteres.")
+    if len(datos["descripcion"]) > 255:
+        errores.append("La descripción admite hasta 255 caracteres.")
+    codigos = {p["codigo"] for p in _permisos()}
+    marcados = {c for c in codigos if form.get(f"p_{c}")}
+    return errores, datos, marcados
+
+
+@bp.route("/roles/nuevo", methods=["GET", "POST"])
+@permiso_requerido("USUARIOS")
+def rol_nuevo():
+    contexto = {"rol": None, "permisos": _permisos(), "marcados": set(), "usuarios_rol": 0}
+    if request.method == "GET":
+        return render_template("usuarios/rol_form.html", **contexto)
+
+    errores, datos, marcados = _validar_rol(request.form)
+    contexto.update(rol=request.form, marcados=marcados)
+    if errores:
+        for e in errores:
+            flash(e, "danger")
+        return render_template("usuarios/rol_form.html", **contexto), 400
+    try:
+        execute_many(
+            [("INSERT INTO rol (nombre, descripcion) VALUES (%s, %s)", (datos["nombre"], datos["descripcion"] or None))]
+            + [("INSERT INTO rol_permiso (id_rol, codigo) SELECT id_rol, %s FROM rol WHERE nombre = %s",
+                (c, datos["nombre"])) for c in sorted(marcados)]
+        )
+    except psycopg.errors.UniqueViolation:
+        flash(f'Ya existe un rol llamado "{datos["nombre"]}".', "danger")
+        return render_template("usuarios/rol_form.html", **contexto), 409
+    except Exception as exc:
+        flash(mensaje_error(exc, "No se pudo crear el rol. Intente más tarde."), "danger")
+        return render_template("usuarios/rol_form.html", **contexto), 500
+    flash(f'Rol "{datos["nombre"]}" creado con {len(marcados)} '
+          f'{"permiso" if len(marcados) == 1 else "permisos"}. Ya puede asignarlo a un usuario.', "success")
+    return redirect(url_for("usuarios.listar"))
+
+
+@bp.route("/roles/<int:id_rol>/editar", methods=["GET", "POST"])
+@permiso_requerido("USUARIOS")
+def rol_editar(id_rol):
+    rol = query_one("SELECT id_rol, nombre, descripcion FROM rol WHERE id_rol = %s", (id_rol,))
+    if rol is None:
+        flash("El rol solicitado no existe.", "warning")
+        return redirect(url_for("usuarios.listar"))
+    es_admin = rol["nombre"] == ADMIN
+    antes = _concedidos().get(id_rol, set())
+    usuarios_rol = query_one("SELECT count(*) AS n FROM usuario WHERE id_rol = %s", (id_rol,))["n"]
+    contexto = {"rol": rol, "permisos": _permisos(), "marcados": antes, "es_admin": es_admin,
+                "usuarios_rol": usuarios_rol}
+    if request.method == "GET":
+        return render_template("usuarios/rol_form.html", **contexto)
+
+    errores, datos, marcados = _validar_rol(request.form)
+    if es_admin:
+        # RN-29: el Administrador conserva su nombre y todos sus permisos.
+        datos["nombre"], marcados = ADMIN, antes
+    elif id_rol == _mi_rol() and "USUARIOS" not in marcados:
+        errores.append('No puede quitarle "Usuarios y roles" a su propio rol: se quedaría sin acceso a esta pantalla.')
+    contexto.update(rol={**rol, **request.form}, marcados=marcados)
+    if errores:
+        for e in errores:
+            flash(e, "danger")
+        return render_template("usuarios/rol_form.html", **contexto), 400
+    sentencias = []
+    if (datos["nombre"], datos["descripcion"] or None) != (rol["nombre"], rol["descripcion"]):
+        sentencias.append(("UPDATE rol SET nombre = %s, descripcion = %s WHERE id_rol = %s",
+                           (datos["nombre"], datos["descripcion"] or None, id_rol)))
+    sentencias += _sentencias_permisos(id_rol, antes, marcados)
+    if not sentencias:
+        flash("No hubo cambios.", "info")
+        return redirect(url_for("usuarios.listar"))
+    try:
+        execute_many(sentencias)
+    except psycopg.errors.UniqueViolation:
+        flash(f'Ya existe un rol llamado "{datos["nombre"]}".', "danger")
+        return render_template("usuarios/rol_form.html", **contexto), 409
+    except Exception as exc:
+        flash(mensaje_error(exc, "No se pudo guardar el rol. Intente más tarde."), "danger")
+        return render_template("usuarios/rol_form.html", **contexto), 500
+    flash(f'Rol "{datos["nombre"]}" actualizado.', "success")
+    return redirect(url_for("usuarios.listar"))
+
+
+@bp.route("/roles/<int:id_rol>/eliminar", methods=["POST"])
+@permiso_requerido("USUARIOS")
+def rol_eliminar(id_rol):
+    rol = query_one(
+        "SELECT r.nombre, (SELECT count(*) FROM usuario u WHERE u.id_rol = r.id_rol) AS usuarios "
+        "FROM rol r WHERE r.id_rol = %s",
+        (id_rol,),
+    )
+    if rol is None:
+        flash("El rol solicitado no existe.", "warning")
+    elif rol["nombre"] == ADMIN:
+        flash("El rol Administrador no se puede eliminar.", "danger")
+    elif rol["usuarios"]:
+        flash(f'El rol "{rol["nombre"]}" tiene {rol["usuarios"]} '
+              f'{"usuario" if rol["usuarios"] == 1 else "usuarios"} (activos o no). '
+              "Asígneles otro rol antes de eliminarlo.", "danger")
+    else:
+        try:
+            execute("DELETE FROM rol WHERE id_rol = %s", (id_rol,))
+            flash(f'Rol "{rol["nombre"]}" eliminado.', "success")
+        except Exception as exc:
+            flash(mensaje_error(exc, "No se pudo eliminar el rol. Intente más tarde."), "danger")
+    return redirect(url_for("usuarios.listar"))
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("USUARIOS")
 def nuevo():
     if request.method == "GET":
         return render_template("usuarios/form.html", usuario=None, roles=_roles())
@@ -134,7 +297,7 @@ def nuevo():
 
 
 @bp.route("/<int:id_usuario>/editar", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("USUARIOS")
 def editar(id_usuario):
     usuario = query_one(
         "SELECT id_usuario, id_rol, nombre, usuario, estado FROM usuario WHERE id_usuario = %s",
@@ -191,7 +354,7 @@ def editar(id_usuario):
 
 
 @bp.route("/<int:id_usuario>/alternar-estado", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("USUARIOS")
 def alternar_estado(id_usuario):
     usuario = query_one(
         """

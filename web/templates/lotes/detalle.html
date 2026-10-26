@@ -6,7 +6,7 @@
 <div class="top-actions">
   <h1>Lote <span class="lote">{{ lote.numero_lote }}</span><span class="subtitle"><code>{{ lote.codigo }}</code> {{ lote.producto }}</span></h1>
   <div class="actions">
-    {% if tiene_rol(ADMIN) %}
+    {% if tiene_permiso('EDITAR_LOTES') %}
     <a class="btn btn-sm" href="{{ url_for('lotes.editar', id_lote=lote.id_lote) }}">Corregir datos</a>
     {% endif %}
     <a class="btn btn-sm" href="{{ url_for('lotes.listar') }}">{{ i.icono('volver') }}Lotes</a>

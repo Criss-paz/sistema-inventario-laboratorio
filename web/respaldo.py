@@ -37,9 +37,9 @@ from db import conexion_sin_rol
 # Si el esquema gana una tabla nueva, generar() se niega a respaldar hasta
 # que se agregue aquí (un respaldo incompleto es peor que ninguno).
 TABLAS = (
-    "rol", "usuario", "categoria", "producto", "proveedor", "lote",
+    "rol", "permiso", "rol_permiso", "usuario", "categoria", "producto", "proveedor", "lote",
     "movimiento", "detalle_movimiento", "examen_laboratorio",
-    "proveedor_producto", "examen_producto", "correccion_entrada",
+    "proveedor_producto", "examen_producto", "correccion_entrada", "bitacora",
 )
 
 # Guatemala no usa horario de verano: UTC-6 todo el año.

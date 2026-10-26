@@ -7,7 +7,7 @@ Además de la lista de insumos, se calcula cuántos exámenes alcanzan con la
 existencia utilizable actual: el insumo que menos rinde marca el límite.
 
 Consultar: todos los roles. Registrar/modificar/dar de baja exámenes y sus
-insumos: Administrador. "Eliminar" un examen es baja lógica vía `estado`
+insumos: permiso EXAMENES. "Eliminar" un examen es baja lógica vía `estado`
 (sql/ddl/003_examen_estado.sql, RN-24), igual que en los demás catálogos;
 los insumos sí se quitan con DELETE (tabla puente, sql/security/001_roles.sql).
 """
@@ -19,7 +19,7 @@ import psycopg
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from db import query_all, query_one, query_page, execute, mensaje_error
-from routes.auth import login_required, rol_requerido, tiene_rol, ADMIN
+from routes.auth import login_required, permiso_requerido, tiene_permiso
 
 bp = Blueprint("examenes", __name__, url_prefix="/examenes")
 
@@ -85,12 +85,12 @@ def detalle(id_examen):
         (id_examen,),
     )
     # Solo el administrador ve el formulario para agregar insumos.
-    productos = query_all("SELECT codigo, nombre FROM producto WHERE estado ORDER BY nombre") if tiene_rol(ADMIN) else []
+    productos = query_all("SELECT codigo, nombre FROM producto WHERE estado ORDER BY nombre") if tiene_permiso("EXAMENES") else []
     return render_template("examenes/detalle.html", examen=examen, insumos=insumos, productos=productos)
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("EXAMENES")
 def nuevo():
     if request.method == "GET":
         return render_template("examenes/form.html", examen=None)
@@ -121,7 +121,7 @@ def nuevo():
 
 
 @bp.route("/<int:id_examen>/editar", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("EXAMENES")
 def editar(id_examen):
     examen = query_one("SELECT * FROM examen_laboratorio WHERE id_examen = %s", (id_examen,))
     if examen is None:
@@ -157,7 +157,7 @@ def editar(id_examen):
 
 
 @bp.route("/<int:id_examen>/insumos", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("EXAMENES")
 def agregar_insumo(id_examen):
     codigo = (request.form.get("producto") or "").split(" — ")[0].strip()
     producto = query_one("SELECT id_producto FROM producto WHERE codigo = %s AND estado", (codigo,)) if codigo else None
@@ -184,7 +184,7 @@ def agregar_insumo(id_examen):
 
 
 @bp.route("/<int:id_examen>/insumos/<int:id_producto>/quitar", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("EXAMENES")
 def quitar_insumo(id_examen, id_producto):
     try:
         execute("DELETE FROM examen_producto WHERE id_examen = %s AND id_producto = %s", (id_examen, id_producto))
@@ -195,7 +195,7 @@ def quitar_insumo(id_examen, id_producto):
 
 
 @bp.route("/<int:id_examen>/alternar-estado", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("EXAMENES")
 def alternar_estado(id_examen):
     """Baja lógica (RN-24): el examen y sus insumos se conservan para poder reactivarlo."""
     examen = query_one("SELECT estado FROM examen_laboratorio WHERE id_examen = %s", (id_examen,))

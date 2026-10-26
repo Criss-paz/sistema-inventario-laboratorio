@@ -5,7 +5,7 @@
 <div class="top-actions">
   <h1>{{ proveedor.nombre }}<span class="subtitle">NIT <code>{{ proveedor.nit }}</code>{{ ', inactivo' if not proveedor.estado else '' }}</span></h1>
   <div class="actions">
-    {% if tiene_rol(ADMIN) %}
+    {% if tiene_permiso('PROVEEDORES') %}
     <a class="btn btn-sm" href="{{ url_for('proveedores.editar', id_proveedor=proveedor.id_proveedor) }}">Editar</a>
     {% endif %}
     <a class="btn btn-sm" href="{{ url_for('proveedores.listar') }}">{{ i.icono('volver') }}Proveedores</a>
@@ -24,7 +24,7 @@
   <table>
     <thead>
       <tr><th>Código</th><th>Producto</th><th>Unidad</th><th class="num">Precio (Q)</th>
-        {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
+        {% if tiene_permiso('PROVEEDORES') %}<th>Acciones</th>{% endif %}</tr>
     </thead>
     <tbody>
       {% for p in productos %}
@@ -33,7 +33,7 @@
         <td>{{ p.nombre }}</td>
         <td>{{ p.unidad_medida }}</td>
         <td class="num">{{ '%.2f'|format(p.precio_compra) }}</td>
-        {% if tiene_rol(ADMIN) %}
+        {% if tiene_permiso('PROVEEDORES') %}
         <td class="actions">
           <form method="post"
                 action="{{ url_for('proveedores.quitar_producto', id_proveedor=proveedor.id_proveedor, id_producto=p.id_producto) }}"
@@ -50,7 +50,7 @@
   </table>
 </div>
 
-{% if tiene_rol(ADMIN) %}
+{% if tiene_permiso('PROVEEDORES') %}
 <form class="card" method="post" action="{{ url_for('proveedores.guardar_producto', id_proveedor=proveedor.id_proveedor) }}">
   <h2>Asignar producto o cambiar precio</h2>
   <label for="producto">Producto</label>

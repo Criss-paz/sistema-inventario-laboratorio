@@ -4,7 +4,7 @@ RF-11 (registrar), RF-12 (modificar), RF-13 (consultar), RN-16 (un
 proveedor suministra varios productos con su precio: tabla puente
 proveedor_producto, que se administra desde la ficha del proveedor).
 
-Consultar: todos los roles. Registrar/modificar/dar de baja: Administrador.
+Consultar: todos los roles. Registrar/modificar/dar de baja: permiso PROVEEDORES.
 "Eliminar" es baja lógica vía `estado`, igual que Categorías y Productos
 (lote.id_proveedor tiene ON DELETE RESTRICT).
 """
@@ -16,7 +16,7 @@ import psycopg
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from db import query_all, query_one, query_page, execute, mensaje_error
-from routes.auth import login_required, rol_requerido, tiene_rol, ADMIN
+from routes.auth import login_required, permiso_requerido, tiene_permiso
 
 bp = Blueprint("proveedores", __name__, url_prefix="/proveedores")
 
@@ -85,12 +85,12 @@ def detalle(id_proveedor):
         (id_proveedor,),
     )
     # Solo el administrador ve el formulario para asignar productos.
-    catalogo = query_all("SELECT codigo, nombre FROM producto WHERE estado ORDER BY nombre") if tiene_rol(ADMIN) else []
+    catalogo = query_all("SELECT codigo, nombre FROM producto WHERE estado ORDER BY nombre") if tiene_permiso("PROVEEDORES") else []
     return render_template("proveedores/detalle.html", proveedor=proveedor, productos=productos, catalogo=catalogo)
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PROVEEDORES")
 def nuevo():
     if request.method == "GET":
         return render_template("proveedores/form.html", proveedor=None)
@@ -121,7 +121,7 @@ def nuevo():
 
 
 @bp.route("/<int:id_proveedor>/editar", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PROVEEDORES")
 def editar(id_proveedor):
     proveedor = query_one("SELECT * FROM proveedor WHERE id_proveedor = %s", (id_proveedor,))
     if proveedor is None:
@@ -160,7 +160,7 @@ def editar(id_proveedor):
 
 
 @bp.route("/<int:id_proveedor>/alternar-estado", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PROVEEDORES")
 def alternar_estado(id_proveedor):
     proveedor = query_one("SELECT estado FROM proveedor WHERE id_proveedor = %s", (id_proveedor,))
     if proveedor is None:
@@ -179,7 +179,7 @@ def alternar_estado(id_proveedor):
 
 
 @bp.route("/<int:id_proveedor>/productos", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PROVEEDORES")
 def guardar_producto(id_proveedor):
     """Asigna un producto al proveedor o, si ya lo tenía, actualiza su precio (RN-16)."""
     codigo = (request.form.get("producto") or "").split(" — ")[0].strip()
@@ -212,7 +212,7 @@ def guardar_producto(id_proveedor):
 
 
 @bp.route("/<int:id_proveedor>/productos/<int:id_producto>/quitar", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PROVEEDORES")
 def quitar_producto(id_proveedor, id_producto):
     """Quita el vínculo proveedor-producto. No afecta lotes ni movimientos ya registrados."""
     try:

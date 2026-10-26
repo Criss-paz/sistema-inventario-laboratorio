@@ -16,12 +16,12 @@ import datetime as dt
 import psycopg
 from urllib.parse import urlsplit
 
-from flask import Flask, abort, redirect, request, url_for, render_template
+from flask import Flask, abort, flash, redirect, request, session, url_for, render_template
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
-from db import close_db
-from routes.auth import bp as auth_bp, login_required, tiene_rol, ADMIN, ENCARGADO, CONSULTA
+from db import close_db, get_db, SesionInvalida
+from routes.auth import bp as auth_bp, login_required, tiene_permiso, ADMIN
 from routes.categorias import bp as categorias_bp
 from routes.productos import bp as productos_bp
 from routes.proveedores import bp as proveedores_bp
@@ -32,6 +32,7 @@ from routes.reportes import bp as reportes_bp
 from routes.usuarios import bp as usuarios_bp
 from routes.informes import bp as informes_bp
 from routes.respaldo import bp as respaldo_bp
+from routes.bitacora import bp as bitacora_bp
 
 
 def create_app():
@@ -45,7 +46,7 @@ def create_app():
     app.teardown_appcontext(close_db)
 
     for bp in (auth_bp, categorias_bp, productos_bp, proveedores_bp, lotes_bp,
-               movimientos_bp, examenes_bp, reportes_bp, usuarios_bp, informes_bp, respaldo_bp):
+               movimientos_bp, examenes_bp, reportes_bp, usuarios_bp, informes_bp, respaldo_bp, bitacora_bp):
         app.register_blueprint(bp)
 
     # Formularios solo desde esta misma app. La cookie de sesión ya es
@@ -57,6 +58,18 @@ def create_app():
             origen = request.headers.get("Origin")
             if origen and urlsplit(origen).netloc != request.host:
                 abort(403)
+
+    # Si el administrador desactivó al usuario (o lo borró), su sesión deja
+    # de valer en la siguiente petición, no recién cuando la cierre.
+    @app.before_request
+    def sesion_vigente():
+        if "id_usuario" in session and request.endpoint != "static":
+            try:
+                get_db()
+            except SesionInvalida:
+                session.clear()
+                flash("Su usuario ya no está activo. Consulte con el administrador.", "warning")
+                return redirect(url_for("auth.login"))
 
     # Encabezados de seguridad en todas las respuestas (RNF-17).
     # 'unsafe-inline' en script/style: las plantillas tienen scripts cortos y
@@ -74,11 +87,10 @@ def create_app():
             respuesta.headers["Strict-Transport-Security"] = "max-age=31536000"
         return respuesta
 
-    # Las plantillas deciden qué botones mostrar con tiene_rol(ADMIN, ...).
+    # Las plantillas deciden qué botones mostrar con tiene_permiso('PRODUCTOS', ...).
     @app.context_processor
-    def roles():
-        return {"tiene_rol": tiene_rol, "ADMIN": ADMIN, "ENCARGADO": ENCARGADO, "CONSULTA": CONSULTA,
-                "ahora": dt.datetime.now()}
+    def permisos():
+        return {"tiene_permiso": tiene_permiso, "ADMIN": ADMIN, "ahora": dt.datetime.now()}
 
     # Montos en quetzales con separador de miles: 12,345.60
     @app.template_filter("q")
@@ -100,7 +112,7 @@ def create_app():
     def forbidden(_e):
         return render_template(
             "error.html", code=403, title="Acceso no permitido",
-            message="Su rol no tiene permiso para entrar a esta página.",
+            message="Su rol no tiene permiso para esta acción. Si lo necesita, pídale al administrador que se lo conceda en Usuarios y roles.",
         ), 403
 
     # Segunda capa: si la app dejara pasar algo, PostgreSQL lo niega (SET ROLE).

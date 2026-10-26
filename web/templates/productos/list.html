@@ -5,7 +5,7 @@
 {% block content %}
 <div class="top-actions">
   <h1>Productos<span class="subtitle">Catálogo de productos e insumos</span></h1>
-  {% if tiene_rol(ADMIN) %}
+  {% if tiene_permiso('PRODUCTOS') %}
   <a class="btn btn-primary" href="{{ url_for('productos.nuevo') }}">{{ i.icono('mas') }}Nuevo producto</a>
   {% endif %}
 </div>
@@ -42,7 +42,7 @@
       <tr>
         <th>Código</th><th>Producto</th><th class="num">Existencia</th>
         <th class="num">Costo unitario (Q)</th><th class="num">Valor (Q)</th><th>Estado</th>
-        {% if tiene_rol(ADMIN) %}<th></th>{% endif %}
+        {% if tiene_permiso('PRODUCTOS') %}<th></th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -73,7 +73,7 @@
           {% elif ex <= p.stock_minimo %}<span class="tag orange">Por reponer</span>
           {% else %}<span class="tag green">Disponible</span>{% endif %}
         </td>
-        {% if tiene_rol(ADMIN) %}
+        {% if tiene_permiso('PRODUCTOS') %}
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('productos.editar', id_producto=p.id_producto) }}">Editar</a>
           <form method="post" action="{{ url_for('productos.alternar_estado', id_producto=p.id_producto) }}"
@@ -85,7 +85,7 @@
       </tr>
       {% else %}
       <tr class="empty-row">
-        <td colspan="{{ 7 if tiene_rol(ADMIN) else 6 }}">
+        <td colspan="{{ 7 if tiene_permiso('PRODUCTOS') else 6 }}">
           <div class="empty-state">
             {{ i.icono('productos', 'empty-icon') }}
             <p>{{ 'Ningún producto coincide con el filtro.' if q or id_categoria else 'No hay productos registrados todavía.' }}</p>

@@ -18,7 +18,7 @@ import psycopg
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 
 from db import query_all, query_one, query_page, execute
-from routes.auth import login_required, rol_requerido, ADMIN
+from routes.auth import login_required, permiso_requerido
 
 bp = Blueprint("productos", __name__, url_prefix="/productos")
 
@@ -128,7 +128,7 @@ def listar():
 
 
 @bp.route("/nuevo", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PRODUCTOS")
 def nuevo():
     if request.method == "GET":
         return render_template("productos/form.html", producto=None, categorias=_categorias_activas())
@@ -162,7 +162,7 @@ def nuevo():
 
 
 @bp.route("/<int:id_producto>/editar", methods=["GET", "POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PRODUCTOS")
 def editar(id_producto):
     producto = query_one("SELECT * FROM producto WHERE id_producto = %s", (id_producto,))
     if producto is None:
@@ -202,7 +202,7 @@ def editar(id_producto):
 
 
 @bp.route("/<int:id_producto>/alternar-estado", methods=["POST"])
-@rol_requerido(ADMIN)
+@permiso_requerido("PRODUCTOS")
 def alternar_estado(id_producto):
     producto = query_one("SELECT estado FROM producto WHERE id_producto = %s", (id_producto,))
     if producto is None:

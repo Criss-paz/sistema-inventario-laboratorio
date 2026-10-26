@@ -6,7 +6,7 @@
 <div class="top-actions">
   <h1>{{ examen.nombre_examen }}<span class="subtitle"><code>{{ examen.codigo_interno }}</code> {{ examen.descripcion or '' }}{{ ' — dado de baja' if not examen.estado else '' }}</span></h1>
   <div class="actions">
-    {% if tiene_rol(ADMIN) %}
+    {% if tiene_permiso('EXAMENES') %}
     <a class="btn btn-sm" href="{{ url_for('examenes.editar', id_examen=examen.id_examen) }}">Editar</a>
     {% endif %}
     <a class="btn btn-sm" href="{{ url_for('examenes.listar') }}">{{ i.icono('volver') }}Exámenes</a>
@@ -23,7 +23,7 @@
   <table>
     <thead>
       <tr><th>Código</th><th>Insumo</th><th class="num">Por examen</th><th class="num">Existencia</th><th class="num">Alcanza para</th>
-        {% if tiene_rol(ADMIN) %}<th>Acciones</th>{% endif %}</tr>
+        {% if tiene_permiso('EXAMENES') %}<th>Acciones</th>{% endif %}</tr>
     </thead>
     <tbody>
       {% for ins in insumos %}
@@ -33,7 +33,7 @@
         <td class="num">{{ m.con_unidad(ins.cantidad_requerida, ins.unidad_medida) }}</td>
         <td class="num">{{ m.cantidad(ins.existencia_utilizable) }}</td>
         <td class="num {{ 'alerta' if ins.alcanzan == 0 else '' }}">{{ m.cantidad(ins.alcanzan) }}</td>
-        {% if tiene_rol(ADMIN) %}
+        {% if tiene_permiso('EXAMENES') %}
         <td class="actions">
           <form method="post"
                 action="{{ url_for('examenes.quitar_insumo', id_examen=examen.id_examen, id_producto=ins.id_producto) }}"
@@ -50,7 +50,7 @@
   </table>
 </div>
 
-{% if tiene_rol(ADMIN) %}
+{% if tiene_permiso('EXAMENES') %}
 <form class="card" method="post" action="{{ url_for('examenes.agregar_insumo', id_examen=examen.id_examen) }}">
   <h2>Agregar insumo</h2>
   <label for="producto">Producto</label>

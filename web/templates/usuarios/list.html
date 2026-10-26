@@ -36,23 +36,37 @@
   </table>
 </div>
 
-<h2>Qué puede hacer cada rol <span class="subtitle">la app oculta lo que el rol no permite y la base de datos lo niega aunque se intente (SET ROLE)</span></h2>
+<div class="top-actions" id="roles">
+  <h2>Roles y permisos <span class="subtitle">Marque lo que puede hacer cada rol y guarde. Consultar inventario, lotes, historial y reportes lo pueden todos. La app oculta lo no permitido y la base de datos lo niega aunque se intente (SET ROLE).</span></h2>
+  <a class="btn" href="{{ url_for('usuarios.rol_nuevo') }}">{{ i.icono('mas') }}Nuevo rol</a>
+</div>
+<form method="post" action="{{ url_for('usuarios.guardar_permisos') }}">
 <div class="table-wrap">
   <table class="permisos">
     <thead>
       <tr>
         <th>Permiso</th>
-        {% for r in roles %}<th class="centro">{{ r.nombre }}<span class="hint">{{ r.activos }} {{ 'usuario activo' if r.activos == 1 else 'usuarios activos' }}</span></th>{% endfor %}
+        {% for r in roles %}
+        <th class="centro">
+          <a href="{{ url_for('usuarios.rol_editar', id_rol=r.id_rol) }}" title="Editar el rol">{{ r.nombre }}</a>
+          <span class="hint">{{ r.activos }} {{ 'usuario activo' if r.activos == 1 else 'usuarios activos' }}</span>
+        </th>
+        {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for texto, admin, encargado, consulta in permisos %}
+      {% for p in permisos %}
       <tr>
-        <td>{{ texto }}</td>
-        {% for permitido in [admin, encargado, consulta] %}
+        <td><strong>{{ p.nombre }}</strong><span class="hint">{{ p.descripcion }}</span></td>
+        {% for r in roles %}
         <td class="centro">
-          {% if permitido %}<span class="permitido">{{ i.icono('ok') }}<span class="sr-only">Sí</span></span>
-          {% else %}<span class="denegado" aria-label="No">—</span>{% endif %}
+          {% if r.nombre == ADMIN %}
+            <span class="permitido" title="El Administrador tiene siempre todos los permisos">{{ i.icono('ok') }}<span class="sr-only">Sí (siempre)</span></span>
+          {% else %}
+            <input type="checkbox" name="p_{{ r.id_rol }}_{{ p.codigo }}" value="1"
+                   aria-label="{{ p.nombre }} — {{ r.nombre }}"
+                   {{ 'checked' if p.codigo in concedidos.get(r.id_rol, []) else '' }}>
+          {% endif %}
         </td>
         {% endfor %}
       </tr>
@@ -60,4 +74,9 @@
     </tbody>
   </table>
 </div>
+<div class="form-actions">
+  <button type="submit" class="btn btn-primary">Guardar permisos</button>
+  <span class="hint">El Administrador tiene siempre todos los permisos. Los cambios rigen desde la próxima página que abra cada usuario.</span>
+</div>
+</form>
 {% endblock %}
