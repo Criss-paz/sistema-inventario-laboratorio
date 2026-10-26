@@ -53,6 +53,18 @@ psql -U usuario_app -d inventario_laboratorio -f sql/triggers/003_correccion_ent
 psql -U usuario_app -d inventario_laboratorio -f sql/procedures/003_correccion_entrada.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/views/005_correccion_entrada.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/security/003_correccion_entrada.sql
+# Número de documento E/S/D (RN-27): va DESPUÉS de dml/004 y dml/005, porque toma los números de su texto:
+psql -U usuario_app -d inventario_laboratorio -f sql/ddl/005_numero_documento.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/triggers/004_numero_documento.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/views/006_numero_documento.sql
+# Permisos configurables por rol (RN-28, RN-29) y bitácora (RN-30):
+psql -U usuario_app -d inventario_laboratorio -f sql/ddl/006_permisos.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/procedures/004_permisos.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/triggers/005_rol_protegido.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/ddl/007_bitacora.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/triggers/006_bitacora.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/views/007_bitacora.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/security/004_permisos_bitacora.sql
 ```
 Por qué este orden:
 1. `ddl/` — tablas y restricciones.
@@ -63,7 +75,8 @@ Por qué este orden:
 6. `seed_usuarios.py` — usuarios con contraseña hasheada por la app; los movimientos necesitan un responsable (RN-08).
 7. `dml/004` — el inventario real de marzo a septiembre de 2026 (registro en papel): 1,188 lotes y 5,839 movimientos, con la existencia calculada por los triggers (tarda unos segundos).
    `dml/005` — lo que el laboratorio registró en SIGAL del 24/09 al 21/10/2026: 8 productos, 1 proveedor, 108 lotes y 721 movimientos (`docs/entrega-4/ENTREGA4_REPORTE_CARGA_SIGAL.md`).
-8. `security/` — **como `postgres`**: crear roles requiere superusuario. Va al final porque otorga permisos sobre tablas, vistas y procedimientos que ya deben existir.
+8. `security/001` — **como `postgres`**: crear roles requiere superusuario. Va después de las cargas porque otorga permisos sobre tablas, vistas y procedimientos que ya deben existir.
+9. Migraciones posteriores (devolución, baja de exámenes, corrección de entradas, número de documento, permisos y bitácora), cada una con sus triggers, procedimientos, vistas y permisos. Sus `security/00N` solo otorgan permisos sobre objetos propios: los puede ejecutar el dueño de las tablas.
 
 En Windows, si `psql` no está en el PATH, use la ruta completa: `& "C:\Program Files\PostgreSQL\18\bin\psql.exe" ...`
 
@@ -93,9 +106,10 @@ Abrir `http://localhost:8080` (o el valor de `APP_PORT` en `.env`) e iniciar ses
 
 ## 7. Verificación rápida
 Base de datos (en `psql`, conectado como `usuario_app`):
-- [ ] `\dt` muestra las 12 tablas y `\dv` las 7 vistas.
+- [ ] `\dt` muestra las 15 tablas y `\dv` las 8 vistas.
 - [ ] `SELECT count(*) FROM producto;` → 814 y `SELECT count(*) FROM movimiento;` → 6560.
-- [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 7 triggers.
+- [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 22 triggers (12 de ellos de la bitácora).
+- [ ] `SELECT min(numero_documento), max(numero_documento) FROM movimiento WHERE tipo_movimiento = 'ENTRADA';` → E000001 y E001790.
 - [ ] `\df sp_*` muestra `sp_registrar_entrada`, `sp_registrar_salida`, `sp_registrar_devolucion` y `sp_corregir_entrada`.
 - [ ] `\du rol_*` muestra `rol_administrador`, `rol_encargado` y `rol_consulta`.
 - [ ] `SET ROLE rol_consulta; UPDATE producto SET stock_minimo = 1 WHERE id_producto = 1;` → *permiso denegado*. Después, `RESET ROLE;`.
@@ -107,7 +121,7 @@ Aplicación web:
 - [ ] `encargado.dev` registra una entrada y una salida; la salida se reparte por FEFO.
 - [ ] Reportes → Inventario muestra el valor total del inventario (Q600,338.34 con los datos iniciales, al 21/10/2026).
 - [ ] Cerrar sesión redirige al login y bloquea el acceso directo a `/productos` sin sesión.
-- [ ] `admin.dev` ve **Administración → Respaldo** y descarga el archivo `.sql`.
+- [ ] `admin.dev` ve **Administración → Respaldo** y descarga el archivo `.sql`; en **Administración → Bitácora** aparecen su inicio de sesión y la descarga.
 
 Los casos de prueba completos están en `docs/casos-prueba/` (los de la Entrega 4 recorren los flujos del manual de usuario e incluyen esta instalación desde cero, CP4-14).
 
