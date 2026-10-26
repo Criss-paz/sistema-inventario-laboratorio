@@ -44,3 +44,11 @@ SELECT count(*) FROM lote l
          FROM detalle_movimiento d JOIN movimiento m USING (id_movimiento)
         WHERE d.id_lote = l.id_lote);
 ```
+
+## Entrega 4 (migraciones)
+
+| Script | Contenido |
+|---|---|
+| `005_carga_sigal.sql` | **Generado** por `generar_carga_sigal.py`. Continúa el inventario con los movimientos del 24/09 al 21/10/2026: 8 productos, 1 proveedor, 108 lotes y 721 movimientos. Reporte: `docs/entrega-4/ENTREGA4_REPORTE_CARGA_SIGAL.md` |
+
+Después de las cargas, `sql/ddl/005_numero_documento.sql` pasa el número E/S/D del texto de la observación a su propia columna.

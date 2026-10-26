@@ -25,3 +25,13 @@ SELECT * FROM vw_inventario_bajo;              -- OK
 UPDATE producto SET stock_minimo = 1;          -- ERROR: permiso denegado
 RESET ROLE;
 ```
+
+## Entrega 3 y 4 (migraciones)
+
+Desde la Entrega 4 los roles de la aplicación ya no están alineados uno a uno con estos: el administrador crea roles y define sus permisos (`permiso`, `rol_permiso`), y estos 3 roles de PostgreSQL funcionan como **niveles**. En cada petición la app adopta el más bajo que cubre los permisos del rol del usuario (`fn_rol_bd`).
+
+| Script | Contenido | Ejecutar como |
+|---|---|---|
+| `002_devolucion.sql` | `SECURITY DEFINER` y `EXECUTE` de la devolución | Dueño de las tablas |
+| `003_correccion_entrada.sql` | `sp_corregir_entrada` solo para `rol_administrador` | Dueño de las tablas |
+| `004_permisos_bitacora.sql` | Administrar roles y permisos; leer `vw_bitacora` (nivel administrador); registrar el cierre de sesión (todos). Nadie tiene `INSERT` sobre `bitacora` | Dueño de las tablas |

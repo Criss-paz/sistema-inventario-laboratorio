@@ -11,14 +11,15 @@
 |---|---|---|---|
 | Login / logout | ✅ | Sesión firmada, contraseña con hash, mensaje genérico ante error, redirección solo a rutas internas | Todos |
 | Inicio | ✅ | Resumen del inventario: productos con existencia, inventario bajo, lotes vencidos y por vencer, últimos movimientos | Todos |
-| Movimientos | ✅ | Pestañas Todos / Entradas / Salidas con filtros por fecha y búsqueda. Registrar entrada (crea o alimenta un lote) y salida (FEFO) llamando a los procedimientos almacenados. Corregir una entrada mal digitada, con registro de cada cambio (Entrega 4) | Consultar: todos. Registrar: administrador y encargado. Corregir entradas: administrador |
+| Movimientos | ✅ | Pestañas Todos / Entradas / Salidas / Devoluciones con filtros por fecha y búsqueda, también por número (E001790). Cada movimiento con su número de documento E/S/D. Registrar entrada (crea o alimenta un lote) y salida (FEFO) llamando a los procedimientos almacenados. Corregir una entrada mal digitada, con registro de cada cambio (Entrega 4) | Consultar: todos. Registrar y corregir: según los permisos del rol |
 | Lotes | ✅ | Existencia por lote, vencidos, por vencer y la ficha de cada lote con sus movimientos. Corregir número, vencimiento o dar de baja (nunca la existencia) | Consultar: todos. Corregir: administrador |
 | Productos | ✅ | CRUD con búsqueda, filtro por categoría, paginación y existencia en vivo | Consultar: todos. Editar: administrador |
 | Exámenes | ✅ | CRUD con baja lógica (Entrega 4), insumos que consume cada examen y para cuántas pruebas alcanza la existencia | Consultar: todos. Editar: administrador |
 | Proveedores | ✅ | CRUD con baja lógica; en la ficha, asignar productos con su precio, cambiar el precio y quitarlos (Entrega 4) | Consultar: todos. Editar: administrador |
 | Categorías | ✅ | CRUD con baja lógica | Consultar: todos. Editar: administrador |
 | Reportes | ✅ | Pantalla única: el usuario elige Inventario, Entradas, Salidas, Kardex, Proveedores, Pruebas, Catálogo de productos, Inventario bajo o Vencimientos. Todos en CSV e impresión | Todos |
-| Usuarios y roles | ✅ | Crear usuarios, cambiar rol, restablecer contraseña, desactivar; tabla de permisos por rol | Administrador |
+| Usuarios y roles | ✅ | Crear usuarios, cambiar rol, restablecer contraseña, desactivar; crear, renombrar y eliminar roles; tabla de permisos editable (26/10/2026) | Permiso *Usuarios y roles* |
+| Bitácora | ✅ | Quién hizo qué y cuándo, con filtros y CSV (26/10/2026) | Permiso *Ver la bitácora* |
 | Mi contraseña | ✅ | Cada usuario cambia su contraseña confirmando la actual (Entrega 4) | Todos |
 | Respaldo | ✅ | Descarga de un respaldo completo `.sql`, restaurable con `psql` (RNF-11, Entrega 4) | Administrador |
 
@@ -26,12 +27,14 @@
 
 Dos capas independientes:
 
-1. **En la aplicación.** `routes/auth.py::rol_requerido()` protege cada ruta (responde 403 si el rol no corresponde) y las plantillas muestran solo los botones que el rol puede usar (`tiene_rol()`).
-2. **En la base de datos.** Después del login, cada petición ejecuta `SET ROLE rol_administrador | rol_encargado | rol_consulta` (`web/db.py`). Aunque la interfaz tuviera un error, PostgreSQL niega lo que el rol no permite. Ningún rol puede leer `password_hash`, editar `cantidad_disponible` ni insertar movimientos sin pasar por los procedimientos.
+1. **En la aplicación.** `routes/auth.py::permiso_requerido()` protege cada ruta (responde 403 si al rol le falta el permiso) y las plantillas muestran solo los botones que el rol puede usar (`tiene_permiso()`). Los permisos de cada rol son datos que el administrador edita (desde el 26/10/2026).
+2. **En la base de datos.** Después del login, cada petición ejecuta `SET ROLE rol_administrador | rol_encargado | rol_consulta`, el nivel más bajo que cubre los permisos del rol (`fn_rol_bd`, `web/db.py`). Aunque la interfaz tuviera un error, PostgreSQL niega lo que el rol no permite. Ningún rol puede leer `password_hash`, editar `cantidad_disponible` ni insertar movimientos sin pasar por los procedimientos.
+
+Así vienen los 3 roles; el administrador puede cambiar sus permisos y crear otros:
 
 | Rol | Puede |
 |---|---|
-| Administrador | Todo, incluidos catálogos, corrección de lotes y usuarios |
+| Administrador | Todo, siempre: catálogos, corrección de entradas y lotes, usuarios y roles, bitácora y respaldo |
 | Encargado de inventario | Consultar y registrar entradas y salidas |
 | Usuario de consulta | Solo consultar y generar reportes |
 
@@ -127,6 +130,9 @@ La aplicación está publicada en Render y la base de datos en Neon (PostgreSQL 
 | Seguridad | Cambio de contraseña propio, encabezados CSP, X-Frame-Options y HSTS, rechazo de POST de otro origen |
 | Corrección de entradas | Una entrada no se borra: el Administrador corrige cantidad, precio, proveedor, lote o vencimiento con motivo, y cada cambio queda en `correccion_entrada` (RN-25, RN-26) |
 | Datos al día | Movimientos de SIGAL del 24/09 al 21/10/2026 (`sql/dml/005_carga_sigal.sql`) |
+| Número de documento (26/10/2026) | Cada movimiento con su número E/S/D; los cargados conservan el del papel y los nuevos siguen el correlativo (RN-27) |
+| Permisos por rol (26/10/2026) | El administrador marca qué puede hacer cada rol y crea roles nuevos; la base sigue aplicando su capa (RN-28, RN-29) |
+| Bitácora (26/10/2026) | Quién creó, modificó o eliminó qué, inicios de sesión y descargas de respaldo; inmutable (RN-30) |
 | Correcciones | La devolución se mostraba como salida en el kardex, la ficha del lote e Inicio; "Devolución" sin tilde |
 
-CRUD por tabla y su justificación: `docs/entrega-4/ENTREGA4_MATRIZ_TRAZABILIDAD.md`. Casos de prueba: `docs/casos-prueba/casos-prueba-entrega-4.md` (14 de 14 aprobados). Manual de usuario: `docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md`.
+CRUD por tabla y su justificación: `docs/entrega-4/ENTREGA4_MATRIZ_TRAZABILIDAD.md`. Casos de prueba: `docs/casos-prueba/casos-prueba-entrega-4.md` (19 de 19 aprobados; regresión de 239 verificaciones). Manual de usuario: `docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md`.

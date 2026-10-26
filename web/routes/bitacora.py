@@ -37,8 +37,19 @@ TIPOS = {"ENTRADA": "entrada", "SALIDA": "salida", "DEVOLUCION": "devolución"}
 OCULTOS = {"id_movimiento", "id_usuario", "id_detalle", "id_correccion", "fecha_creacion"}
 
 
+# Nombres de columna con tilde o más claros para una persona.
+CAMPOS = {
+    "descripcion": "descripción", "codigo": "código", "numero_lote": "número de lote",
+    "fecha_vencimiento": "vencimiento", "fecha_ingreso": "fecha de ingreso", "nit": "NIT",
+    "unidad_medida": "presentación", "stock_minimo": "stock mínimo", "precio_unitario": "precio",
+    "requiere_vencimiento": "requiere vencimiento", "codigo_interno": "código interno",
+    "nombre_examen": "nombre", "telefono": "teléfono", "direccion": "dirección",
+    "observacion": "observación", "id_rol": "rol", "id_categoria": "categoría", "id_proveedor": "proveedor",
+}
+
+
 def _campo(nombre):
-    return nombre.removeprefix("id_").replace("_", " ")
+    return CAMPOS.get(nombre) or nombre.removeprefix("id_").replace("_", " ")
 
 
 def _valor(v):
@@ -152,7 +163,7 @@ def _describir(f, n):
         enlace = url_for("informes.kardex", id_producto=int(idr))
 
     if f["accion"] == "MODIFICAR":
-        cambios += [(_campo(c), _valor(v.get("antes")), _valor(v.get("despues")))
+        cambios += [(_campo(c), None if c == "contraseña" else _valor(v.get("antes")), _valor(v.get("despues")))
                     for c, v in det.items() if c not in OCULTOS]
     elif f["accion"] in ("CREAR", "ELIMINAR") and entidad in ("proveedor_producto", "examen_producto"):
         cambios += [(_campo(c), None, _valor(v)) for c, v in det.items()

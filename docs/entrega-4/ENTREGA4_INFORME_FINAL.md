@@ -14,12 +14,13 @@
 El Laboratorio Privado Quetzaltenango llevaba el control de su bodega en papel. No había una forma confiable de saber cuánto quedaba de cada reactivo, qué lotes estaban por vencer ni quién había sacado qué. Este proyecto diseñó e implementó una base de datos relacional en PostgreSQL que resuelve ese problema, más una aplicación web que la consume.
 
 El sistema final tiene:
-- **12 tablas** en tercera forma normal;
-- **7 triggers**, **4 procedimientos almacenados** y **7 vistas** con las reglas de negocio;
-- **3 roles de base de datos** con privilegios diferenciados;
-- una aplicación web con **11 módulos** y control de acceso en dos capas.
+- **15 tablas** en tercera forma normal;
+- **22 triggers**, **4 procedimientos almacenados** y **8 vistas** con las reglas de negocio;
+- **3 roles de base de datos** con privilegios diferenciados, sobre los que el administrador define los permisos de cada rol de la aplicación;
+- una **bitácora de auditoría** que registra quién hizo qué y cuándo;
+- una aplicación web con **12 módulos** y control de acceso en dos capas.
 
-Funciona con el **inventario real del laboratorio**: los registros en papel de marzo a septiembre de 2026 y lo que el laboratorio registró después en SIGAL, hasta el 21/10/2026. En total, 814 productos, 1,296 lotes y 6,560 movimientos, valorizados en Q600,338.34. Está publicado en internet, y su instalación desde cero toma unos 12 segundos de scripts.
+Funciona con el **inventario real del laboratorio**: los registros en papel de marzo a septiembre de 2026 y lo que el laboratorio registró después en SIGAL, hasta el 21/10/2026. En total, 814 productos, 1,296 lotes y 6,560 movimientos, cada uno con su número de documento del laboratorio (E/S/D), valorizados en Q600,338.34. Está publicado en internet, y su instalación desde cero toma unos 30 segundos de scripts.
 
 ---
 
@@ -58,12 +59,12 @@ Diseñar, implementar y documentar un sistema de base de datos relacional que co
 
 | # | Requisito | Mínimo | Resultado | Evidencia |
 |---|---|---|---|---|
-| 1 | Entidades principales (sin asociativas N:M) | 8 | **9**: rol, usuario, categoria, producto, proveedor, lote, movimiento, detalle_movimiento, examen_laboratorio | Diagrama ER |
-| 2 | Relaciones N:M resueltas | 2 | **3**: proveedor–producto (`proveedor_producto`), examen–producto (`examen_producto`) y movimiento–lote (`detalle_movimiento`) | Modelo relacional |
+| 1 | Entidades principales (sin asociativas N:M) | 8 | **9**: rol, usuario, categoria, producto, proveedor, lote, movimiento, detalle_movimiento, examen_laboratorio (más `correccion_entrada`, `permiso` y `bitacora`, agregadas en la Entrega 4) | Diagrama ER |
+| 2 | Relaciones N:M resueltas | 2 | **4**: proveedor–producto (`proveedor_producto`), examen–producto (`examen_producto`), movimiento–lote (`detalle_movimiento`) y rol–permiso (`rol_permiso`) | Modelo relacional |
 | 3 | Normalización hasta 3FN con ejemplo | Sí | Ejemplo completo de 0FN a 3FN | `docs/entrega-2/normalizacion-3fn.md` y `.xlsx` |
-| 4 | Restricciones explícitas | 15 | **38** en el esquema inicial (PK, FK, UNIQUE, CHECK, NOT NULL), más las de las migraciones: `fk_movimiento_origen`, `ck_movimiento_devolucion`, `NOT NULL` de `examen_laboratorio.estado` y, en `correccion_entrada`, 2 FK y 3 CHECK | `docs/entrega-2/diccionario-datos.md`, `sql/ddl/` |
-| 5 | Triggers y procedimientos con justificación | 2 y 2 | **7 triggers** y **4 procedimientos**, más 8 funciones, cada uno con su regla de negocio | `sql/triggers/`, `sql/procedures/` |
-| 6 | Roles con privilegios diferenciados | 3 | **3**: `rol_consulta ⊂ rol_encargado ⊂ rol_administrador` | `sql/security/` |
+| 4 | Restricciones explícitas | 15 | **38** en el esquema inicial (PK, FK, UNIQUE, CHECK, NOT NULL), más las de las migraciones: `fk_movimiento_origen`, `ck_movimiento_devolucion`, `NOT NULL` de `examen_laboratorio.estado` , en `correccion_entrada`, 2 FK y 3 CHECK, el número de documento (`NOT NULL`, `UNIQUE`, `CHECK`), `permiso`/`rol_permiso` (2 PK, 2 FK, `UNIQUE`, 2 CHECK) y `bitacora` (1 FK, 1 CHECK) | `docs/entrega-2/diccionario-datos.md`, `sql/ddl/` |
+| 5 | Triggers y procedimientos con justificación | 2 y 2 | **22 triggers** (12 de ellos de auditoría) y **4 procedimientos**, más 14 funciones, cada uno con su regla de negocio | `sql/triggers/`, `sql/procedures/` |
+| 6 | Roles con privilegios diferenciados | 3 | **3**: `rol_consulta ⊂ rol_encargado ⊂ rol_administrador`; además, permisos editables por rol de la aplicación (RN-28) | `sql/security/` |
 | 7 | Registros por tabla principal | 50 | producto 814, lote 1,296, movimiento 6,560, detalle_movimiento 6,646, proveedor_producto 425, examen_producto 114, proveedor 50, examen_laboratorio 50. Excepciones justificadas: `rol`, `categoria` y `usuario` son catálogos de configuración | `sql/dml/` |
 
 ---
@@ -75,22 +76,24 @@ Diseñar, implementar y documentar un sistema de base de datos relacional que co
 1. **El lote es la unidad de control.** La existencia se guarda por lote, no por producto: así se puede vencer, rastrear al proveedor y aplicar FEFO. La existencia por producto se calcula en una vista.
 2. **El historial no se borra.** Ningún movimiento se elimina (RN-09). Una salida equivocada se corrige con un movimiento inverso, la devolución. Una entrada mal digitada se corrige con `sp_corregir_entrada`, que registra cada dato cambiado con su valor anterior, el motivo y el usuario (RN-25, RN-26). Fuera de ese procedimiento, los triggers impiden cualquier cambio, y ningún rol tiene `UPDATE` ni `DELETE` sobre esas tablas.
 3. **Las reglas de negocio viven en la base de datos.** Existencias, FEFO, vencimiento obligatorio y tope de devolución se aplican aunque alguien use la base sin pasar por la aplicación.
-4. **Seguridad en dos capas.** La aplicación protege cada ruta por rol y, además, adopta en PostgreSQL el rol del usuario (`SET ROLE`). Ni el administrador puede leer los hashes de contraseñas ni cambiar existencias a mano.
-5. **Costo promedio ponderado móvil.** Cada compra recalcula el promedio y cada salida se valora al promedio vigente, calculado en la base con `fn_kardex_promedio`. El cuadre contable con los datos reales (compras − consumo = inventario) tiene una diferencia de Q0.06, que viene del redondeo de cada salida.
-6. **Baja lógica en todos los catálogos.** Nada que tenga historial se borra.
+4. **Seguridad en dos capas.** La aplicación protege cada ruta por permiso y, además, adopta en PostgreSQL el nivel que cubre los permisos del rol (`SET ROLE`). Los permisos son datos que el administrador edita, pero los 3 roles de PostgreSQL no cambian: son niveles. Ni el administrador puede leer los hashes de contraseñas ni cambiar existencias a mano.
+5. **Todo cambio deja rastro.** El historial de movimientos es inmutable y cada movimiento lleva el número de documento del laboratorio (RN-27). Todo lo demás (catálogos, usuarios, roles, permisos, lotes, inicios de sesión) queda en una bitácora que escriben triggers de la base, así que se registra aunque el cambio se haga fuera de la aplicación (RN-30).
+6. **Costo promedio ponderado móvil.** Cada compra recalcula el promedio y cada salida se valora al promedio vigente, calculado en la base con `fn_kardex_promedio`. El cuadre contable con los datos reales (compras − consumo = inventario) tiene una diferencia de Q0.06, que viene del redondeo de cada salida.
+7. **Baja lógica en todos los catálogos.** Nada que tenga historial se borra.
 
 ### 4.2 Aplicación web (100%)
 
 | Módulo | Funciones |
 |---|---|
 | Interfaz | Diseño de SIGAL: menú oscuro, búsqueda rápida `Ctrl K`, tema claro y oscuro, avisos flotantes |
-| Acceso | Login, logout, cambio de contraseña propio, menú y permisos por rol |
+| Acceso | Login, logout, cambio de contraseña propio; menú y botones según los permisos del rol |
 | Panel | "Bodega hoy": indicadores, calendario de vencimientos por lote, qué reponer primero y actividad reciente |
-| Movimientos | Entradas, salidas por FEFO, devolución de salidas, corrección de entradas con registro, historial con filtros |
+| Movimientos | Entradas, salidas por FEFO, devolución de salidas, corrección de entradas con registro; cada uno con su número E/S/D; historial con filtros y búsqueda por número |
 | Lotes | Existencia por lote, vencidos, por vencer, ficha con historial, corrección de datos |
 | Productos, Categorías, Proveedores, Exámenes | CRUD completo con baja lógica; productos y precios por proveedor; insumos por examen y "alcanza para N pruebas" |
 | Reportes | 9 reportes (inventario valorizado, entradas, salidas, kardex, proveedores, pruebas, catálogo, inventario bajo, vencimientos) con CSV e impresión |
-| Usuarios y roles | Alta, cambio de rol, contraseña nueva, desactivación |
+| Usuarios y roles | Alta, cambio de rol, contraseña nueva, desactivación; crear, renombrar y eliminar roles; tabla de permisos editable |
+| Bitácora | Quién hizo qué y cuándo, con filtros y CSV |
 | Respaldo | Descarga de un respaldo completo restaurable con `psql` |
 
 El CRUD por tabla, con la justificación de las operaciones que no se ofrecen a propósito, está en `ENTREGA4_MATRIZ_TRAZABILIDAD.md`.
@@ -102,7 +105,7 @@ El CRUD por tabla, con la justificación de las operaciones que no se ofrecen a 
 | 1 | 18/08/2026 | Propuesta, requerimientos, ER en notación Chen, Gantt |
 | 2 | 01/09/2026 | Modelo relacional, 3FN, diccionario, DDL; web al 30% (login, 2 CRUD) |
 | 3 | 29/09/2026 | Datos reales, triggers, procedimientos, vistas, roles, 8 casos de prueba, despliegue; web al 70%; devolución de salidas |
-| 4 | 03/11/2026 | Web al 100%: CRUD de proveedor–producto, baja de exámenes, corrección de entradas, respaldo, seguridad e interfaz con el diseño de SIGAL; inventario al día con SIGAL; manuales, informe y diagramas actualizados |
+| 4 | 03/11/2026 | Web al 100%: CRUD de proveedor–producto, baja de exámenes, corrección de entradas, respaldo, seguridad e interfaz con el diseño de SIGAL; inventario al día con SIGAL; número de documento E/S/D, permisos editables por rol y bitácora de auditoría; manuales, informe y diagramas actualizados |
 
 ---
 
@@ -113,8 +116,8 @@ El CRUD por tabla, con la justificación de las operaciones que no se ofrecen a 
 | Entrega 2: login y CRUD | 18 | 18 aprobados |
 | Entrega 3: triggers, FEFO, roles, valorización | 8 | 8 aprobados, sobre una instalación desde cero en un segundo equipo |
 | Entrega 3: devolución de salidas | 6 | 6 aprobados |
-| Entrega 4: flujos del manual de usuario, corrección de entradas, carga de SIGAL, respaldo, instalación | 16 | 16 aprobados, con capturas |
-| Regresión de la aplicación (Entrega 4) | 199 verificaciones | 0 fallas |
+| Entrega 4: flujos del manual de usuario, corrección de entradas, carga de SIGAL, número de documento, roles y permisos, bitácora, respaldo, instalación | 19 | 19 aprobados, con capturas |
+| Regresión de la aplicación (Entrega 4) | 239 verificaciones | 0 fallas |
 
 Las pruebas encontraron defectos reales, que se corrigieron antes de cada cierre:
 - en la Entrega 3, el generador de la carga de datos y el kardex, que restaba las devoluciones;
@@ -139,6 +142,8 @@ La lección principal: la IA acelera mucho la escritura, pero **los errores que 
 | Registros en papel con errores e inconsistencias | Carga con un generador (`sql/dml/generar_carga.py`) que documenta cada corrección; el trigger de existencia valida la carga |
 | Corregir una salida mal registrada sin romper la inmutabilidad del historial | Devolución como movimiento inverso, enlazado a la salida y con motivo obligatorio |
 | Mantener el control de acceso en la base con una sola conexión de aplicación | `SET ROLE` por petición, con `COMMIT` inmediato; pooler de Neon desactivado |
+| Que el administrador defina permisos sin perder la segunda capa de seguridad en la base | Permisos como datos (`permiso`, `rol_permiso`) y los 3 roles de PostgreSQL como niveles: `fn_rol_bd` elige el que cubre los permisos del rol en cada petición |
+| Numerar los movimientos sin repetir ni saltar números con dos usuarios a la vez | Trigger con candado de transacción por tipo; el número se calcula dentro de la misma transacción |
 | Respaldo en un servidor sin `pg_dump` compatible | Respaldo generado en el mismo formato `COPY` desde Python, probado con una restauración real |
 | Tildes corruptas al ejecutar `psql` en Windows | `PGCLIENTENCODING=UTF8`, documentado en `INSTALL.md` |
 | Equipo de dos integrantes, no de tres (la consigna lo permite con autorización del catedrático) | Reparto por bloques, cada uno con commits propios |
@@ -156,7 +161,8 @@ La lección principal: la IA acelera mucho la escritura, pero **los errores que 
 
 - Antes del uso diario, pasar a un plan pagado o a un servidor en la red del laboratorio: el plan gratuito tarda unos 50 segundos en despertar tras 15 minutos sin uso.
 - Programar el respaldo semanal (`python web/respaldo.py`) y guardarlo fuera del servidor.
-- Agregar en una versión futura: bloqueo por intentos fallidos de login, auditoría de cambios en catálogos y envío automático del respaldo fuera del servidor (manual técnico, sección 11).
+- Revisar cada mes en la Bitácora los intentos fallidos de inicio de sesión y los cambios de permisos.
+- Agregar en una versión futura: bloqueo por intentos fallidos de login y envío automático del respaldo fuera del servidor (manual técnico, sección 11).
 
 ---
 

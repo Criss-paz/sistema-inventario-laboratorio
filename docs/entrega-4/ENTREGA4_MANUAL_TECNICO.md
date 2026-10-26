@@ -1,7 +1,7 @@
 # Manual técnico
 
 **Sistema Web de Gestión y Control de Inventario — Laboratorio Privado Quetzaltenango**
-Versión 1.0 · Entrega 4 · octubre de 2026
+Versión 1.1 · Entrega 4 · octubre de 2026 (número de documento, permisos por rol y bitácora)
 
 Este manual es para quien instala, administra o modifica el sistema: el administrador del servidor, un desarrollador que continúe el proyecto o el catedrático que lo revisa. Describe la arquitectura, la base de datos, la aplicación web, la seguridad, la instalación, el despliegue, el respaldo y el mantenimiento. La guía de instalación paso a paso está en `INSTALL.md`; aquí se explica *por qué* está construido así y cómo operarlo.
 
@@ -29,15 +29,15 @@ Este manual es para quien instala, administra o modifica el sistema: el administ
  Navegador ──HTTPS──▶  Flask (gunicorn)  ──psycopg 3──▶  PostgreSQL
  (HTML/CSS/JS)         web/                              tablas, triggers,
                        routes/  → db.py                  procedimientos, vistas,
-                       templates/                        3 roles de BD
+                       templates/                        3 roles de BD, bitácora
 ```
 
 | Capa | Tecnología | Responsabilidad |
 |---|---|---|
 | Presentación | Plantillas Jinja2, CSS y JavaScript propios, sin frameworks de interfaz; sistema visual de SIGAL | Mostrar datos y formularios; ocultar lo que el rol no puede usar |
-| Aplicación | Python 3.12+ (probado con 3.12 en Render y 3.14 en desarrollo), Flask 3.0 | Sesión, validación de entrada, control de acceso por ruta, traducción de errores |
-| Acceso a datos | `web/db.py` con psycopg 3 | Única puerta a PostgreSQL: conexión por petición, `SET ROLE`, consultas parametrizadas |
-| Datos y reglas de negocio | PostgreSQL 14+ (18 en desarrollo, 17 en Neon) | Integridad, existencias, FEFO, inmutabilidad del historial, valorización, permisos |
+| Aplicación | Python 3.12+ (probado con 3.12 en Render y 3.14 en desarrollo), Flask 3.0 | Sesión, validación de entrada, control de acceso por permiso, traducción de errores |
+| Acceso a datos | `web/db.py` con psycopg 3 | Única puerta a PostgreSQL: conexión por petición, permisos del rol, `SET ROLE`, usuario para la bitácora, consultas parametrizadas |
+| Datos y reglas de negocio | PostgreSQL 14+ (18 en desarrollo, 17 en Neon) | Integridad, existencias, FEFO, inmutabilidad del historial, numeración de documentos, valorización, permisos, auditoría |
 
 **Decisión central: las reglas de negocio viven en la base de datos.** La existencia de un lote solo la cambia un trigger; las entradas, salidas y devoluciones solo se registran con procedimientos almacenados; el historial lo protege otro trigger; los permisos los aplica PostgreSQL. La aplicación valida antes para dar buenos mensajes, pero aunque tuviera un error, la base no permitiría un inventario incoherente.
 
@@ -57,24 +57,27 @@ Este manual es para quien instala, administra o modifica el sistema: el administ
 │   └── casos-prueba/             casos de cada entrega y sus evidencias
 ├── sql/
 │   ├── ddl/          001 esquema · 002 devolución · 003 baja lógica de exámenes · 004 corrección de entradas
+│   │                 005 número de documento · 006 permisos por rol · 007 bitácora
 │   ├── dml/          001–004 datos del papel (generar_carga.py) · 005 movimientos de SIGAL (generar_carga_sigal.py)
 │   ├── triggers/     001 existencia, inmutabilidad, vencimiento · 002 tope de devolución · 003 corrección
-│   ├── procedures/   001 entrada y salida (FEFO) · 002 devolución · 003 corrección de entradas
+│   │                 004 número de documento · 005 rol Administrador protegido · 006 bitácora
+│   ├── procedures/   001 entrada y salida (FEFO) · 002 devolución · 003 corrección de entradas · 004 fn_rol_bd
 │   ├── views/        001 consultas · 002 kardex y valorización · 003–004 devolución · 005 correcciones
-│   └── security/     001 roles · 002 permisos de la devolución · 003 permisos de la corrección
+│   │                 006 número en el historial · 007 bitácora
+│   └── security/     001 roles · 002 devolución · 003 corrección · 004 permisos y bitácora
 └── web/
     ├── app.py          arma la app: blueprints, filtros, manejadores de error, encabezados
     ├── config.py       variables de entorno
     ├── db.py           acceso a datos
     ├── respaldo.py     servicio de respaldo (también ejecutable por línea de comandos)
     ├── seed_usuarios.py  usuarios de desarrollo
-    ├── routes/         un módulo por área (11)
-    ├── templates/      40 plantillas
+    ├── routes/         un módulo por área (12)
+    ├── templates/      43 plantillas
     └── static/         style.css (diseño de SIGAL, tema claro/oscuro), app.js (tema, menús, avisos,
                         búsqueda Ctrl K), fuentes Schibsted Grotesk y JetBrains Mono, favicon
 ```
 
-Cada script SQL abre con un encabezado: archivo, propósito, autor, descripción, reglas de negocio, dependencias, SGBD y forma de ejecutarlo (estándar S3). Los scripts de esquema `002` a `004` son **migraciones aditivas**: se aplican sobre una base existente sin borrar datos.
+Cada script SQL abre con un encabezado: archivo, propósito, autor, descripción, reglas de negocio, dependencias, SGBD y forma de ejecutarlo (estándar S3). Los scripts de esquema `002` a `007` son **migraciones aditivas**: se aplican sobre una base existente sin borrar datos. `005` además rellena el número de documento de los movimientos ya cargados (ver 3.1).
 
 ---
 
@@ -86,20 +89,25 @@ El diseño completo (modelo relacional, normalización 3FN y diccionario de dato
 
 | Tabla | Contenido | Filas (datos iniciales) |
 |---|---|---|
-| `rol` | Los 3 roles de la aplicación | 3 |
+| `rol` | Roles de la aplicación; el administrador puede crear más | 3 |
+| `permiso` | Acciones que se pueden conceder a un rol, con el nivel de PostgreSQL que necesita cada una | 11 |
+| `rol_permiso` | Qué permisos tiene cada rol (N:M) | 14 |
 | `usuario` | Usuarios, con contraseña en hash | 3 (desarrollo) |
 | `categoria` | Clasificación de productos | 10 |
 | `producto` | Catálogo de insumos y reactivos | 814 |
 | `proveedor` | Proveedores | 51 |
 | `lote` | Cada lote recibido, con su existencia | 1,296 |
-| `movimiento` | Cabecera de cada entrada, salida o devolución | 6,560 |
+| `movimiento` | Cabecera de cada entrada, salida o devolución, con su número de documento (E/S/D) | 6,560 |
 | `detalle_movimiento` | Cuánto de cada lote movió cada movimiento (resuelve movimiento–lote N:M) | 6,646 |
 | `examen_laboratorio` | Exámenes que ofrece el laboratorio | 50 |
 | `proveedor_producto` | Qué productos suministra cada proveedor y a qué precio (N:M) | 425 |
 | `examen_producto` | Qué insumos consume cada examen y cuánto (N:M) | 114 |
 | `correccion_entrada` | Cada dato corregido de una entrada: valor anterior, nuevo, motivo, quién y cuándo (solo crece) | 0 |
+| `bitacora` | Auditoría: quién creó, modificó o eliminó qué, inicios y cierres de sesión, descargas de respaldo (solo crece) | 0 |
 
-Las 14 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (estándar S4): `RESTRICT` donde hay historial que proteger (lotes, movimientos), `CASCADE` en las tablas puente.
+Las 17 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (estándar S4): `RESTRICT` donde hay historial que proteger (lotes, movimientos, bitácora), `CASCADE` en las tablas puente.
+
+**Número de documento (RN-27).** `movimiento.numero_documento` es `E`, `S` o `D` según el tipo, más 6 dígitos: `UNIQUE` y con un `CHECK` de formato y de prefijo. Los movimientos del papel y de la carga posterior conservan su número original; `ddl/005` lo tomó del texto de la observación (y limpió ese texto) desactivando el trigger de inmutabilidad solo dentro de su transacción. Los movimientos nuevos los numera `trg_movimiento_numero`. La numeración del papel tiene huecos (servicios y rechazos que no se cargaron); la de los nuevos no los tiene.
 
 **Baja lógica.** Ningún catálogo se borra: `categoria`, `producto`, `proveedor`, `usuario`, `lote` y, desde la Entrega 4, `examen_laboratorio` tienen columna `estado`. Así el historial siempre puede mostrar a qué producto, proveedor o usuario se refiere cada movimiento.
 
@@ -115,6 +123,12 @@ Las 14 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (es
 | `trg_lote_vencimiento` | `lote` | Si el producto requiere vencimiento, el lote debe tener fecha (RN-07) |
 | `trg_z_correccion_existencia` | `detalle_movimiento` | Al corregir la cantidad de una entrada, ajusta el lote por la diferencia y no lo deja negativo (RN-01, RN-25) |
 | `trg_correccion_inmutable` | `correccion_entrada` | Las correcciones no se modifican ni se borran |
+| `trg_movimiento_numero` | `movimiento` | Asigna el siguiente número de su tipo (E/S/D), con un candado de transacción por tipo para que dos registros simultáneos no tomen el mismo, y en las devoluciones escribe la salida que corrigen por su número (RN-27) |
+| `trg_rol_protegido` | `rol` | El rol Administrador no se renombra ni se elimina (RN-29) |
+| `trg_bitacora_*` (12) | `categoria`, `producto`, `proveedor`, `examen_laboratorio`, `proveedor_producto`, `examen_producto`, `usuario`, `rol`, `rol_permiso`, `lote` (solo los datos que corrige una persona), `movimiento`, `correccion_entrada` | Escriben en la bitácora cada creación, modificación (solo los campos que cambiaron, con el valor anterior y el nuevo) y eliminación; nunca la contraseña (RN-30) |
+| `trg_bitacora_inmutable` | `bitacora` | La bitácora no se modifica ni se borra |
+
+En total, 22 triggers.
 
 ### 3.3 Procedimientos y funciones
 
@@ -127,6 +141,9 @@ Las 14 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (es
 | `fn_devolvible` | Función, `SECURITY DEFINER` | Saldo que aún se puede devolver de cada lote de una salida |
 | `fn_kardex_promedio` | Función | Kardex de un producto a costo promedio ponderado móvil |
 | `fn_validar_usuario_activo` | Función | Un movimiento solo lo registra un usuario activo (RN-08) |
+| `fn_rol_bd` | Función | El rol de PostgreSQL más bajo que cubre los permisos de un rol de la aplicación: `rol_administrador` si es el Administrador o tiene algún permiso de ese nivel, `rol_encargado` si tiene alguno de nivel encargado, `rol_consulta` si no tiene ninguno (RN-28) |
+| `fn_bitacora` | Función de trigger, `SECURITY DEFINER` | Escribe en la bitácora; el responsable sale de `current_setting('app.id_usuario')`, que la app fija en cada conexión |
+| `fn_registrar_evento` | Función, `SECURITY DEFINER` | Registra un cierre de sesión o una descarga de respaldo a nombre del usuario de la conexión; ningún otro evento |
 | `fn_*` restantes | Funciones de trigger | Implementan los triggers de 3.2 |
 
 Los errores de negocio se lanzan con `RAISE EXCEPTION` sin código propio (SQLSTATE `P0001`) y con un texto escrito para el usuario. La aplicación muestra esos textos tal cual y oculta cualquier otro error (sección 4.3).
@@ -144,6 +161,9 @@ Los procedimientos son `SECURITY DEFINER` con `search_path` fijo (`public, pg_te
 | `vw_valorizacion_inventario` | Valor del inventario a costo promedio ponderado |
 | `vw_devoluciones` | Auditoría de devoluciones con su salida de origen y motivo |
 | `vw_correcciones_entrada` | Correcciones de entradas con el dato en palabras y quién las hizo |
+| `vw_bitacora` | Bitácora con el nombre del responsable ("Sistema" si el cambio se hizo fuera de la app) |
+
+`vw_historial_movimientos` incluye además el número de documento del movimiento y, en las devoluciones, el de la salida que corrigen.
 
 ### 3.5 Roles de base de datos
 
@@ -154,6 +174,8 @@ Los procedimientos son `SECURITY DEFINER` con `search_path` fijo (`public, pg_te
 | `rol_administrador` | `rol_encargado` | Además, ejecutar `sp_corregir_entrada`; `INSERT`/`UPDATE` en catálogos; `UPDATE` de `lote` solo en las columnas que corrige una persona (número, proveedor, fechas, estado; nunca `cantidad_disponible`); `DELETE` en las tablas puente; y administrar usuarios por columna, **sin poder leer `password_hash`** |
 
 Ningún rol puede modificar `cantidad_disponible`, ni insertar, modificar o borrar movimientos directamente. Detalle y justificación en `sql/security/001_roles.sql`.
+
+**Roles de la aplicación y roles de la base (RN-28).** Desde el 26/10/2026, los permisos de cada rol de la aplicación son datos (`permiso`, `rol_permiso`) que el administrador edita. Los 3 roles de PostgreSQL no cambian: son **niveles**. En cada petición, `fn_rol_bd` elige el nivel más bajo que cubre los permisos del rol y la app lo adopta con `SET ROLE`. Así se mantienen las dos capas: la app aplica el permiso exacto (por ejemplo, *Registrar salidas* sin *Registrar entradas*) y la base, el nivel. `rol_administrador` además puede crear, renombrar y eliminar roles y cambiar sus permisos, y leer la bitácora solo por `vw_bitacora`. Nadie tiene `INSERT` sobre `bitacora`.
 
 ### 3.6 Valorización
 
@@ -173,22 +195,25 @@ Con los datos iniciales (papel y SIGAL, hasta el 21/10/2026), el inventario vale
 
 | Módulo (`web/routes/`) | Pantallas | Roles |
 |---|---|---|
-| `auth.py` | Login, logout, cambiar mi contraseña; `login_required`, `rol_requerido`, `tiene_rol` | Todos |
-| `reportes.py` | Panel "Bodega hoy" (indicadores, calendario de vencimientos, reponer primero, actividad), inventario bajo, por vencer y `buscar` (JSON para la búsqueda `Ctrl K`) | Todos |
-| `movimientos.py` | Historial (todos/entradas/salidas), detalle, entrada, salida, devolución | Consultar: todos · Registrar: Administrador y Encargado |
-| `lotes.py` | Lista por estado, ficha, corrección de datos | Consultar: todos · Corregir: Administrador |
-| `productos.py`, `categorias.py` | CRUD con baja lógica | Consultar: todos · Editar: Administrador |
-| `proveedores.py` | CRUD con baja lógica y productos que suministra con su precio | Consultar: todos · Editar: Administrador |
-| `examenes.py` | CRUD con baja lógica e insumos por examen | Consultar: todos · Editar: Administrador |
+| `auth.py` | Login, logout, cambiar mi contraseña; `login_required`, `permiso_requerido`, `tiene_permiso`; inicio, intento fallido y cierre de sesión en la bitácora | Todos |
+| `reportes.py` | Panel "Bodega hoy" (indicadores, calendario de vencimientos, reponer primero, actividad), inventario bajo, por vencer y `buscar` (JSON para la búsqueda `Ctrl K`: productos y movimientos por número) | Todos |
+| `movimientos.py` | Historial (todos/entradas/salidas/devoluciones, búsqueda por número), detalle, entrada, salida, devolución, corrección de entradas | Consultar: todos · Registrar y corregir: permisos `REGISTRAR_ENTRADAS`, `REGISTRAR_SALIDAS`, `DEVOLVER_SALIDAS`, `CORREGIR_ENTRADAS` |
+| `lotes.py` | Lista por estado, ficha, corrección de datos | Consultar: todos · Corregir: `EDITAR_LOTES` |
+| `productos.py`, `categorias.py` | CRUD con baja lógica | Consultar: todos · Editar: `PRODUCTOS` |
+| `proveedores.py` | CRUD con baja lógica y productos que suministra con su precio | Consultar: todos · Editar: `PROVEEDORES` |
+| `examenes.py` | CRUD con baja lógica e insumos por examen | Consultar: todos · Editar: `EXAMENES` |
 | `informes.py` | Pantalla única de reportes (9 tipos), CSV e impresión | Todos |
-| `usuarios.py` | Usuarios y roles | Administrador |
-| `respaldo.py` | Descarga del respaldo | Administrador |
+| `usuarios.py` | Usuarios; roles (crear, renombrar, eliminar) y tabla de permisos | `USUARIOS` |
+| `bitacora.py` | Bitácora con filtros y CSV; traduce cada registro a una frase legible | `BITACORA` |
+| `respaldo.py` | Descarga del respaldo (queda en la bitácora) | `RESPALDO` |
+
+El rol Administrador tiene siempre todos los permisos; los demás, los que les asigne el administrador.
 
 ### 4.2 Flujo de una petición
 
-1. `rol_requerido(...)` verifica la sesión y el rol. Si el rol no corresponde responde 403; si no hay sesión, redirige al login.
-2. La ruta valida la entrada (obligatorios, números con hasta 2 decimales, fechas, formatos) **antes** de tocar la base (A3).
-3. `db.get_db()` abre la conexión de la petición y ejecuta `SET ROLE rol_<rol del usuario>`, seguido de un `COMMIT` inmediato, para que un `ROLLBACK` posterior no lo deshaga.
+1. Si hay sesión, `db.get_db()` abre la conexión de la petición y, como `usuario_app`, lee el rol del usuario, sus permisos y `fn_rol_bd`. Si el usuario ya no existe o está desactivado, la sesión se cierra (`SesionInvalida`) y se redirige al login. Después fija `app.id_usuario` (para la bitácora) y ejecuta `SET ROLE` con el nivel que corresponde, seguido de un `COMMIT` inmediato, para que un `ROLLBACK` posterior no lo deshaga.
+2. `permiso_requerido("CÓDIGO")` verifica la sesión y el permiso. Si falta, responde 403; si no hay sesión, redirige al login. Como los permisos se leen en cada petición, un cambio del administrador rige desde la siguiente página.
+3. La ruta valida la entrada (obligatorios, números con hasta 2 decimales, fechas, formatos) **antes** de tocar la base (A3).
 4. Las consultas usan siempre parámetros (`%s` / `%(nombre)s`). Los pocos fragmentos de SQL armados con f-string solo combinan texto fijo del código, nunca texto del usuario (A4).
 5. Al terminar la petición, `close_db` cierra la conexión.
 
@@ -218,7 +243,9 @@ Con los datos iniciales (papel y SIGAL, hasta el 21/10/2026), el inventario vale
 | Ningún rol de la app puede leer `password_hash` | `security/001_roles.sql` | Que un error de la app exponga los hashes |
 | Mensaje genérico de login | `auth.login` | Averiguar qué usuarios existen |
 | Redirección tras login solo a rutas internas | `auth.login` | Redirecciones abiertas (`?next=https://otro-sitio`) |
-| Control de acceso en dos capas: app (`rol_requerido`) y base (`SET ROLE`) | `auth.py`, `db.py` | Que un error en una capa dé acceso indebido |
+| Control de acceso en dos capas: app (`permiso_requerido`, permiso exacto) y base (`SET ROLE`, nivel calculado con `fn_rol_bd`) | `auth.py`, `db.py` | Que un error en una capa dé acceso indebido |
+| Sesión revalidada en cada petición | `db.get_db`, `app.sesion_vigente` | Que un usuario desactivado siga trabajando con la sesión abierta |
+| Bitácora de auditoría inmutable, escrita por triggers `SECURITY DEFINER` | `triggers/006_bitacora.sql` | Cambios sin responsable; borrar el rastro de un cambio |
 | Cookie de sesión `HttpOnly`, `SameSite=Lax` y, en producción, `Secure` | `config.py` | Robo de la sesión por JavaScript y envío desde otros sitios |
 | Rechazo de POST con encabezado `Origin` ajeno | `app.mismo_origen` | Falsificación de peticiones entre sitios (CSRF), como segunda barrera |
 | Encabezados `Content-Security-Policy`, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy`, HSTS | `app.encabezados_de_seguridad` | Contenido inyectado, páginas que "envuelven" al sistema, filtración de URL |
@@ -227,8 +254,8 @@ Con los datos iniciales (papel y SIGAL, hasta el 21/10/2026), el inventario vale
 
 **La excepción documentada: `db.conexion_sin_rol()`.** Es la única conexión que no adopta un rol. La usan tres operaciones que necesitan `password_hash`:
 
-- el login, antes de que exista sesión;
-- el cambio de contraseña propio, siempre sobre el `id_usuario` de la sesión firmada y nunca sobre uno recibido del formulario;
+- el login, antes de que exista sesión (también escribe el inicio o el intento fallido en la bitácora);
+- el cambio de contraseña propio, siempre sobre el `id_usuario` de la sesión firmada y nunca sobre uno recibido del formulario (fija `app.id_usuario`, así el cambio queda en la bitácora a su nombre);
 - el respaldo, restringido al Administrador y abierto en modo de solo lectura.
 
 Cualquier otro uso nuevo de esa función debe justificarse igual.
@@ -250,13 +277,13 @@ Cualquier otro uso nuevo de esa función debe justificarse igual.
 2. Ejecutar los scripts SQL **en el orden del paso 3**. El orden importa:
    - los triggers van antes de los datos, para que validen también la carga inicial;
    - `security/` va después de que existan todos los objetos;
-   - las migraciones `002_*` y `003_*` van al final.
+   - las migraciones (`002` a `007`) van al final; `ddl/005_numero_documento.sql`, después de las cargas de `dml/`, porque toma los números de su texto.
 3. Copiar `.env.example` a `.env` y completarlo.
 4. Instalar las dependencias (`pip install -r web/requirements.txt`) y ejecutar `python web/app.py`.
 
 En Windows, antes de `psql`: `$env:PGCLIENTENCODING = "UTF8"`. Sin esto, las tildes se guardan corruptas sin ningún error.
 
-La instalación completa desde cero toma unos 6 segundos de scripts. Se verificó el 21/10/2026 con los 21 pasos (CP4-14): 814 productos, 6,560 movimientos, 0 lotes incoherentes y Q600,338.34.
+La instalación completa desde cero toma unos 30 segundos de scripts. Se verificó el 26/10/2026 con los 33 pasos (CP4-14): 15 tablas, 814 productos, 6,560 movimientos numerados de E000001 a E001790, 0 lotes incoherentes y Q600,338.34.
 
 ### 6.2 Producción (Render + Neon)
 
@@ -287,7 +314,21 @@ psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/views/005_correccion_entrada.sql
 psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/security/003_correccion_entrada.sql
 # Movimientos de SIGAL (una sola vez; se niega a correr si ya se aplicó):
 psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/dml/005_carga_sigal.sql
+# Número de documento (después de la carga anterior):
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/ddl/005_numero_documento.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/triggers/004_numero_documento.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/views/006_numero_documento.sql
+# Permisos por rol y bitácora:
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/ddl/006_permisos.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/procedures/004_permisos.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/triggers/005_rol_protegido.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/ddl/007_bitacora.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/triggers/006_bitacora.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/views/007_bitacora.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/security/004_permisos_bitacora.sql
 ```
+
+**Orden con el despliegue:** primero la base y después el código. La versión de la app del 26/10/2026 lee `permiso` y `rol_permiso` en cada petición: si se despliega antes de las migraciones, ninguna página abre.
 
 Para saber si una base ya tiene la devolución: `SELECT column_name FROM information_schema.columns WHERE table_name = 'movimiento' AND column_name = 'motivo';` (si devuelve una fila, ya está). Antes de aplicar cualquier migración en producción, **descargue un respaldo** (sección 7).
 
@@ -297,7 +338,9 @@ Para saber si una base ya tiene la devolución: `SELECT column_name FROM informa
 - En producción los usuarios se llaman `admin`, `encargado` y `consulta` (sin `.dev`). `005_carga_sigal.sql` acepta cualquiera de los dos nombres del encargado.
 - Una **salida de prueba** hecha en producción (#5840, 1 unidad) había dejado en 0 el lote que SIGAL necesitaba, y la carga se detuvo con «Existencia insuficiente». No se borró, porque el historial es inmutable: se anuló con `sp_registrar_devolucion` y la carga se repitió. Resultado: 814 productos, 6,562 movimientos (incluyen la prueba y su devolución) y Q600,338.34, igual que la instalación desde cero.
 
-`security/002_devolucion.sql` solo contiene `ALTER FUNCTION` y `GRANT` sobre objetos propios, así que lo puede ejecutar el dueño de las tablas (`usuario_app` en local, `neondb_owner` en Neon) sin superusuario.
+El 26/10/2026 se aplicaron en Neon las migraciones del número de documento, los permisos y la bitácora en una sola ejecución del SQL Editor (68 instrucciones sin error): 0 movimientos sin número, última entrada E001790, última salida S004788 (la salida de prueba #5840 recibió el suyo) y 14 permisos asignados. Después, Manual Deploy en Render.
+
+`security/002_devolucion.sql`, `003` y `004` solo contienen `ALTER FUNCTION`, `GRANT` y `REVOKE` sobre objetos propios, así que lo puede ejecutar el dueño de las tablas (`usuario_app` en local, `neondb_owner` en Neon) sin superusuario.
 
 ---
 
@@ -307,7 +350,7 @@ Cubre el requerimiento RNF-11.
 
 ### 7.1 Qué respalda
 
-`web/respaldo.py` genera un archivo `.sql` con **los datos** de las 12 tablas. No incluye la estructura: tablas, triggers, procedimientos, vistas y roles ya están versionados en `sql/` y se reinstalan desde ahí. El archivo:
+`web/respaldo.py` genera un archivo `.sql` con **los datos** de las 15 tablas, bitácora incluida. No incluye la estructura: tablas, triggers, procedimientos, vistas y roles ya están versionados en `sql/` y se reinstalan desde ahí. El archivo:
 
 - usa bloques `COPY … FROM stdin`, el mismo formato que `pg_dump`, así que es SQL estándar y legible, y se restaura sin la aplicación;
 - lee todas las tablas en **una sola foto** de la base (`REPEATABLE READ`, solo lectura), aunque alguien registre un movimiento mientras se genera;
@@ -346,8 +389,8 @@ La restauración **reemplaza todos los datos** de la base de destino. Por eso no
 
 Qué hace el archivo al restaurar, en **una sola transacción** (si algo falla, la base queda exactamente como estaba):
 
-1. Apaga los triggers de usuario de las 12 tablas. La existencia de cada lote ya viene calculada, y el trigger de historial inmutable impediría recargar los movimientos.
-2. `TRUNCATE` de las 12 tablas.
+1. Apaga los triggers de usuario de las 15 tablas. La existencia de cada lote ya viene calculada, el trigger de historial inmutable impediría recargar los movimientos y los de la bitácora registrarían la restauración como si fueran cambios nuevos.
+2. `TRUNCATE` de las 15 tablas.
 3. `COPY` de cada tabla en orden de dependencias. Las FK **sí** se verifican, porque son triggers del sistema y no se apagan.
 4. Ajusta cada secuencia de identidad al siguiente valor libre.
 5. Vuelve a encender los triggers y hace `COMMIT`.
@@ -370,7 +413,7 @@ Qué hace el archivo al restaurar, en **una sola transacción** (si algo falla, 
 ### 8.2 Agregar una pantalla
 
 1. Cree o amplíe un módulo en `web/routes/`, con docstring que explique su responsabilidad y quién puede usarlo (A6).
-2. Proteja cada ruta con `@login_required` o `@rol_requerido(...)`.
+2. Proteja cada ruta con `@login_required` o `@permiso_requerido("CÓDIGO")`. Si la acción es nueva, agregue su permiso a la tabla `permiso` con el nivel de base que necesita, en una migración.
 3. Valide la entrada en el servidor, use `query_*`/`execute`/`call_procedure` de `db.py` con parámetros, y traduzca los errores con `mensaje_error`.
 4. Si es un blueprint nuevo, regístrelo en `app.py` y agregue la entrada al menú en `templates/base.html`.
 
@@ -381,6 +424,7 @@ Qué hace el archivo al restaurar, en **una sola transacción** (si algo falla, 
 | Descargar un respaldo y guardarlo fuera del servidor | Semanal y antes de cada cambio |
 | Revisar Lotes → Vencidos con existencia y registrar su baja | Semanal |
 | Revisar usuarios activos y desactivar a quien ya no trabaja en el laboratorio | Mensual |
+| Revisar en la Bitácora los intentos fallidos de inicio de sesión y los cambios de permisos | Mensual |
 | Actualizar dependencias de `web/requirements.txt` y volver a correr las pruebas | Trimestral |
 
 ---
@@ -391,8 +435,8 @@ Qué hace el archivo al restaurar, en **una sola transacción** (si algo falla, 
 |---|---|---|
 | Casos de la Entrega 2 | `docs/casos-prueba/casos-prueba-entrega-2.md` | Login, CRUD de categorías y productos (18) |
 | Casos de la Entrega 3 | `docs/casos-prueba/casos-prueba-entrega-3.md` | Triggers, FEFO, inmutabilidad, roles, valorización, devolución (14) |
-| Casos de la Entrega 4 | `docs/casos-prueba/casos-prueba-entrega-4.md` | Flujos del manual de usuario, corrección de entradas, carga de SIGAL, respaldo y restauración, instalación desde cero (16) |
-| Regresión de la app | Descrita en los casos de la Entrega 4 | 43 pantallas × 3 roles y los módulos nuevos (199 verificaciones) |
+| Casos de la Entrega 4 | `docs/casos-prueba/casos-prueba-entrega-4.md` | Flujos del manual de usuario, corrección de entradas, carga de SIGAL, número de documento, roles y permisos, bitácora, respaldo y restauración, instalación desde cero (19) |
+| Regresión de la app | Descrita en los casos de la Entrega 4 | 43 pantallas × 3 roles y los módulos nuevos (239 verificaciones) |
 
 Las pruebas de la app usan el cliente de pruebas de Flask (`app.test_client()`) contra una base real con los datos iniciales; cada una deshace lo que crea. Las del navegador usan Playwright con Edge.
 
@@ -407,6 +451,8 @@ Además de la tabla de `INSTALL.md`:
 | "Acceso no permitido" en una pantalla que el rol sí debería ver | Falta un `GRANT` para un objeto nuevo: PostgreSQL negó la consulta y la app lo traduce a 403 | Revise el script de `security/` de ese objeto |
 | La devolución falla con "columna motivo no existe" | La base no tiene las migraciones `002_devolucion` | Sección 6.3 |
 | La lista de exámenes da error 500 tras actualizar el código | Falta `sql/ddl/003_examen_estado.sql` | Sección 6.3 |
+| Ninguna página abre después de iniciar sesión (error 500) tras actualizar el código | Faltan las tablas `permiso` y `rol_permiso` (`ddl/006`) o `fn_rol_bd` | Sección 6.3: aplicar las migraciones antes del despliegue |
+| Un usuario no ve un botón que su rol debería tener | Al rol le falta el permiso | Usuarios y roles → tabla de permisos (U-14). Rige desde la siguiente página |
 | El respaldo dice "La lista de tablas del respaldo no coincide con la base" | Se agregó una tabla y no se sumó a `TABLAS` en `respaldo.py` | Agréguela en orden de dependencias |
 | La restauración se detiene con un error y no cambia nada | Esquema distinto del respaldo (por ejemplo, falta una migración) | Instale las migraciones que faltan y repita: la restauración es atómica |
 | Un formulario responde 403 sin motivo aparente en producción | El navegador envía un `Origin` distinto del dominio (proxy mal configurado) | Verifique `APP_ENV=production`, para que `ProxyFix` tome el host real |
@@ -420,4 +466,5 @@ Además de la tabla de `INSTALL.md`:
 - **El respaldo es manual o por tarea programada.** No se envía automáticamente fuera del servidor.
 - **Restauración solo por `psql`.** Es intencional (reemplaza todo), pero exige acceso al servidor.
 - **Plan gratuito de Render y Neon:** arranque lento tras inactividad y sin garantía de disponibilidad. Para uso real del laboratorio conviene un plan pagado o un servidor propio en la red local.
-- **Sin auditoría de cambios en catálogos.** El historial de movimientos es inmutable, pero un cambio de nombre de producto o de precio de proveedor no guarda quién lo hizo.
+- **La bitácora crece sin límite.** No se archiva ni se depura (es inmutable a propósito). Con el volumen actual no es un problema; si creciera mucho, convendría particionarla por año.
+- **Los permisos son por acción, no por dato.** Un rol con *Registrar salidas* puede sacar de cualquier producto; no hay permisos por área o por categoría.

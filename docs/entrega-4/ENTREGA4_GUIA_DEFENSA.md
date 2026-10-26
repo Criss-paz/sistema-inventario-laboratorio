@@ -14,19 +14,21 @@ Preparación para la defensa grupal (base de datos y aplicación web) y la indiv
 
 ---
 
-## 2. Guion de la demostración grupal (unos 12 minutos)
+## 2. Guion de la demostración grupal (unos 14 minutos)
 
 | Min. | Qué se muestra | Qué se dice | Quién |
 |---|---|---|---|
 | 0–1 | Panel "Bodega hoy" como administrador: indicadores y calendario de vencimientos (pasar el cursor por un punto rojo) | El problema: bodega en papel; ahora existencias, vencimientos y valor del inventario en un vistazo, con los datos reales. La interfaz sigue el diseño de SIGAL, proyecto nacido de este | Cristopher |
 | 1–3 | Diagrama ER y relacional | 9 entidades; el **lote** como unidad de existencia; 3 relaciones N:M resueltas; 3FN | José |
-| 3–5 | Como encargado: registrar una entrada y luego una salida mayor a lo que hay en un solo lote | La salida se reparte por **FEFO**, lo hace el procedimiento `sp_registrar_salida`, no la aplicación | Cristopher |
+| 3–5 | Como encargado: registrar una entrada y luego una salida mayor a lo que hay en un solo lote | La salida se reparte por **FEFO**, lo hace el procedimiento `sp_registrar_salida`, no la aplicación. Cada una recibe el siguiente número del laboratorio (E001791, S004788…), que asigna un trigger | Cristopher |
 | 5–6 | Intentar sacar más de lo que hay | El rechazo viene de la base de datos (trigger y procedimiento); la aplicación solo muestra el mensaje | Cristopher |
 | 6–7 | Devolver la salida y abrir la ficha del lote | El historial no se edita (RN-09): la corrección es un movimiento inverso enlazado y con motivo | José |
 | 7–8 | Kardex del producto | Costo promedio ponderado: la compra cambia el promedio y la salida y la devolución no | José |
 | 8–10 | Como usuario de consulta: menú reducido; escribir `/usuarios/` a mano. Luego en `psql`: `SET ROLE rol_consulta; UPDATE producto …` | Control de acceso en **dos capas**: la app (403) y PostgreSQL (permiso denegado) | Cristopher |
 | 10–11 | En `psql`: `UPDATE movimiento SET observacion='x' WHERE id_movimiento = 1;` | El trigger de inmutabilidad lo impide, incluso para el dueño de las tablas | José |
 | 11–12 | Administración → Respaldo | RNF-11: respaldo completo, restaurable con `psql`, probado con una restauración real | José |
+| 12–13 | Usuarios y roles: darle "Registrar salidas" al Usuario de consulta y, con su sesión abierta, mostrar que ya ve el botón; quitarlo de nuevo | Los permisos son datos que edita el administrador (RN-28); la base sigue aplicando su capa con `SET ROLE` al nivel que calcula `fn_rol_bd` | Cristopher |
+| 13–14 | Administración → Bitácora, filtrada por "Permiso de rol" y luego por "Inició sesión" | Quién hizo qué y cuándo (RN-30): lo escriben triggers de la base, nunca guarda contraseñas y no se puede modificar | José |
 
 Comandos para `psql` (local: `psql -U usuario_app -d inventario_laboratorio`):
 
@@ -45,6 +47,13 @@ RESET ROLE;
 -- El historial es inmutable
 UPDATE movimiento SET observacion = 'x' WHERE id_movimiento = 1;  -- rechazado por el trigger
 
+-- La bitácora también
+UPDATE bitacora SET referencia = 'x' WHERE id_bitacora = 1;       -- rechazado por el trigger
+
+-- Qué nivel de base de datos le toca a cada rol según sus permisos
+SELECT r.nombre, fn_rol_bd(r.id_rol), count(rp.codigo) AS permisos
+FROM rol r LEFT JOIN rol_permiso rp USING (id_rol) GROUP BY r.id_rol;
+
 -- Coherencia de existencias contra el historial: debe dar 0
 SELECT count(*) FROM lote l
 WHERE l.cantidad_disponible <> coalesce((
@@ -59,12 +68,13 @@ WHERE l.cantidad_disponible <> coalesce((
 
 | Dato | Valor |
 |---|---|
-| Tablas / entidades principales / relaciones N:M | 12 / 9 / 3 |
-| Triggers / procedimientos / funciones / vistas / roles | 7 / 4 / 8 / 7 / 3 |
-| Productos / lotes / movimientos (papel + SIGAL, hasta el 21/10/2026) | 814 / 1,296 / 6,560 |
+| Tablas / entidades principales / relaciones N:M | 15 / 9 / 4 |
+| Triggers / procedimientos / funciones / vistas / roles de BD | 22 / 4 / 14 / 8 / 3 |
+| Permisos que se pueden conceder a un rol | 11 |
+| Productos / lotes / movimientos (papel + SIGAL, hasta el 21/10/2026) | 814 / 1,296 / 6,560 (E000001 a E001790) |
 | Valor del inventario con los datos iniciales | Q600,338.34 |
-| Requerimientos | 39 RF, 18 RNF y 26 RN, todos implementados |
-| Casos de prueba ejecutados (entregas 2 a 4) | 46, todos aprobados |
+| Requerimientos | 39 RF, 18 RNF y 30 RN, todos implementados |
+| Casos de prueba ejecutados (entregas 2 a 4) | 49, todos aprobados; regresión de 239 verificaciones |
 
 ---
 
@@ -79,7 +89,7 @@ Porque el vencimiento, el proveedor y el número de lote son de cada lote, no de
 Es la única cifra derivada que se almacena, y por una razón de rendimiento y de control: validar "no sacar más de lo que hay" en el mismo instante, con un bloqueo `FOR UPDATE` sobre la fila del lote. Solo la modifica el trigger, ningún rol puede escribirla, y se puede verificar contra el historial en cualquier momento (la consulta de la sección 2 debe dar 0).
 
 **¿Qué relaciones N:M hay y cómo se resolvieron?**
-Proveedor–producto (`proveedor_producto`, con el precio de compra), examen–producto (`examen_producto`, con la cantidad que consume cada examen) y movimiento–lote (`detalle_movimiento`): una salida FEFO puede tocar varios lotes, y un lote recibe muchos movimientos. Cada tabla puente tiene PK compuesta y su atributo propio.
+Proveedor–producto (`proveedor_producto`, con el precio de compra), examen–producto (`examen_producto`, con la cantidad que consume cada examen) y movimiento–lote (`detalle_movimiento`): una salida FEFO puede tocar varios lotes, y un lote recibe muchos movimientos. Cada tabla puente tiene PK compuesta y su atributo propio. Desde la Entrega 4 hay una cuarta: rol–permiso (`rol_permiso`), que no tiene atributo propio porque solo dice qué permisos tiene cada rol.
 
 **Dé un ejemplo de la normalización a 3FN.**
 `docs/entrega-2/normalizacion-3fn.md` usa el registro de un movimiento, que es la parte más compleja del modelo.
@@ -110,6 +120,9 @@ Con `sp_corregir_entrada`, solo el Administrador. La entrada no se borra: por ca
 **¿Por qué no se puede corregir el producto de una entrada?**
 Porque movería existencia de un producto a otro y podría dejar sin respaldo salidas ya registradas. Se resuelve con una salida del producto equivocado y una entrada en el correcto, cada una con su observación.
 
+**¿Cómo se numeran los movimientos y por qué no con una secuencia?**
+Cada movimiento tiene `numero_documento`: `E`, `S` o `D` según el tipo, más 6 dígitos (RN-27), con `UNIQUE` y un `CHECK` de formato y de prefijo. Lo asigna el trigger `trg_movimiento_numero`: toma el último de su tipo y le suma 1, con un candado de transacción por tipo para que dos registros simultáneos no tomen el mismo. No se usa una secuencia porque una secuencia no se devuelve si la transacción falla, y dejaría huecos; el laboratorio necesita un correlativo continuo. Los movimientos cargados conservan el número del papel, que `ddl/005` tomó del texto de la observación.
+
 **¿Por qué el trigger del tope de devolución se llama `trg_z_…`?**
 PostgreSQL dispara los triggers `BEFORE` de una misma tabla en orden alfabético, y este debe correr después del trigger de existencia.
 
@@ -119,7 +132,13 @@ Por costo promedio ponderado móvil, calculado en `fn_kardex_promedio`. Cada com
 ### Seguridad
 
 **¿Cuáles son los 3 roles y en qué se diferencian?**
-`rol_consulta` solo lee. `rol_encargado` hereda de consulta y además ejecuta los procedimientos de entrada, salida y devolución. `rol_administrador` hereda de encargado y además edita catálogos y usuarios. Ninguno puede leer `password_hash`, editar `cantidad_disponible` ni modificar movimientos.
+`rol_consulta` solo lee. `rol_encargado` hereda de consulta y además ejecuta los procedimientos de entrada, salida y devolución. `rol_administrador` hereda de encargado y además edita catálogos, usuarios y roles. Ninguno puede leer `password_hash`, editar `cantidad_disponible` ni modificar movimientos.
+
+**Si el administrador puede crear roles y cambiar permisos, ¿para qué siguen los 3 roles de PostgreSQL?**
+Porque son la segunda capa. Los permisos de la aplicación son datos (`permiso`, `rol_permiso`) y los 3 roles de la base son **niveles**. En cada petición, `fn_rol_bd` elige el nivel más bajo que cubre los permisos del rol del usuario: un rol que solo registra salidas trabaja como `rol_encargado`. La app aplica el permiso exacto y la base, el nivel. El rol Administrador siempre tiene todo y un trigger impide renombrarlo o eliminarlo (RN-29). Como los permisos se leen en cada petición, un cambio rige desde la siguiente página, y un usuario desactivado pierde la sesión.
+
+**¿Cómo funciona la bitácora y por qué está en la base y no en la aplicación?**
+Un trigger genérico `AFTER` (`fn_bitacora`) en 12 tablas escribe una fila por cada creación, modificación o eliminación: en las modificaciones, solo los campos que cambiaron, con el valor anterior y el nuevo, y nunca la contraseña. El responsable lo informa la app en cada conexión (`set_config('app.id_usuario', …)`). Está en la base para que quede registrado aunque el cambio se haga fuera de la aplicación (aparece como "Sistema"). Es `SECURITY DEFINER`: ningún rol tiene `INSERT` sobre `bitacora`, así que nadie puede escribir ni borrar entradas por su cuenta, y otro trigger impide modificarla.
 
 **Si la aplicación se conecta con un solo usuario, ¿cómo aplica PostgreSQL los roles?**
 Tras el login, cada petición ejecuta `SET ROLE` con el rol de base de datos del usuario. Desde ahí, PostgreSQL niega lo que ese rol no puede hacer, aunque la aplicación tuviera un error. Por eso el pooler de Neon está desactivado: un pooler en modo transacción podría reutilizar una sesión con el rol de otro usuario.
@@ -139,10 +158,10 @@ El login consulta con el usuario de conexión **antes** de adoptar un rol: es la
 Los catálogos usan baja lógica, para que el historial siempre muestre a qué producto, proveedor o usuario se refiere. Los movimientos no se editan ni se borran por regla de negocio. La tabla completa de CRUD está en `ENTREGA4_MATRIZ_TRAZABILIDAD.md`.
 
 **¿Cómo se respalda y se restaura?**
-Administración → Respaldo descarga un `.sql` con los datos de las 12 tablas, leídos en una sola foto consistente (`REPEATABLE READ`). Se restaura con `psql` sobre el esquema instalado, en una sola transacción y con los triggers apagados solo durante la carga. Se probó restaurándolo: las 11 tablas quedaron idénticas a la original.
+Administración → Respaldo descarga un `.sql` con los datos de las 15 tablas, bitácora incluida, leídos en una sola foto consistente (`REPEATABLE READ`). Se restaura con `psql` sobre el esquema instalado, en una sola transacción y con los triggers apagados solo durante la carga. Se probó restaurándolo: las 11 tablas quedaron idénticas a la original.
 
 **¿Cómo se instala desde cero?**
-Siguiendo `INSTALL.md`: crear la base, ejecutar los scripts en orden (estructura, triggers antes de los datos, seguridad al final), configurar `.env` y ejecutar la aplicación. Los scripts tardan unos 12 segundos.
+Siguiendo `INSTALL.md`: crear la base, ejecutar los scripts en orden (estructura, triggers antes de los datos, seguridad al final), configurar `.env` y ejecutar la aplicación. Son 33 pasos y los scripts tardan unos 30 segundos.
 
 **¿Cómo usaron la IA y cómo garantizan que entienden el resultado?**
 Claude Code generó borradores de SQL, código y documentos. Cada resultado se probó contra la base real antes del commit, y la bitácora registra qué se corrigió o rechazó. Las pruebas encontraron errores que la IA no había visto: en el generador de la carga, en el kardex de devoluciones y en las plantillas. Cada decisión de esta guía la podemos explicar sin la herramienta.
@@ -151,4 +170,4 @@ Claude Code generó borradores de SQL, código y documentos. Cada resultado se p
 Del respaldo de SIGAL, el sistema hermano donde el laboratorio siguió registrando. `sql/dml/generar_carga_sigal.py` carga solo lo posterior al 23/09 cuyo código no estaba ya, con las mismas reglas que la carga del papel: FEFO, lotes `SL-` y servicios excluidos. Al comparar, 804 de 813 productos coinciden exactamente con SIGAL. En 7 de las diferencias, el contador de existencias de SIGAL no cuadra con su propio historial, y este sistema sí: es el argumento práctico para no guardar datos calculables (S7).
 
 **¿Qué mejorarían?**
-Bloqueo de cuenta por intentos fallidos de login, auditoría de cambios en catálogos, envío automático del respaldo fuera del servidor y un servidor pagado o en la red del laboratorio (manual técnico, sección 11).
+Bloqueo de cuenta por intentos fallidos de login (la bitácora ya los registra), permisos por área o categoría, envío automático del respaldo fuera del servidor y un servidor pagado o en la red del laboratorio (manual técnico, sección 11).

@@ -2,12 +2,12 @@
 
 Relaciona cada requerimiento de la Entrega 1 con dónde se implementa en la base de datos y en la aplicación web, y con la prueba que lo demuestra. Actualiza la versión 2 (`docs/entrega-3/ENTREGA3_MATRIZ_TRAZABILIDAD.md`).
 
-**Estado general:** **39 de 39 requerimientos funcionales y los 18 no funcionales implementados.** El último pendiente, RNF-11 (respaldos), se completó en esta entrega. Además hay 8 reglas de negocio nuevas: RN-19 a RN-23 (devolución), RN-24 (baja lógica de exámenes) y RN-25 y RN-26 (corrección de entradas). Ningún requerimiento queda abierto.
+**Estado general:** **39 de 39 requerimientos funcionales y los 18 no funcionales implementados.** El último pendiente, RNF-11 (respaldos), se completó en esta entrega. Además hay 12 reglas de negocio nuevas: RN-19 a RN-23 (devolución), RN-24 (baja lógica de exámenes), RN-25 y RN-26 (corrección de entradas), RN-27 (número de documento), RN-28 y RN-29 (permisos por rol) y RN-30 (bitácora). Ningún requerimiento queda abierto.
 
 Convenciones de la columna *Evidencia*:
 - `CP4-xx`: caso de prueba de esta entrega (`docs/casos-prueba/casos-prueba-entrega-4.md`), ejecutado en el navegador siguiendo el manual de usuario.
 - `CP3-xx` y `CP-xx`: casos de las entregas 3 y 2, que siguen vigentes.
-- *Prueba automatizada*: verificación con el cliente de pruebas de Flask contra la base real con los 3 usuarios. La regresión de la Entrega 4 suma 199 verificaciones sin fallas.
+- *Prueba automatizada*: verificación con el cliente de pruebas de Flask contra la base real con los 3 usuarios. La regresión de la Entrega 4 suma 239 verificaciones sin fallas.
 
 ---
 
@@ -21,17 +21,22 @@ Qué operación ofrece la aplicación sobre cada tabla y por qué algunas no tie
 | `categoria` | ✅ | ✅ | ✅ | ✅ baja lógica | Categorías | CP-06 a CP-10 |
 | `proveedor` | ✅ | ✅ | ✅ | ✅ baja lógica | Proveedores | CP4-04, CP4-11 |
 | `examen_laboratorio` | ✅ | ✅ | ✅ | ✅ baja lógica (Entrega 4) | Exámenes | CP4-07 |
-| `usuario` | ✅ | ✅ | ✅ rol y contraseña | ✅ baja lógica | Usuarios y roles | CP4-09 |
+| `usuario` | ✅ | ✅ | ✅ rol y contraseña | ✅ baja lógica | Usuarios y roles | CP4-09, CP4-18 |
 | `proveedor_producto` (N:M) | ✅ | ✅ | ✅ precio | ✅ `DELETE` | Ficha del proveedor (Entrega 4) | CP4-04 |
 | `examen_producto` (N:M) | ✅ | ✅ | quitar y volver a agregar | ✅ `DELETE` | Ficha del examen | CP4-07 |
 | `lote` | ✅ con la primera entrada | ✅ | ✅ número, proveedor, fechas | ✅ baja lógica | Movimientos → Entrada; Lotes → Corregir datos | CP4-05, CP4-06 |
 | `movimiento` + `detalle_movimiento` | ✅ entrada, salida, devolución | ✅ | ✅ solo entradas, con registro (`correccion_entrada`) | ✖ por diseño | Movimientos | CP4-05, CP4-06, CP4-15 |
 | `correccion_entrada` | ✅ al corregir | ✅ ficha de la entrada | ✖ por diseño | ✖ por diseño | Movimientos → Corregir entrada | CP4-15 |
-| `rol` | — | ✅ | — | — | Usuarios y roles (tabla de permisos) | CP4-01 |
+| `rol` | ✅ | ✅ | ✅ nombre y descripción | ✅ `DELETE` si no tiene usuarios (el Administrador, nunca) | Usuarios y roles → Nuevo rol / clic en el rol | CP4-18 |
+| `rol_permiso` (N:M) | ✅ marcar casilla | ✅ | — | ✅ desmarcar casilla | Usuarios y roles → tabla de permisos | CP4-18 |
+| `permiso` | ✖ por diseño | ✅ | ✖ por diseño | ✖ por diseño | Catálogo fijo (`ddl/006`) | CP4-18 |
+| `bitacora` | ✅ la escriben los triggers y la app | ✅ | ✖ por diseño | ✖ por diseño | Administración → Bitácora | CP4-19 |
 
 - **`movimiento` y `detalle_movimiento`:** no se borran nunca (RN-09). Una **entrada** mal digitada se corrige con `sp_corregir_entrada` (solo Administrador), que registra cada dato cambiado con su valor anterior (RN-25, RN-26); una **salida** se corrige con una devolución (movimiento inverso, RN-19 a RN-22). El trigger de inmutabilidad impide cualquier otro cambio.
 - **`lote`:** su existencia nunca se edita a mano (la mantiene el trigger), y nace con la entrada que lo trae, para que ningún lote tenga existencia sin un movimiento que la explique.
-- **`rol`:** catálogo de configuración. Cada rol de la aplicación corresponde a un rol de PostgreSQL con sus privilegios; agregar uno exige crear también el rol de base de datos y sus permisos, así que se hace por script (`sql/security/`), no desde la pantalla.
+- **`rol` y `rol_permiso`:** desde el 26/10/2026 el administrador crea, renombra y elimina roles y marca sus permisos desde la pantalla (RN-28). No hace falta crear roles de PostgreSQL: los 3 existentes son niveles, y `fn_rol_bd` elige el que cubre los permisos de cada rol. El Administrador no se renombra ni se elimina, y un rol con usuarios no se elimina (RN-29).
+- **`permiso`:** catálogo de las acciones que el código sabe proteger. Agregar una exige programar la acción, así que se hace por migración, no desde la pantalla.
+- **`bitacora`:** solo crece (RN-30); nadie la modifica ni la borra, ni siquiera el administrador.
 
 ---
 
@@ -44,8 +49,8 @@ Qué operación ofrece la aplicación sobre cada tabla y por qué algunas no tie
 | RF-01 Iniciar sesión | `usuario`, `rol` | `routes/auth.py::login` | CP-01, CP-02, CP-03, CP4-01 |
 | RF-02 Cerrar sesión | — (sesión) | `routes/auth.py::logout` | CP-05, CP4-01 |
 | RF-03 Administrar usuarios | `usuario`; `GRANT INSERT/UPDATE` por columna a `rol_administrador` | `routes/usuarios.py`: crear, editar, restablecer contraseña, desactivar; cada usuario cambia su propia contraseña (`auth.cambiar_contrasena`, CP4-02) | Prueba automatizada (19 casos), CP4-09 |
-| RF-04 Asignar roles | `usuario.id_rol` → `rol` (FK) | Selector de rol en `usuarios/form.html` | Prueba automatizada, CP4-09 |
-| RF-05 Control de acceso por rol | 3 roles de BD con privilegios distintos (`sql/security/001_roles.sql`); la app adopta el rol con `SET ROLE` | `auth.rol_requerido()` en rutas, `tiene_rol()` en plantillas, error 403 | CP3-06, CP3-07, CP4-01, CP4-10 |
+| RF-04 Asignar roles | `usuario.id_rol` → `rol` (FK); permisos de cada rol en `rol_permiso` (RN-28) | Selector de rol en `usuarios/form.html`; tabla de permisos editable, crear, renombrar y eliminar roles | Prueba automatizada, CP4-09, CP4-18 |
+| RF-05 Control de acceso por rol | Permisos por rol en `permiso`/`rol_permiso`; 3 roles de BD como niveles (`sql/security/001_roles.sql`); la app adopta con `SET ROLE` el que calcula `fn_rol_bd` | `auth.permiso_requerido()` en rutas, `tiene_permiso()` en plantillas, error 403; sesión revalidada en cada petición | CP3-06, CP3-07, CP4-01, CP4-10, CP4-18 |
 
 ### Catálogos
 
@@ -81,7 +86,7 @@ Qué operación ofrece la aplicación sobre cada tabla y por qué algunas no tie
 | RF-25 Impedir existencia negativa | `ck_lote_cantidad_disponible CHECK (>= 0)` + trigger (RN-01) | — | CP3-03 |
 | RF-26 Fecha y hora de cada movimiento | `movimiento.fecha_hora` | Historial y detalle | CP3-01, CP4-05 |
 | RF-27 Usuario responsable | `movimiento.id_usuario` (FK, RN-08) | Columna "Responsable" | CP3-01, CP4-05 |
-| RF-28 Historial de movimientos | `vw_historial_movimientos`; triggers `trg_movimiento_inmutable` y `trg_detalle_movimiento_inmutable` (RN-09) | Pestañas Todos / Entradas / Salidas con filtros | CP3-05, CP4-06 |
+| RF-28 Historial de movimientos | `vw_historial_movimientos`; triggers `trg_movimiento_inmutable` y `trg_detalle_movimiento_inmutable` (RN-09); número de documento E/S/D (RN-27) | Pestañas Todos / Entradas / Salidas / Devoluciones con filtros y búsqueda por número | CP3-05, CP4-06, CP4-17 |
 
 ### Consultas y reportes
 
@@ -93,7 +98,7 @@ Qué operación ofrece la aplicación sobre cada tabla y por qué algunas no tie
 | RF-32 Filtrar información de inventario | Consultas parametrizadas | Filtros por categoría, fechas, tipo de movimiento y estado del lote | Prueba automatizada, CP4-08 |
 | RF-33 Generar reportes de inventario | `fn_kardex_promedio`, `vw_valorizacion_inventario` (costo promedio ponderado) | `routes/informes.py`: pantalla única con 9 tipos de reporte, CSV e impresión | CP3-08, CP4-08 |
 | RF-34 Consultar información histórica | `fn_kardex_promedio` (kardex con saldo inicial por período) | Kardex por producto, historial de movimientos | CP3-08, CP4-08 |
-| RF-35 Trazabilidad de operaciones | Cada detalle enlaza movimiento → lote → producto → proveedor; historial inmutable | Del movimiento al lote y del lote a sus movimientos | CP3-02, CP3-05, CP4-06 |
+| RF-35 Trazabilidad de operaciones | Cada detalle enlaza movimiento → lote → producto → proveedor; historial inmutable; bitácora de auditoría de todo lo demás (RN-30) | Del movimiento al lote y del lote a sus movimientos; Administración → Bitácora | CP3-02, CP3-05, CP4-06, CP4-19 |
 
 ---
 
@@ -126,17 +131,17 @@ Qué operación ofrece la aplicación sobre cada tabla y por qué algunas no tie
 | Requerimiento | Implementación | Estado |
 |---|---|---|
 | RNF-01 Navegador web | Flask + plantillas HTML | ✅ |
-| RNF-02 Base de datos relacional | PostgreSQL 18, 12 tablas en 3FN | ✅ |
+| RNF-02 Base de datos relacional | PostgreSQL 18, 15 tablas en 3FN | ✅ |
 | RNF-03 Autenticación | Login con sesión firmada | ✅ |
 | RNF-04, RNF-05 Contraseñas con hash | `generate_password_hash` (scrypt) / `check_password_hash`; cambio de contraseña propio confirmando la actual (CP4-02) | ✅ |
-| RNF-06 Acceso por roles | Doble capa: app (`rol_requerido`) y base de datos (`SET ROLE`) | ✅ |
-| RNF-07, RNF-08 Integridad | Restricciones del DDL (PK, FK, UNIQUE, CHECK, NOT NULL), 7 triggers y 4 procedimientos atómicos | ✅ |
+| RNF-06 Acceso por roles | Doble capa: app (`permiso_requerido`, permisos editables por rol) y base de datos (`SET ROLE` al nivel que calcula `fn_rol_bd`) | ✅ |
+| RNF-07, RNF-08 Integridad | Restricciones del DDL (PK, FK, UNIQUE, CHECK, NOT NULL), 22 triggers y 4 procedimientos atómicos | ✅ |
 | RNF-09, RNF-10 Interfaz clara y mensajes | Los mensajes de las reglas de negocio llegan tal cual al usuario (SQLSTATE P0001); nunca se muestra SQL | ✅ |
 | RNF-11 Respaldos | `web/respaldo.py` + Administración → Respaldo: archivo `.sql` restaurable con `psql` en una sola transacción. Procedimiento en el manual técnico, sección 7 (CP4-10, CP4-13) | ✅ Entrega 4 |
 | RNF-12, RNF-13 Arquitectura mantenible y ampliable | Capas `config` / `db` / `routes` / `templates`; SQL separado por propósito | ✅ |
 | RNF-14 Tiempo de respuesta | Listas paginadas; el kardex de los 814 productos se calcula en ~18 ms | ✅ |
 | RNF-15 Validar antes de modificar inventario | Validación en el servidor + procedimientos + triggers | ✅ |
-| RNF-16 Información para trazabilidad | Historial inmutable con usuario, fecha y lote | ✅ |
+| RNF-16 Información para trazabilidad | Historial inmutable con usuario, fecha, lote y número de documento; bitácora de auditoría inmutable | ✅ |
 | RNF-17 Evitar accesos no autorizados | Rutas protegidas, 403, `SET ROLE`, redirección de login solo a rutas internas; desde la Entrega 4, encabezados de seguridad (CSP, X-Frame-Options, HSTS) y rechazo de POST de otro origen | ✅ |
 | RNF-18 Interfaz adaptable | Diseño responsivo verificado a 1440 px y 390 px, sin desbordamiento horizontal (CP4-12) | ✅ |
 
@@ -174,4 +179,7 @@ Reglas de negocio nuevas, propuestas por el equipo. No provienen de los 39 RF: n
 | Devolución mostrada como reingreso en kardex, ficha del lote e Inicio | RN-21, RN-23 | `informes/kardex.html`, `lotes/detalle.html`, `reportes/inicio.html` | CP4-06, CP4-08 |
 | Corrección de entradas con registro | RF-20, RF-28, RN-09, **RN-25** (una entrada se corrige, no se elimina; cada cambio queda registrado), **RN-26** (motivo obligatorio y usuario responsable) | `ddl/004`, `triggers/003`, `procedures/003` (`sp_corregir_entrada`), `views/005`, `security/003`; `movimientos.corregir` | CP4-15 |
 | Inventario al día con SIGAL | RF-20, RF-21, RF-35 | `sql/dml/005_carga_sigal.sql` (generado por `generar_carga_sigal.py`): 205 entradas y 516 salidas del 24/09 al 21/10/2026 | CP4-16 |
-| Manuales técnico y de usuario | Consigna, Entrega 4 | `docs/entrega-4/` | CP4-01 a CP4-16 siguen sus flujos |
+| Número de documento E/S/D | RF-26, RF-28, **RN-27** (cada movimiento tiene un número único y correlativo por tipo: E, S o D y seis dígitos) | `ddl/005` (columna, relleno desde la observación, UNIQUE y CHECK), `triggers/004` (`trg_movimiento_numero`), `views/006`; columna N.º, ficha, kardex, Panel y `Ctrl K` | CP4-17 |
+| Roles con permisos editables | RF-04, RF-05, RNF-06, **RN-28** (el administrador define los permisos de cada rol; consultar es común a todos), **RN-29** (el Administrador conserva todo y no se renombra ni elimina; un rol con usuarios no se elimina) | `ddl/006` (`permiso`, `rol_permiso`), `procedures/004` (`fn_rol_bd`), `triggers/005` (`trg_rol_protegido`), `security/004`; `auth.permiso_requerido`, `usuarios.guardar_permisos`, `rol_nuevo`, `rol_editar`, `rol_eliminar` | CP4-18 |
+| Bitácora de auditoría | RF-27, RF-35, RNF-16, RNF-17, **RN-30** (toda creación, modificación o eliminación y todo inicio y cierre de sesión quedan con su responsable y fecha; la bitácora no se modifica ni se borra) | `ddl/007`, `triggers/006` (`fn_bitacora` en 12 tablas, `fn_registrar_evento`, `trg_bitacora_inmutable`), `views/007`; `routes/bitacora.py` | CP4-19 |
+| Manuales técnico y de usuario | Consigna, Entrega 4 | `docs/entrega-4/` | CP4-01 a CP4-19 siguen sus flujos |

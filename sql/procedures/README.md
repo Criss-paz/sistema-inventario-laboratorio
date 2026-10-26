@@ -19,3 +19,11 @@ CALL sp_registrar_salida(2, 1, 25, 'Consumo área química', NULL);
 ```
 
 **Orden de ejecución:** `ddl/001_schema.sql` → `triggers/001_triggers.sql` → `procedures/001_procedures.sql`.
+
+## Entrega 3 y 4 (migraciones)
+
+| Script | Objeto | Regla |
+|---|---|---|
+| `002_devolucion.sql` | `sp_registrar_devolucion`, `fn_devolvible` | RN-19 a RN-22 |
+| `003_correccion_entrada.sql` | `sp_corregir_entrada` (solo Administrador) | RN-25, RN-26 |
+| `004_permisos.sql` | `fn_rol_bd`: el rol de PostgreSQL más bajo que cubre los permisos de un rol de la aplicación | RN-28 |

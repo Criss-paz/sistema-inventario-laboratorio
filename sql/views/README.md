@@ -21,3 +21,15 @@ Vistas de consulta del inventario. Todo lo que muestran es **calculado** a parti
 **Orden de ejecución:** `001_views.sql` después de `sql/ddl/001_schema.sql`; `002_valorizacion_promedio.sql` después de `001` (usa sus vistas).
 
 **Verificación del promedio** (colesterol HDL, 14/04/2026): saldo de 7 unidades a Q900 (Q6,300) + compra de 5 a Q600 (Q3,000) = 12 unidades por Q9,300 → promedio **Q775**. Las salidas siguientes se valorizan a Q775.
+
+## Entrega 3 y 4 (migraciones)
+
+| Script | Vista o función | Para qué |
+|---|---|---|
+| `003_devolucion.sql` | `vw_historial_movimientos` (con la devolución), `vw_devoluciones` | Auditoría de devoluciones |
+| `004_kardex_devolucion.sql` | `fn_kardex_promedio` | La devolución reingresa al costo promedio vigente (RN-23) |
+| `005_correccion_entrada.sql` | `vw_correcciones_entrada` | Correcciones de cada entrada |
+| `006_numero_documento.sql` | `vw_historial_movimientos` | Agrega el número de documento y el de la salida que corrige una devolución |
+| `007_bitacora.sql` | `vw_bitacora` | Bitácora con el nombre del responsable |
+
+Total: 8 vistas.
