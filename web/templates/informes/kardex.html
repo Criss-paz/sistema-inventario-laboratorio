@@ -48,7 +48,7 @@
       {% for f in filas %}
       <tr>
         <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=f.id_movimiento) }}">{{ f.fecha_hora.strftime('%d/%m/%Y') }}</a></td>
-        <td class="obs">{{ f.observacion or f.tipo_movimiento|tipo_mov }}</td>
+        <td class="obs">{{ f.tipo_movimiento|tipo_mov }} {{ f.numero_documento }}{% if f.observacion and f.tipo_movimiento != 'DEVOLUCION' %} · {{ f.observacion }}{% endif %}</td>
         {# La devolución suma al saldo: va en Entradas, al costo promedio vigente (RN-23). #}
         {% if f.tipo_movimiento in ('ENTRADA', 'DEVOLUCION') %}
           <td class="num">{{ m.cantidad(f.cantidad_entrada) }}</td><td class="num">{{ f.costo_unitario_entrada|q }}</td><td class="num">{{ f.total_entrada|q }}</td>

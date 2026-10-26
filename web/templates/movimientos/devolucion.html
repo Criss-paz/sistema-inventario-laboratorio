@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Devolver salida #{{ mov.id_movimiento }}{% endblock %}
+{% block title %}Devolver salida {{ mov.numero_documento }}{% endblock %}
 {% block content %}
 <div class="top-actions">
-  <h1>Devolver salida #{{ mov.id_movimiento }}<span class="subtitle">Reponga al inventario lo que salió por error. La salida original no se borra: ambos movimientos quedan en el historial (RN-09).</span></h1>
+  <h1>Devolver salida {{ mov.numero_documento }}<span class="subtitle">Reponga al inventario lo que salió por error. La salida original no se borra: ambos movimientos quedan en el historial (RN-09).</span></h1>
 </div>
 
 <div class="card">

@@ -378,6 +378,9 @@ a .lote { border-color: var(--line-strong); }
 a:hover .lote { background: var(--amber-soft); border-color: var(--amber); }
 h1 .lote { font-size: 17px; vertical-align: .15em; }
 
+/* Número de documento del movimiento (E000001, S000001, D000001) */
+a.doc { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+
 /* Existencia con medidor (contra el stock mínimo) */
 .stock { display: inline-grid; grid-template-columns: auto 70px; gap: 10px; align-items: center; justify-content: end; }
 .stock b { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right; }

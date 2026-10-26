@@ -39,18 +39,19 @@
 <h2>Movimientos del lote <span class="subtitle">la existencia es entradas − salidas de esta lista</span></h2>
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Fecha</th><th>Tipo</th><th class="num">Cantidad</th><th>Responsable</th><th>Observación</th></tr></thead>
+    <thead><tr><th>N.º</th><th>Fecha</th><th>Tipo</th><th class="num">Cantidad</th><th>Responsable</th><th>Observación</th></tr></thead>
     <tbody>
       {% for mv in movimientos %}
       <tr>
-        <td class="fecha"><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">{{ mv.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</a></td>
+        <td><a class="doc" href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">{{ mv.numero_documento }}</a></td>
+        <td class="fecha">{{ mv.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</td>
         <td><span class="tag {{ {'ENTRADA': 'kraft', 'SALIDA': 'none', 'DEVOLUCION': 'amber'}[mv.tipo_movimiento] }}">{{ mv.tipo_movimiento|tipo_mov }}</span></td>
         <td class="num">{{ '−' if mv.tipo_movimiento == 'SALIDA' else '+' }}{{ m.cantidad(mv.cantidad) }}</td>
         <td>{{ mv.nombre_usuario }}</td>
         <td class="obs">{{ mv.observacion or '—' }}</td>
       </tr>
       {% else %}
-      <tr class="empty-row"><td colspan="5">{{ i.vacio('Este lote no tiene movimientos.', 'movimientos') }}</td></tr>
+      <tr class="empty-row"><td colspan="6">{{ i.vacio('Este lote no tiene movimientos.', 'movimientos') }}</td></tr>
       {% endfor %}
     </tbody>
   </table>

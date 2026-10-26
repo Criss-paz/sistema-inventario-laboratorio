@@ -44,6 +44,13 @@ def _producto_por_texto(texto):
     )
 
 
+def _numero(id_movimiento):
+    """Número de documento (E000001, S000001, D000001) de un movimiento: RN-27."""
+    fila = query_one("SELECT numero_documento FROM vw_historial_movimientos WHERE id_movimiento = %s LIMIT 1",
+                     (id_movimiento,))
+    return fila["numero_documento"] if fila else f"#{id_movimiento}"
+
+
 def _decimal(valor, campo, errores, minimo_exclusivo=None, minimo=None):
     try:
         numero = Decimal((valor or "").strip().replace(",", "."))
@@ -76,8 +83,9 @@ def historial():
         condiciones.append("h.tipo_movimiento = %s")
         params.append(tipo)
     if q:
-        condiciones.append("(h.producto ILIKE %s OR h.codigo ILIKE %s OR h.numero_lote ILIKE %s OR pr.nombre ILIKE %s)")
-        params += [f"%{q}%"] * 4
+        condiciones.append("(h.numero_documento ILIKE %s OR h.producto ILIKE %s OR h.codigo ILIKE %s "
+                           "OR h.numero_lote ILIKE %s OR pr.nombre ILIKE %s)")
+        params += [f"%{q}%"] * 5
     for valor, operador in ((desde, ">="), (hasta, "<")):
         try:
             fecha = dt.date.fromisoformat(valor)
@@ -91,7 +99,7 @@ def historial():
 
     filas, total = query_page(
         f"""
-        SELECT h.id_movimiento, h.fecha_hora, h.tipo_movimiento, h.nombre_usuario, h.numero_lote,
+        SELECT h.id_movimiento, h.numero_documento, h.fecha_hora, h.tipo_movimiento, h.nombre_usuario, h.numero_lote,
                h.id_lote, h.id_producto, h.codigo, h.producto, h.cantidad, h.unidad_medida, h.precio_unitario,
                h.subtotal, h.observacion, pr.nombre AS proveedor
         FROM vw_historial_movimientos h
@@ -221,7 +229,8 @@ def entrada():
         flash(mensaje_error(exc, "No se pudo registrar la entrada. Intente más tarde."), "danger")
         return render_template("movimientos/entrada.html", **contexto), 400
 
-    flash(f"Entrada registrada: {cantidad.normalize():f} de {producto['nombre']} en el lote {numero_lote}.", "success")
+    flash(f"Entrada {_numero(fila['p_id_movimiento'])} registrada: {cantidad.normalize():f} de "
+          f"{producto['nombre']} en el lote {numero_lote}.", "success")
     return redirect(url_for("movimientos.detalle", id_movimiento=fila["p_id_movimiento"]))
 
 
@@ -254,7 +263,7 @@ def salida():
         flash(mensaje_error(exc, "No se pudo registrar la salida. Intente más tarde."), "danger")
         return render_template("movimientos/salida.html", **contexto), 400
 
-    flash(f"Salida registrada: {cantidad.normalize():f} de {producto['nombre']}. "
+    flash(f"Salida {_numero(fila['p_id_movimiento'])} registrada: {cantidad.normalize():f} de {producto['nombre']}. "
           "Los lotes se eligieron por FEFO (primero el que vence antes).", "success")
     return redirect(url_for("movimientos.detalle", id_movimiento=fila["p_id_movimiento"]))
 
@@ -269,7 +278,7 @@ def devolucion(id_movimiento):
     Igual que entrada() y salida(), ningún rol tiene INSERT sobre movimiento.
     """
     mov = query_one(
-        "SELECT id_movimiento, tipo_movimiento, fecha_hora, nombre_usuario, observacion "
+        "SELECT id_movimiento, numero_documento, tipo_movimiento, fecha_hora, nombre_usuario, observacion "
         "FROM vw_historial_movimientos WHERE id_movimiento = %s LIMIT 1",
         (id_movimiento,),
     )
@@ -278,13 +287,13 @@ def devolucion(id_movimiento):
         return redirect(url_for("movimientos.historial"))
 
     if mov["tipo_movimiento"] != "SALIDA":
-        flash(f"Solo se puede devolver una salida. El movimiento #{id_movimiento} "
+        flash(f"Solo se puede devolver una salida. El movimiento {mov['numero_documento']} "
               f"es de tipo {mov['tipo_movimiento'].lower()}.", "warning")
         return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
 
     pendientes = query_all("SELECT * FROM fn_devolvible(%s)", (id_movimiento,))
     if not pendientes:
-        flash(f"La salida #{id_movimiento} ya fue devuelta por completo.", "info")
+        flash(f"La salida {mov['numero_documento']} ya fue devuelta por completo.", "info")
         return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
 
     contexto = {"mov": mov, "pendientes": pendientes, "form": request.form}
@@ -337,8 +346,8 @@ def devolucion(id_movimiento):
         return render_template("movimientos/devolucion.html", **contexto), 400
 
     total = sum(cantidades)
-    flash(f"Devolución registrada: {total.normalize():f} devuelto a "
-          f"{len(id_lotes)} lote(s). La salida #{id_movimiento} queda corregida "
+    flash(f"Devolución {_numero(fila['p_id_movimiento'])} registrada: {total.normalize():f} devuelto a "
+          f"{len(id_lotes)} lote(s). La salida {mov['numero_documento']} queda corregida "
           "y ambos movimientos permanecen en el historial.", "success")
     return redirect(url_for("movimientos.detalle", id_movimiento=fila["p_id_movimiento"]))
 
@@ -354,8 +363,8 @@ def corregir(id_movimiento):
     """
     entrada = query_one(
         """
-        SELECT h.id_movimiento, h.tipo_movimiento, h.fecha_hora, h.nombre_usuario, h.observacion,
-               h.codigo, h.producto, h.unidad_medida, h.cantidad, h.precio_unitario,
+        SELECT h.id_movimiento, h.numero_documento, h.tipo_movimiento, h.fecha_hora, h.nombre_usuario,
+               h.observacion, h.codigo, h.producto, h.unidad_medida, h.cantidad, h.precio_unitario,
                l.id_lote, l.numero_lote, l.id_proveedor, l.fecha_ingreso, l.fecha_vencimiento,
                l.cantidad_disponible, p.requiere_vencimiento,
                (SELECT count(*) FROM vw_historial_movimientos o
@@ -426,7 +435,7 @@ def corregir(id_movimiento):
         return render_template("movimientos/corregir.html", **contexto), 400
 
     n = fila["p_cambios"]
-    flash(f"Entrada #{id_movimiento} corregida: {n} {'dato' if n == 1 else 'datos'}. "
+    flash(f"Entrada {entrada['numero_documento']} corregida: {n} {'dato' if n == 1 else 'datos'}. "
           "El registro original y la corrección quedan en el historial.", "success")
     return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
 

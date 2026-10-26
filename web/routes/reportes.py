@@ -8,6 +8,7 @@ existencias ni faltantes (S7). Todos los roles pueden consultar; por eso
 aquí no se lee la tabla movimiento (rol_consulta solo ve la vista).
 """
 import datetime as dt
+import re
 
 from flask import Blueprint, jsonify, render_template, request, url_for
 
@@ -16,6 +17,8 @@ from routes.auth import login_required
 from routes.informes import _csv
 
 bp = Blueprint("reportes", __name__, url_prefix="/reportes")
+
+TIPOS = {"ENTRADA": "Entrada", "SALIDA": "Salida", "DEVOLUCION": "Devolución"}
 
 
 def _categorias():
@@ -104,11 +107,11 @@ def inicio():
     )
     actividad = query_all(
         """
-        SELECT id_movimiento, tipo_movimiento, codigo, producto, unidad_medida, max(fecha_hora) AS fecha_hora,
-               sum(cantidad) AS cantidad
+        SELECT id_movimiento, numero_documento, tipo_movimiento, codigo, producto, unidad_medida,
+               max(fecha_hora) AS fecha_hora, sum(cantidad) AS cantidad
         FROM vw_historial_movimientos
         WHERE fecha_hora >= CURRENT_DATE - 14
-        GROUP BY id_movimiento, tipo_movimiento, codigo, producto, unidad_medida
+        GROUP BY id_movimiento, numero_documento, tipo_movimiento, codigo, producto, unidad_medida
         ORDER BY max(fecha_hora) DESC, id_movimiento DESC
         LIMIT 9
         """
@@ -122,11 +125,32 @@ def inicio():
 @bp.route("/buscar")
 @login_required
 def buscar():
-    """Búsqueda rápida de la barra superior (Ctrl K): productos activos por
-    nombre o código, con su existencia utilizable. Responde JSON."""
+    """Búsqueda rápida de la barra superior (Ctrl K): un movimiento por su
+    número de documento (E1790 o E001790) y productos activos por nombre o
+    código, con su existencia utilizable. Responde JSON."""
     q = (request.args.get("q") or "").strip()[:60]
     if len(q) < 2:
         return jsonify([])
+    movimientos = []
+    numero = re.fullmatch(r"([EeSsDd])0*(\d{1,6})", q)
+    if numero:
+        documento = numero.group(1).upper() + numero.group(2).zfill(6)
+        movimientos = [
+            {"grupo": "Movimientos", "codigo": f"{f['fecha_hora']:%d/%m/%Y}",
+             "nombre": f"{TIPOS[f['tipo_movimiento']]} {f['numero_documento']}",
+             "existencia": f["producto"] + (f" y {f['otros']} más" if f["otros"] else ""),
+             "url": url_for("movimientos.detalle", id_movimiento=f["id_movimiento"])}
+            for f in query_all(
+                """
+                SELECT id_movimiento, numero_documento, tipo_movimiento, min(fecha_hora) AS fecha_hora,
+                       min(producto) AS producto, count(*) - 1 AS otros
+                FROM vw_historial_movimientos
+                WHERE numero_documento = %s
+                GROUP BY id_movimiento, numero_documento, tipo_movimiento
+                """,
+                (documento,),
+            )
+        ]
     filas = query_all(
         """
         SELECT id_producto, codigo, nombre, unidad_medida, existencia_utilizable
@@ -144,7 +168,7 @@ def buscar():
             u += "s" if u[-1] in "aeiou" else "es"
         return f"{valor:,.2f}".rstrip("0").rstrip(".") + f" {u}"
 
-    return jsonify([
+    return jsonify(movimientos + [
         {"codigo": f["codigo"], "nombre": f["nombre"],
          "existencia": _existencia(f["existencia_utilizable"], f["unidad_medida"]),
          "url": url_for("informes.kardex", id_producto=f["id_producto"])}

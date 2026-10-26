@@ -97,8 +97,9 @@
         });
       }
       if (productos && productos.length) {
-        html += '<li class="grp">Productos</li>';
+        var grupo = null;
         productos.forEach(function (p) {
+          if ((p.grupo || "Productos") !== grupo) { grupo = p.grupo || "Productos"; html += '<li class="grp">' + esc(grupo) + "</li>"; }
           opciones.push(p.url);
           html += '<li><a class="opt" role="option" href="' + esc(p.url) + '"><span class="ico">' + icoProducto + '</span><span><b>' + esc(p.nombre) + "</b><span>" + esc(p.codigo) + "</span></span><em>" + esc(p.existencia) + "</em></a></li>";
         });

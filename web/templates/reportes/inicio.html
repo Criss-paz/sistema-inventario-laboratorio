@@ -107,7 +107,7 @@
       {% set t = mv.tipo_movimiento %}
       <li><a href="{{ url_for('movimientos.detalle', id_movimiento=mv.id_movimiento) }}">
         <span class="mv {{ 'e' if t == 'ENTRADA' else ('d' if t == 'DEVOLUCION' else 's') }}" title="{{ t|tipo_mov }}">{{ i.icono('baja' if t == 'ENTRADA' else ('devuelve' if t == 'DEVOLUCION' else 'sube')) }}</span>
-        <div style="min-width:0"><div class="t">{{ mv.producto }}</div><div class="s"><code>{{ mv.codigo }}</code>&ensp;{{ mv.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</div></div>
+        <div style="min-width:0"><div class="t">{{ mv.producto }}</div><div class="s"><code>{{ mv.numero_documento }}</code>&ensp;{{ mv.fecha_hora.strftime('%d/%m/%Y %H:%M') }}</div></div>
         <div class="q">{{ '−' if t == 'SALIDA' else '+' }}{{ m.cantidad(mv.cantidad) }}<span>{{ (t|tipo_mov)|lower }}</span></div>
       </a></li>
       {% endfor %}

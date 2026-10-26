@@ -359,6 +359,12 @@ def kardex(id_producto):
         return redirect(url_for("informes.kardex_buscar"))
 
     filas = query_all("SELECT * FROM fn_kardex_promedio(%s)", (id_producto,))
+    # El kardex identifica cada movimiento por su número de documento (RN-27).
+    numeros = {f["id_movimiento"]: f["numero_documento"] for f in query_all(
+        "SELECT DISTINCT id_movimiento, numero_documento FROM vw_historial_movimientos WHERE id_producto = %s",
+        (id_producto,))}
+    for f in filas:
+        f["numero_documento"] = numeros.get(f["id_movimiento"], "")
     # Con período: el saldo inicial es el último saldo antes de "desde".
     saldo_inicial = None
     if request.args.get("desde") or request.args.get("hasta"):
@@ -371,10 +377,11 @@ def kardex(id_producto):
 
     if _quiere_csv():
         return _csv(f"kardex-{producto['codigo']}",
-                    ["Fecha", "Movimiento", "Detalle", "Entrada cantidad", "Entrada costo unitario (Q)",
+                    ["Fecha", "N.º", "Movimiento", "Detalle", "Entrada cantidad", "Entrada costo unitario (Q)",
                      "Entrada total (Q)", "Salida cantidad", "Salida costo unitario (Q)", "Salida total (Q)",
                      "Saldo cantidad", "Costo promedio (Q)", "Saldo valor (Q)"],
-                    [[f"{f['fecha_hora']:%d/%m/%Y %H:%M}", f["tipo_movimiento"], f["observacion"] or "",
+                    [[f"{f['fecha_hora']:%d/%m/%Y %H:%M}", f["numero_documento"], f["tipo_movimiento"],
+                      f["observacion"] or "",
                       f["cantidad_entrada"], f["costo_unitario_entrada"], f["total_entrada"],
                       f["cantidad_salida"], f["costo_unitario_salida"], f["total_salida"],
                       f["saldo_cantidad"], f["costo_promedio"], f["saldo_valor"]] for f in filas])

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% import "_iconos.html" as i %}
 {% import "_macros.html" as m %}
-{% block title %}Corregir entrada #{{ e.id_movimiento }}{% endblock %}
+{% block title %}Corregir entrada {{ e.numero_documento }}{% endblock %}
 {% block content %}
 <div class="top-actions">
-  <h1>Corregir entrada #{{ e.id_movimiento }}
+  <h1>Corregir entrada {{ e.numero_documento }}
     <span class="subtitle"><code>{{ e.codigo }}</code> {{ e.producto }}, registrada el {{ e.fecha_hora.strftime('%d/%m/%Y a las %H:%M') }} por {{ e.nombre_usuario }}</span></h1>
   <a class="btn btn-sm" href="{{ url_for('movimientos.detalle', id_movimiento=e.id_movimiento) }}">{{ i.icono('volver') }}Entrada</a>
 </div>

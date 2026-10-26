@@ -80,7 +80,7 @@ def detalle(id_lote):
         return redirect(url_for("lotes.listar"))
     movimientos = query_all(
         """
-        SELECT id_movimiento, fecha_hora, tipo_movimiento, cantidad, nombre_usuario, observacion
+        SELECT id_movimiento, numero_documento, fecha_hora, tipo_movimiento, cantidad, nombre_usuario, observacion
         FROM vw_historial_movimientos
         WHERE id_lote = %s
         ORDER BY fecha_hora, id_movimiento
