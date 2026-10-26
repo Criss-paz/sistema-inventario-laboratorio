@@ -22,7 +22,7 @@ Productos de la Entrega 4 (consigna, sección 11):
 - [x] **Inventario al día** con los movimientos de SIGAL del 24/09 al 21/10/2026, verificado contra SIGAL (`docs/entrega-4/ENTREGA4_REPORTE_CARGA_SIGAL.md`).
 - [x] **CRUD en todas las tablas principales**, con la justificación de las operaciones que no se ofrecen a propósito (movimientos inmutables, lotes que nacen con la entrada): `docs/entrega-4/ENTREGA4_MATRIZ_TRAZABILIDAD.md`.
 - [x] **Manuales técnico y de usuario** (`docs/entrega-4/ENTREGA4_MANUAL_TECNICO.md`, `ENTREGA4_MANUAL_USUARIO.md`).
-- [ ] **Informe final y declaración de integridad**: redactados (`ENTREGA4_INFORME_FINAL.md`, `ENTREGA4_DECLARACION_INTEGRIDAD.md`); falta que la declaración lleve las firmas.
+- [ ] **Informe final y declaración de integridad**: redactados (`ENTREGA4_INFORME_FINAL.md`, `ENTREGA4_DECLARACION_INTEGRIDAD.md`); la declaración está firmada por José Eduardo Escobar y falta la firma de Cristopher.
 - [x] **Diagramas ER y relacional actualizados** con la devolución, la baja de exámenes, la corrección de entradas, el número de documento, los permisos por rol y la bitácora (15 tablas), en editable, PNG y PDF.
 - [x] **Versión publicada al día** (21/10/2026): Neon tiene todas las migraciones, la corrección de entradas y la carga de SIGAL (721 movimientos; 814 productos, 6,562 movimientos e inventario valorizado en Q600,338.34, igual que la instalación desde cero). Antes de cargar se anuló con una devolución la salida de prueba #5840, que había dejado un lote en 0. Render publica la última versión. El 26/10/2026 se aplicaron en Neon el número de documento, los permisos y la bitácora (0 movimientos sin número, 14 permisos asignados) y se redesplegó Render.
 
