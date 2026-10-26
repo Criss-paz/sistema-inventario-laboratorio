@@ -93,6 +93,8 @@ El 26/10/2026 se agregaron tres funciones a pedido del laboratorio: cada movimie
 
 **3 de 3 casos aprobados.** La instalación desde cero se repitió con los 33 scripts (CP4-14, actualizado): mismos totales, Q600,338.34, numeración de E000001 a E001790 y ninguna observación con el origen de la carga. En producción (Neon) se aplicaron las migraciones el 26/10/2026: 0 movimientos sin número, última entrada E001790, última salida S004788 (la salida de prueba #5840 recibió el suyo) y 14 permisos asignados.
 
+**Verificación en el segundo equipo y en línea (26/10/2026, Cristopher Alexis Castellanos Paz):** En Windows 11 con PostgreSQL 18.6 y Python 3.13.14 se reconstruyó desde cero la base `inventario_laboratorio` ejecutando todos los pasos de `INSTALL.md` (11.0 s, 0 errores): quedaron las **15 tablas**, **8 vistas** y **22 triggers**, con **814 productos**, **1,296 lotes**, **6,560 movimientos** numerados de `E000001` a `E001790` y de `S000001` a `S004787` (0 sin número), **0 lotes incoherentes** con el historial, **11 permisos** en catálogo (14 asignados) e inventario valorizado en **Q600,338.34**. Sobre esa instalación y el despliegue en Render se verificaron los flujos U-01 a U-07 y las pantallas nuevas (CP4-17 a CP4-19): inicio de sesión de los 3 roles y Panel "Bodega hoy", búsqueda `Ctrl K` por número de documento (`E001790`), reporte de inventario valorizado y kardex, concesión y retiro en caliente del permiso `REGISTRAR_SALIDAS` al rol Usuario de consulta (pasa de 403 a 200 y vuelve a 403 sin reiniciar sesión) y registro inmutable en la bitácora de auditoría.
+
 ## Defectos encontrados al ejecutar los casos
 
 Las pruebas encontraron tres defectos, que se corrigieron antes de cerrar estos resultados:

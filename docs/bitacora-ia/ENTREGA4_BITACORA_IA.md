@@ -197,11 +197,18 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 
 ---
 
-### Pendiente de registrar por el equipo
+### Registro de Bitácora IA — Revisión de cierre, instalación en segundo equipo y verificación de flujos
 
-| Acción | Responsable |
+| Campo | Detalle |
 |---|---|
-| Revisión del manual de usuario contra la versión publicada en Render, y su registro aquí | Cristopher Alexis Castellanos Paz |
+| **Fecha** | 26/10/2026 |
+| **Herramienta** | Antigravity (Google DeepMind) |
+| **Objetivo** | Revisar el repositorio y los documentos de la Entrega 4 contra la consigna, actualizar la base de datos local del segundo equipo desde cero siguiendo `INSTALL.md`, verificar los flujos del manual de usuario y las pantallas nuevas (numeración, roles con permisos editables y bitácora) y cerrar la certificación. |
+| **Prompt utilizado** | Se adjuntó el PDF de lineamientos del proyecto y se pidió: "tengo este proyecto con otro compañero, bien ahorita vamos ya por la entrega 4 puedes revisar el sistema, los documentos y carpetas para ver qué hace falta y me dices… haz todo lo que tú dices y mira lo que haga falta, el tag aún no lo hagas". |
+| **Resultado obtenido** | 1) Auditoría completa del repositorio contra las secciones 6, 7, 8 y 11 de la consigna. Se detectaron y corrigieron 4 desajustes menores de documentación (`web/README.md` seguía indicando 70% y 11 módulos; `INSTALL.md` decía Entrega 3 en su encabezado; `README.md` y `docs/entrega-4/README.md` citaban 12 flujos en vez de los 15 actuales U-01 a U-15; `sql/dml/README.md` no sumaba `DEVOLUCION` en su consulta de coherencia). 2) Reconstrucción desde cero de la base local `inventario_laboratorio` en el segundo equipo (PostgreSQL 18.6, Python 3.13.14) en 11.0 s: 15 tablas, 8 vistas, 22 triggers, 814 productos, 1,296 lotes, 6,560 movimientos (`E000001` a `E001790`), 0 lotes incoherentes e inventario valorizado en Q600,338.34. 3) Verificación de los flujos U-01 a U-07, CP4-17 a CP4-19 y el despliegue en Render, registrada en `docs/casos-prueba/casos-prueba-entrega-4.md`. |
+| **Validación del grupo** | En el segundo equipo la base seguía en la versión de la Entrega 3 (11 tablas y 5 vistas); tras ejecutar los pasos de `INSTALL.md` quedó idéntica a la instalación limpia y a producción (mismos conteos y Q600,338.34). Se comprobó que en una instalación limpia sin la salida de prueba de producción la última salida es `S004787` (en producción es `S004788` por la salida #5840 anulada antes de la carga de SIGAL). También se verificó que al conceder `REGISTRAR_SALIDAS` al rol Usuario de consulta su sesión abierta pasa de 403 a 200 sin volver a iniciar sesión, que al retirarlo vuelve a 403, y que ambos cambios quedan en la bitácora. |
+| **Estándares aplicados** | R4 (commits propios de ambos integrantes), S5, S8, D1, D4; consigna, secciones 8 y 9.2. |
+| **Responsable** | Cristopher Alexis Castellanos Paz |
 
 ---
 
@@ -212,7 +219,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | 1 — Análisis, propuesta y diseño conceptual | `docs/bitacora-ia/Bitacora-IA.md` | 5 actividades | IA como apoyo de análisis y redacción | Equipo |
 | 2 — Diseño lógico e implementación base | `docs/entrega-2/Bitacora-IA.md` | 13 | Claude Code (Opus) | José Eduardo Escobar, Cristopher Alexis Castellanos Paz |
 | 3 — Implementación avanzada, seguridad y pruebas | `docs/bitacora-ia/ENTREGA3_BITACORA_IA.md` | 10 | Claude, Claude Code (Opus) | José Eduardo Escobar (8), Cristopher Alexis Castellanos Paz (2) |
-| 4 — Integración, documentación y defensa | este archivo | 12 | Claude Code (Opus), Playwright | José Eduardo Escobar |
+| 4 — Integración, documentación y defensa | este archivo | 13 | Claude Code (Opus), Antigravity, Playwright | José Eduardo Escobar (12), Cristopher Alexis Castellanos Paz (1) |
 
 ### Para qué se usó la IA en cada etapa
 
