@@ -1,6 +1,6 @@
 # Guía de instalación — Sistema Web de Inventario
 
-Estado: actualizado en la Entrega 3 (BD con triggers, procedimientos, vistas y 3 roles de motor + app web Flask).
+Estado: actualizado en la Entrega 4 (15 tablas, 22 triggers, 4 procedimientos, 8 vistas y 3 roles de motor + app web Flask al 100%).
 
 ## Requisitos previos
 - PostgreSQL 14 o superior.

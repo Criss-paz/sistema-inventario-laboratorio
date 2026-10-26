@@ -36,11 +36,11 @@ Cada registro del papel pasó por las mismas reglas que aplica la base (CHECK, t
 
 Privacidad: los proveedores que son personas individuales se publican anonimizados, y los proveedores reales llevan un NIT provisional (`SIN-NIT-##`) porque el papel no lo registra.
 
-**Verificación de coherencia** (debe dar 0): lotes cuya existencia no coincide con entradas − salidas del historial.
+**Verificación de coherencia** (debe dar 0): lotes cuya existencia no coincide con entradas + devoluciones − salidas del historial.
 ```sql
 SELECT count(*) FROM lote l
  WHERE l.cantidad_disponible <> (
-       SELECT COALESCE(sum(CASE m.tipo_movimiento WHEN 'ENTRADA' THEN d.cantidad ELSE -d.cantidad END), 0)
+       SELECT COALESCE(sum(CASE WHEN m.tipo_movimiento = 'SALIDA' THEN -d.cantidad ELSE d.cantidad END), 0)
          FROM detalle_movimiento d JOIN movimiento m USING (id_movimiento)
         WHERE d.id_lote = l.id_lote);
 ```

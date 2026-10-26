@@ -2,7 +2,7 @@
 
 Aplicación web del sistema: Flask 3 + PostgreSQL 18 (driver `psycopg` v3).
 
-**Estado:** implementada al 70% (Entrega 3). El detalle de módulos, roles y pruebas está en `AVANCE_WEB.md`, en la raíz del repositorio.
+**Estado:** implementada al 100% (Entrega 4). El detalle de módulos, roles y pruebas está en `AVANCE_WEB.md`, en la raíz del repositorio.
 
 ## Estructura
 
@@ -12,7 +12,7 @@ Aplicación web del sistema: Flask 3 + PostgreSQL 18 (driver `psycopg` v3).
 | `config.py` | Lee la configuración desde `.env` (nunca credenciales en el código) |
 | `db.py` | Único acceso a PostgreSQL: adopta el rol de BD del usuario (`SET ROLE`), consultas parametrizadas, paginación, llamadas a procedimientos y mensajes de error para el usuario |
 | `respaldo.py` | Servicio de respaldo de la base (también por línea de comandos) |
-| `routes/` | Un módulo por área: `auth`, `movimientos`, `lotes`, `productos`, `examenes`, `proveedores`, `categorias`, `informes` (reportes), `reportes` (Panel, alertas y búsqueda rápida), `usuarios`, `respaldo` |
+| `routes/` | Un módulo por área (12): `auth`, `movimientos`, `lotes`, `productos`, `examenes`, `proveedores`, `categorias`, `informes` (reportes), `reportes` (Panel, alertas y búsqueda rápida), `usuarios`, `bitacora`, `respaldo` |
 | `templates/` | Plantillas por módulo, más `base.html` (menú lateral y barra superior), `_macros.html` y `_iconos.html` |
 | `static/` | `style.css` (diseño de SIGAL, tema claro y oscuro), `app.js` (tema, menús, avisos, búsqueda Ctrl K), fuentes Schibsted Grotesk y JetBrains Mono (licencia OFL) y favicon |
 | `seed_usuarios.py` | Crea los 3 usuarios de prueba con contraseña con hash |
