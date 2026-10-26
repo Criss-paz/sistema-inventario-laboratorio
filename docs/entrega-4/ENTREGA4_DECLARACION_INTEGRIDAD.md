@@ -8,7 +8,7 @@ Los integrantes del equipo declaramos que:
 
 1. **El trabajo es nuestro.** El análisis, el modelo de datos, la base de datos, la aplicación y la documentación de este repositorio los produjo este equipo para este curso. No copiamos el trabajo de otro grupo ni lo compartimos con otro grupo.
 
-2. **Usamos inteligencia artificial y lo documentamos.** Como permite la consigna, usamos Claude Code (Anthropic) como agente de apoyo para escribir SQL, código, pruebas y documentación. Cada uso está registrado en `docs/bitacora-ia/`: qué se pidió, qué produjo la herramienta, qué revisamos, qué corregimos o rechazamos y quién lo validó. Ningún resultado de la IA se incorporó sin revisarse y probarse contra la base de datos real (estándar S8).
+2. **Usamos inteligencia artificial y lo documentamos.** Como permite la consigna, usamos Claude Code (Anthropic) y Antigravity (Google DeepMind) como agentes de apoyo para escribir SQL, código, pruebas y documentación. Cada uso está registrado en `docs/bitacora-ia/`: qué se pidió, qué produjo la herramienta, qué revisamos, qué corregimos o rechazamos y quién lo validó. Ningún resultado de la IA se incorporó sin revisarse y probarse contra la base de datos real (estándar S8).
 
 3. **Entendemos y podemos defender lo entregado.** Cada integrante conoce el modelo de datos, las reglas de negocio y su implementación (triggers, procedimientos, vistas, roles), y las decisiones de diseño registradas en los documentos de cada entrega. Estamos preparados para explicarlas en la defensa grupal e individual.
 
@@ -33,4 +33,4 @@ Concretamente, `web/static/style.css` adapta la hoja de estilos de SIGAL (variab
 | Nombre completo | Carné | Firma | Fecha |
 |---|---|---|---|
 | José Eduardo Escobar | 2690245346 | José Eduardo Escobar | 26/10/2026 |
-| Cristopher Alexis Castellanos Paz | 2690245972 | | |
+| Cristopher Alexis Castellanos Paz | 2690245972 | Cristopher Alexis Castellanos Paz | 26/10/2026 |
