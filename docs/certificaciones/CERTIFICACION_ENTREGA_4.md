@@ -40,6 +40,23 @@ Productos de la Entrega 4 (consigna, sección 11):
 
 ---
 
+## Añadido el 27/10/2026, después de firmar lo anterior
+
+Tras la presentación del sistema, el catedrático observó que alguien podría conectarse e intentar hacer o deshacer varios ingresos o salidas, y sugirió implementar *tokens*, mencionando OAuth 2.0. El equipo analizó la observación e incorporó lo siguiente:
+
+- [x] **Token CSRF** en los 27 formularios POST (`web/seguridad.py`).
+- [x] **Token de un solo uso** en las cinco operaciones que mueven inventario: el mismo movimiento no se registra dos veces, ni recargando con F5 ni reenviando una petición capturada.
+- [x] **Bloqueo tras cinco intentos fallidos**, contado desde la bitácora por usuario y dirección de origen.
+- [x] **Probado:** casos CP4-21 a CP4-24, 4 de 4 pasaron, sobre la base reconstruida desde cero siguiendo `INSTALL.md`.
+- [x] **Documentado:** [`ENTREGA4_SEGURIDAD_WEB.md`](../entrega-4/ENTREGA4_SEGURIDAD_WEB.md), que explica además por qué **OAuth 2.0 no aplica** a una aplicación monolítica sin terceros, y en qué caso sí tendría sentido.
+- [x] **Presentación del sistema** añadida al repositorio: `docs/entrega-4/ENTREGA4_PRESENTACION.pptx`, 18 diapositivas.
+
+Durante las pruebas se detectaron y corrigieron **dos defectos del propio diseño**: contar los intentos sólo por usuario habría permitido bloquear al administrador a propósito, y registrar los intentos ya bloqueados reiniciaba la ventana, de modo que el bloqueo nunca caducaba. Ambos quedaron corregidos y documentados.
+
+Hacemos constar que esta funcionalidad se agregó después de firmar los puntos anteriores y que se probó con el mismo rigor que el resto de la entrega.
+
+---
+
 ## Firmas
 
 | Nombre completo | Carné | Firma |
