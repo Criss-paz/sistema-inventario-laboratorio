@@ -43,7 +43,7 @@
           {% if tiene_permiso('PROVEEDORES') %}
           <a class="btn btn-sm" href="{{ url_for('proveedores.editar', id_proveedor=pr.id_proveedor) }}">Editar</a>
           <form method="post" action="{{ url_for('proveedores.alternar_estado', id_proveedor=pr.id_proveedor) }}"
-                onsubmit="return confirm({{ ('¿Desactivar el proveedor ' if pr.estado else '¿Activar el proveedor ')|tojson }} + {{ pr.nombre|tojson }} + '?');">
+                onsubmit="return confirm({{ ('¿Desactivar el proveedor ' if pr.estado else '¿Activar el proveedor ')|tojson }} + {{ pr.nombre|tojson }} + '?');">{{ campo_csrf() }}
             <button type="submit" class="btn btn-sm {{ 'btn-danger' if pr.estado else '' }}">{{ 'Desactivar' if pr.estado else 'Activar' }}</button>
           </form>
           {% endif %}

@@ -6,7 +6,7 @@
   <h1>{{ 'Editar usuario' if editando else 'Nuevo usuario' }}</h1>
 </div>
 
-<form class="card" method="post" autocomplete="off">
+<form class="card" method="post" autocomplete="off">{{ campo_csrf() }}
   <label for="nombre">Nombre completo</label>
   <input type="text" id="nombre" name="nombre" required maxlength="100" autofocus value="{{ usuario.nombre if usuario else '' }}">
 

@@ -10,7 +10,7 @@ Preparación para la defensa grupal (base de datos y aplicación web) y la indiv
 - [ ] Tener a mano las credenciales de producción de los 3 roles (canal privado, no el repositorio).
 - [ ] Tener `psql` conectado a la base local o a Neon, para mostrar triggers y roles en vivo.
 - [ ] Abrir en pestañas: el diagrama ER, el diagrama relacional, `sql/triggers/001_triggers.sql`, `sql/procedures/001_procedures.sql` y `sql/security/001_roles.sql`.
-- [ ] Repasar la sección 4 de esta guía: las preguntas individuales pueden ser sobre cualquier parte, no solo la que cada uno construyó.
+- [ ] Repasar la sección 3 bis (la pregunta sobre seguridad) y la sección 4 de esta guía: las preguntas individuales pueden ser sobre cualquier parte, no solo la que cada uno construyó.
 
 ---
 
@@ -75,6 +75,21 @@ WHERE l.cantidad_disponible <> coalesce((
 | Valor del inventario con los datos iniciales | Q600,338.34 |
 | Requerimientos | 39 RF, 18 RNF y 31 RN, todos implementados |
 | Casos de prueba ejecutados (entregas 2 a 4) | 50, todos aprobados; regresión de 256 verificaciones |
+
+---
+
+## 3 bis. La pregunta sobre seguridad del 27/10
+
+**Si vuelve a preguntar por tokens u OAuth 2.0**, la respuesta corta, en este orden:
+
+1. **Lo implementamos.** Token CSRF en los 27 formularios, token de un solo uso en cada movimiento y bloqueo tras cinco intentos fallidos. Probado en los casos CP4-21 a CP4-24.
+2. **El token de un solo uso responde exactamente a lo que usted planteó**: el mismo ingreso o salida no se puede registrar dos veces, ni recargando con F5 ni reenviando una petición capturada.
+3. **OAuth 2.0 no aplica a esta arquitectura.** Es autorización delegada entre un usuario, una aplicación de terceros y el servicio que guarda los datos. Aquí hay una sola aplicación con sus propios usuarios y nada que delegar. Tendría sentido si expusiéramos una API o si el login pasara a la cuenta institucional de la universidad, y así queda anotado como mejora futura.
+4. **La defensa más fuerte sigue siendo la base de datos.** Aunque alguien falsificara una petición perfecta, ningún rol tiene `INSERT` sobre `movimiento`: la única vía son los procedimientos, que validan las reglas.
+
+Razonamiento completo en [`ENTREGA4_SEGURIDAD_WEB.md`](ENTREGA4_SEGURIDAD_WEB.md).
+
+**Si pregunta por el bloqueo:** se cuenta por usuario **y** dirección de origen, para que nadie pueda dejar fuera al administrador fallando a propósito; y un acierto reinicia el contador.
 
 ---
 

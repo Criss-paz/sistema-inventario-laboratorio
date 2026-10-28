@@ -43,7 +43,7 @@
         <td class="actions">
           <a class="btn btn-sm" href="{{ url_for('examenes.editar', id_examen=e.id_examen) }}">Editar</a>
           <form method="post" action="{{ url_for('examenes.alternar_estado', id_examen=e.id_examen) }}"
-                onsubmit="return confirm({{ ('¿Dar de baja el examen ' if e.estado else '¿Activar el examen ')|tojson }} + {{ e.nombre_examen|tojson }} + '?');">
+                onsubmit="return confirm({{ ('¿Dar de baja el examen ' if e.estado else '¿Activar el examen ')|tojson }} + {{ e.nombre_examen|tojson }} + '?');">{{ campo_csrf() }}
             <button type="submit" class="btn btn-sm {{ 'btn-danger' if e.estado else '' }}">{{ 'Dar de baja' if e.estado else 'Activar' }}</button>
           </form>
         </td>

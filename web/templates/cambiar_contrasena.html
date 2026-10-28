@@ -5,7 +5,7 @@
   <h1>Cambiar mi contraseña<span class="subtitle">{{ session.get('nombre_usuario') }}</span></h1>
 </div>
 
-<form class="card" method="post" autocomplete="off">
+<form class="card" method="post" autocomplete="off">{{ campo_csrf() }}
   <label for="actual">Contraseña actual</label>
   <input type="password" id="actual" name="actual" required autofocus autocomplete="current-password">
 

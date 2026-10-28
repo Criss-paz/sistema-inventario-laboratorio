@@ -25,7 +25,7 @@
           <a class="btn btn-sm" href="{{ url_for('usuarios.editar', id_usuario=u.id_usuario) }}">Editar</a>
           {% if u.id_usuario != session.get('id_usuario') %}
           <form method="post" action="{{ url_for('usuarios.alternar_estado', id_usuario=u.id_usuario) }}"
-                onsubmit="return confirm({{ ('¿Desactivar a ' if u.estado else '¿Activar a ')|tojson }} + {{ u.usuario|tojson }} + '?');">
+                onsubmit="return confirm({{ ('¿Desactivar a ' if u.estado else '¿Activar a ')|tojson }} + {{ u.usuario|tojson }} + '?');">{{ campo_csrf() }}
             <button type="submit" class="btn btn-sm {{ 'btn-danger' if u.estado else '' }}">{{ 'Desactivar' if u.estado else 'Activar' }}</button>
           </form>
           {% endif %}
@@ -40,7 +40,7 @@
   <h2>Roles y permisos <span class="subtitle">Marque lo que puede hacer cada rol y guarde. Consultar inventario, lotes, historial y reportes lo pueden todos. La app oculta lo no permitido y la base de datos lo niega aunque se intente (SET ROLE).</span></h2>
   <a class="btn" href="{{ url_for('usuarios.rol_nuevo') }}">{{ i.icono('mas') }}Nuevo rol</a>
 </div>
-<form method="post" action="{{ url_for('usuarios.guardar_permisos') }}">
+<form method="post" action="{{ url_for('usuarios.guardar_permisos') }}">{{ campo_csrf() }}
 <div class="table-wrap">
   <table class="permisos">
     <thead>

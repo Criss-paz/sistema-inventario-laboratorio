@@ -39,7 +39,7 @@
 </div>
 {% else %}
 <form class="card" method="post"
-      onsubmit="return confirm({{ ('¿Eliminar la entrada ' ~ e.numero_documento ~ '? No se puede deshacer.')|tojson }});">
+      onsubmit="return confirm({{ ('¿Eliminar la entrada ' ~ e.numero_documento ~ '? No se puede deshacer.')|tojson }});">{{ campo_csrf() }}{{ campo_operacion() }}
   <label for="motivo">Motivo de la eliminación <span class="hint">(obligatorio, mínimo 10 caracteres)</span></label>
   <textarea id="motivo" name="motivo" rows="3" maxlength="255" required minlength="10"
             placeholder="Ejemplo: entrada duplicada; la misma factura se registró dos veces.">{{ form.get('motivo', '') }}</textarea>

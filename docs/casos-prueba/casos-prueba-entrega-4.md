@@ -129,3 +129,22 @@ Después de todos los cambios de la Entrega 4 se volvió a recorrer la aplicaci�
 Cada prueba deshace lo que crea (quita el producto asignado, reactiva el examen, devuelve la contraseña original, devuelve los permisos y elimina el rol de prueba) y su última verificación comprueba que la base quedó como estaba. Lo único que permanece es lo que debe permanecer: las filas que esas acciones dejan en la bitácora (RN-30).
 
 **Nota sobre la base de desarrollo.** Una primera versión de la prueba automatizada de la corrección suponía que la entrada CP4B seguía en 20 unidades a Q50. Después de CP4-15 ya no era así, de modo que su verificación "sin cambios" registró 2 correcciones reales: la entrada volvió a 20 a Q50, con el motivo "Sin cambiar ningún dato". Como exige RN-25, esas correcciones no se pueden borrar y quedan en la base de desarrollo, sobre datos de prueba. La prueba se corrigió para leer los valores actuales y ya no escribe nada.
+
+---
+
+## Casos añadidos el 27/10/2026 — defensas contra peticiones falsificadas o repetidas
+
+Surgen de la observación del catedrático en la presentación: que alguien podría conectarse e intentar hacer o deshacer varios movimientos. El razonamiento completo, incluido por qué OAuth 2.0 no aplica, está en [`ENTREGA4_SEGURIDAD_WEB.md`](../entrega-4/ENTREGA4_SEGURIDAD_WEB.md).
+
+Ejecutados contra la instalación local reconstruida desde cero siguiendo `INSTALL.md` (PostgreSQL 18.4 + Python 3.14), con peticiones HTTP reales contra el servidor.
+
+| ID | Caso | Reglas | Pasos | Resultado esperado | Resultado obtenido (27/10/2026) | Estado |
+|---|---|---|---|---|---|---|
+| **CP4-21** | Un formulario sin token CSRF se rechaza | RNF-17 | Enviar `POST /login` con usuario y contraseña correctos pero sin el campo `_csrf` | El servidor responde 403 y no inicia sesión | **403**. Repetido el mismo envío con el token tomado del formulario: aceptado y sesión iniciada | ✅ Pasó |
+| **CP4-22** | El mismo movimiento no se registra dos veces | RN-09 | Abrir Registrar salida, enviarlo, y volver a enviar exactamente la misma petición con el mismo token de operación | El primer envío registra la salida; el segundo no registra nada | Salidas antes **4,780** → tras el primer envío **4,781** → tras el segundo **4,781**. El sistema avisa que la operación ya se registró | ✅ Pasó |
+| **CP4-23** | Cinco intentos fallidos bloquean el acceso | RNF-17, RN-30 | Enviar seis veces el login de `admin.dev` con contraseña incorrecta; luego intentar con la correcta; luego entrar con otro usuario | Del 1 al 5 responde 401; el 6.º responde 429. Estando bloqueado, ni la contraseña correcta entra. Otro usuario no se ve afectado | Intentos 1-5 → **401**; 6.º → **429**. Con la contraseña correcta estando bloqueado → **429**. `encargado.dev` con su contraseña → **200** | ✅ Pasó |
+| **CP4-24** | Un inicio de sesión correcto reinicia el contador | RNF-17 | Fallar cuatro veces, entrar bien, y volver a fallar cuatro veces | Tras el acierto el contador vuelve a cero: los cuatro fallos siguientes no bloquean | Cuatro fallos → acierto **200** → cuatro fallos más siguen en **401**; el quinto en 401 y el sexto en **429** | ✅ Pasó |
+
+**Resultado: 4 de 4 casos pasaron.**
+
+**Limitación documentada.** Un usuario bloqueado no se puede desbloquear desde la aplicación: el conteo se lee de la bitácora, que es inmutable (RN-30). Las salidas son esperar los quince minutos o entrar desde otra dirección. Se asume a propósito, porque una pantalla de desbloqueo sería ella misma un objetivo de ataque.

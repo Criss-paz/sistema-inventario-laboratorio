@@ -37,7 +37,7 @@
         <td class="actions">
           <form method="post"
                 action="{{ url_for('examenes.quitar_insumo', id_examen=examen.id_examen, id_producto=ins.id_producto) }}"
-                onsubmit="return confirm('¿Quitar ' + {{ ins.nombre|tojson }} + ' del examen?');">
+                onsubmit="return confirm('¿Quitar ' + {{ ins.nombre|tojson }} + ' del examen?');">{{ campo_csrf() }}
             <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
           </form>
         </td>
@@ -51,7 +51,7 @@
 </div>
 
 {% if tiene_permiso('EXAMENES') %}
-<form class="card" method="post" action="{{ url_for('examenes.agregar_insumo', id_examen=examen.id_examen) }}">
+<form class="card" method="post" action="{{ url_for('examenes.agregar_insumo', id_examen=examen.id_examen) }}">{{ campo_csrf() }}
   <h2>Agregar insumo</h2>
   <label for="producto">Producto</label>
   <input list="lista-productos" id="producto" name="producto" required autocomplete="off" placeholder="Escriba el nombre o el código">

@@ -18,12 +18,14 @@ siempre todos los permisos (RN-29).
 Los inicios de sesión (correctos y fallidos) y los cierres quedan en la
 bitácora (RN-30).
 """
+import json
 from functools import wraps
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, abort
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import query_one, execute, conexion_sin_rol, permisos_actuales, rol_actual
+from seguridad import esta_bloqueado, origen_peticion, MAX_INTENTOS, VENTANA_MINUTOS
 
 # El único rol con nombre fijo: tiene siempre todos los permisos (RN-29).
 ADMIN = "Administrador"
@@ -80,13 +82,15 @@ def tiene_permiso(*codigos):
     return bool(permisos_actuales() & set(codigos))
 
 
-def _bitacora_sesion(accion, id_usuario, referencia):
+def _bitacora_sesion(accion, id_usuario, referencia, usuario=None, bloqueado=False):
     """Inicio de sesión correcto o fallido (RN-30). Se escribe con la
     conexión de usuario_app de esta petición: todavía no hay rol adoptado."""
     try:
         execute(
-            "INSERT INTO bitacora (id_usuario, accion, entidad, referencia) VALUES (%s, %s, 'sesion', %s)",
-            (id_usuario, accion, referencia[:150]),
+            "INSERT INTO bitacora (id_usuario, accion, entidad, id_registro, referencia, detalle) "
+            "VALUES (%s, %s, 'sesion', %s, %s, %s::jsonb)",
+            (id_usuario, accion, (usuario or "")[:40], referencia[:150],
+             json.dumps({"origen": origen_peticion(), **({"bloqueado": True} if bloqueado else {})})),
         )
     except Exception:
         pass  # la bitácora no debe impedir entrar
@@ -104,6 +108,19 @@ def login():
     if not usuario_input or not password_input:
         flash("Usuario y contraseña son obligatorios.", "danger")
         return render_template("login.html"), 400
+
+    # Freno a la fuerza bruta: se cuentan los fallos recientes de ESTE usuario
+    # en la bitácora (no en memoria, para que valga tras un reinicio y con
+    # varios procesos de gunicorn). El mensaje no revela si el usuario existe.
+    if esta_bloqueado(usuario_input):
+        # Se marca como "bloqueado" para que NO vuelva a contar: si contara,
+        # cada reintento reiniciaría la ventana y el bloqueo no caducaría nunca.
+        _bitacora_sesion("SESION_FALLIDA", None,
+                         f'Bloqueado por {MAX_INTENTOS} intentos fallidos', usuario_input,
+                         bloqueado=True)
+        flash(f"Demasiados intentos fallidos. Espere {VENTANA_MINUTOS} minutos "
+              "o pida al administrador que restablezca su contraseña.", "danger")
+        return render_template("login.html"), 429
 
     # Se descarta la sesión anterior ANTES de consultar: la verificación del
     # password la hace usuario_app, sin adoptar el rol de otro usuario.
@@ -129,11 +146,11 @@ def login():
 
     if row is None or not row["estado"] or not check_password_hash(row["password_hash"], password_input):
         _bitacora_sesion("SESION_FALLIDA", row["id_usuario"] if row else None,
-                         f'Intento con el usuario "{usuario_input[:60]}"')
+                         f'Intento con el usuario "{usuario_input[:60]}"', usuario_input)
         flash(error_generico, "danger")
         return render_template("login.html"), 401
 
-    _bitacora_sesion("INICIAR_SESION", row["id_usuario"], usuario_input)
+    _bitacora_sesion("INICIAR_SESION", row["id_usuario"], usuario_input, usuario_input)
 
     session["id_usuario"] = row["id_usuario"]
     session["nombre_usuario"] = row["nombre"]

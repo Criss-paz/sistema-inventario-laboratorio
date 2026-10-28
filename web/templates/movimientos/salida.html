@@ -5,7 +5,7 @@
   <h1>Registrar salida<span class="subtitle">Consumo de insumos. El sistema elige los lotes que vencen primero (FEFO) y no usa lotes vencidos.</span></h1>
 </div>
 
-<form class="card" method="post">
+<form class="card" method="post">{{ campo_csrf() }}{{ campo_operacion() }}
   <label for="producto">Producto <span class="hint">(escriba el nombre o el código y elija de la lista)</span></label>
   <input list="lista-productos" id="producto" name="producto" required autofocus autocomplete="off"
          value="{{ form.get('producto', '') }}">

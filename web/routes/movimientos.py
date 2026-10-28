@@ -25,6 +25,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 
 from db import query_all, query_one, query_page, call_procedure, mensaje_error
+from seguridad import consumir_operacion
 from routes.auth import login_required, permiso_requerido, solo_administrador
 
 bp = Blueprint("movimientos", __name__, url_prefix="/movimientos")
@@ -192,6 +193,14 @@ def entrada():
     if request.method == "GET":
         return render_template("movimientos/entrada.html", **contexto)
 
+    # Token de un solo uso: impide que el mismo movimiento se registre dos
+    # veces por recargar con F5, por doble clic o por reenviar una petición
+    # capturada (seguridad.py). La salida original del formulario ya lo gastó.
+    if not consumir_operacion():
+        flash("Esta operación ya se registró. Vuelva a abrir el formulario "
+              "si necesita hacer otra.", "warning")
+        return redirect(url_for("movimientos.historial"))
+
     errores = []
     producto = _producto_por_texto(request.form.get("producto"))
     if producto is None:
@@ -242,6 +251,14 @@ def salida():
     contexto = {"productos": _productos_activos(), "form": request.form}
     if request.method == "GET":
         return render_template("movimientos/salida.html", **contexto)
+
+    # Token de un solo uso: impide que el mismo movimiento se registre dos
+    # veces por recargar con F5, por doble clic o por reenviar una petición
+    # capturada (seguridad.py). La salida original del formulario ya lo gastó.
+    if not consumir_operacion():
+        flash("Esta operación ya se registró. Vuelva a abrir el formulario "
+              "si necesita hacer otra.", "warning")
+        return redirect(url_for("movimientos.historial"))
 
     errores = []
     producto = _producto_por_texto(request.form.get("producto"))
@@ -301,6 +318,14 @@ def devolucion(id_movimiento):
     contexto = {"mov": mov, "pendientes": pendientes, "form": request.form}
     if request.method == "GET":
         return render_template("movimientos/devolucion.html", **contexto)
+
+    # Token de un solo uso: impide que el mismo movimiento se registre dos
+    # veces por recargar con F5, por doble clic o por reenviar una petición
+    # capturada (seguridad.py). La salida original del formulario ya lo gastó.
+    if not consumir_operacion():
+        flash("Esta operación ya se registró. Vuelva a abrir el formulario "
+              "si necesita hacer otra.", "warning")
+        return redirect(url_for("movimientos.historial"))
 
     # A3: validación en el servidor antes de tocar la base.
     errores = []
@@ -392,6 +417,14 @@ def corregir(id_movimiento):
     contexto = {"e": entrada, "proveedores": proveedores, "form": request.form}
     if request.method == "GET":
         return render_template("movimientos/corregir.html", **contexto)
+
+    # Token de un solo uso: impide que el mismo movimiento se registre dos
+    # veces por recargar con F5, por doble clic o por reenviar una petición
+    # capturada (seguridad.py). La salida original del formulario ya lo gastó.
+    if not consumir_operacion():
+        flash("Esta operación ya se registró. Vuelva a abrir el formulario "
+              "si necesita hacer otra.", "warning")
+        return redirect(url_for("movimientos.historial"))
 
     # A3: validación en el servidor antes de tocar la base.
     errores = []
@@ -485,6 +518,14 @@ def eliminar(id_movimiento):
     contexto = {"e": e, "lineas": lineas, "bloqueos": bloqueos, "form": request.form}
     if request.method == "GET":
         return render_template("movimientos/eliminar.html", **contexto)
+
+    # Token de un solo uso: impide que el mismo movimiento se registre dos
+    # veces por recargar con F5, por doble clic o por reenviar una petición
+    # capturada (seguridad.py). La salida original del formulario ya lo gastó.
+    if not consumir_operacion():
+        flash("Esta operación ya se registró. Vuelva a abrir el formulario "
+              "si necesita hacer otra.", "warning")
+        return redirect(url_for("movimientos.historial"))
 
     motivo = (request.form.get("motivo") or "").strip()[:255]
     if len(motivo) < 10:

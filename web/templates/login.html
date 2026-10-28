@@ -23,7 +23,7 @@
       <h2>Iniciar sesión</h2>
       <p class="login-subtitle">Use el usuario y la contraseña que le asignó el administrador.</p>
 
-      <form class="card" method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+      <form class="card" method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}">{{ campo_csrf() }}
         <label for="usuario">Usuario</label>
         <input type="text" id="usuario" name="usuario" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false">
 

@@ -13,7 +13,7 @@
   </p>
 </div>
 
-<form class="card" method="post">
+<form class="card" method="post">{{ campo_csrf() }}{{ campo_operacion() }}
   <label for="motivo">Motivo de la devolución <span class="hint">(obligatorio, queda guardado en la base de datos)</span></label>
   <textarea id="motivo" name="motivo" rows="3" maxlength="255" required minlength="10" autofocus
             placeholder="Ejemplo: la salida se registró en el área equivocada, o el examen se canceló y el reactivo no se usó.">{{ form.get('motivo', '') }}</textarea>

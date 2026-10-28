@@ -5,7 +5,7 @@
   <h1>{{ 'Editar examen' if examen and examen.id_examen else 'Nuevo examen' }}</h1>
 </div>
 
-<form class="card" method="post">
+<form class="card" method="post">{{ campo_csrf() }}
   <label for="nombre_examen">Nombre <span class="hint">(obligatorio)</span></label>
   <input type="text" id="nombre_examen" name="nombre_examen" required maxlength="150" autofocus
          value="{{ examen.nombre_examen if examen else '' }}">

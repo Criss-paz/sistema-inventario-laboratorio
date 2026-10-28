@@ -7,7 +7,7 @@
   <h1>Respaldo de la base de datos<span class="subtitle">Copia completa de los datos para guardar fuera del servidor (RNF-11)</span></h1>
 </div>
 
-<form class="card" method="post" action="{{ url_for('respaldo.descargar') }}">
+<form class="card" method="post" action="{{ url_for('respaldo.descargar') }}">{{ campo_csrf() }}
   <h2>Descargar respaldo</h2>
   <p>Genera el archivo <code>{{ archivo }}</code> con todos los datos del sistema en este momento:
     catálogos, lotes, el historial completo de movimientos, exámenes y usuarios.

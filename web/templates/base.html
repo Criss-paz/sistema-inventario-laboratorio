@@ -89,7 +89,7 @@
             </button>
             <div id="user-dropdown" class="desplegable" role="menu" hidden>
               <a class="menu-item" role="menuitem" href="{{ url_for('auth.cambiar_contrasena') }}">{{ i.icono('clave') }}Cambiar mi contraseña</a>
-              <form action="{{ url_for('auth.logout') }}" method="post">
+              <form action="{{ url_for('auth.logout') }}" method="post">{{ campo_csrf() }}
                 <button type="submit" class="menu-item menu-item-danger" role="menuitem">{{ i.icono('salir') }}Cerrar sesión</button>
               </form>
             </div>

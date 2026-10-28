@@ -265,6 +265,20 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 
 La IA aceleró mucho la escritura, pero los errores que importaban los encontraron **las pruebas contra la base de datos real y el navegador**, no la revisión del texto generado. Por eso cada entrega ejecutó sus casos antes de cerrar, y cada resultado registrado es lo que el sistema respondió.
 
+### Registro de Bitácora IA — Seguridad web y presentación
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 27/10/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Tras la presentación, el catedrático observó que alguien podría conectarse e intentar hacer o deshacer varios ingresos o salidas, y sugirió implementar tokens, mencionando OAuth 2.0. El equipo pidió **primero una explicación** y después la implementación. También pidió crear la presentación del sistema, que no estaba en el repositorio. |
+| **Prompt utilizado** | "Dijo que deberíamos de implementar algo como tokens y mencionó algo como OAuth 2.0, pero quiero que me expliques primero antes que lo hagas y lo implementes" y después "implementa todo eso y también revisa si hay alguna presentación tipo pptx". |
+| **Resultado obtenido** | La IA explicó que OAuth 2.0 es autorización delegada y no aplica a una aplicación monolítica sin terceros, y que la observación apuntaba en realidad a tres cosas distintas. Implementó `web/seguridad.py` con token CSRF en los 27 formularios, token de un solo uso en las cinco operaciones de inventario y bloqueo tras cinco intentos fallidos. Generó `ENTREGA4_PRESENTACION.pptx` (18 diapositivas) con las capturas ya existentes en el repositorio. |
+| **Validación del grupo** | Los tres mecanismos se probaron con peticiones HTTP reales (CP4-21 a CP4-24) sobre la base reconstruida desde cero. La IA detectó y corrigió **un defecto de su propio diseño**: la primera versión contaba los intentos sólo por usuario, lo que habría permitido a cualquiera dejar fuera al administrador fallando cinco veces a propósito; se cambió a contar por usuario y dirección de origen, y se añadió que un acierto reinicie el contador. Queda documentada la limitación de que un bloqueo no se puede levantar desde la aplicación, porque la bitácora es inmutable. |
+| **Estándares aplicados** | A2 (mensajes comprensibles ante el bloqueo y la repetición), A3 (validación en el servidor), A4 (consultas parametrizadas en el conteo de intentos), RNF-17; D1 y D4 en la documentación de los casos nuevos. |
+| **Responsable** | Cristopher Alexis Castellanos Paz |
+
+
 ---
 
 ## Declaración

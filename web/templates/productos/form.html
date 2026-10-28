@@ -5,7 +5,7 @@
   <h1>{{ 'Editar producto' if producto and producto.id_producto else 'Nuevo producto' }}</h1>
 </div>
 
-<form class="card" method="post">
+<form class="card" method="post">{{ campo_csrf() }}
   <label for="codigo">Código <span class="hint">(obligatorio, único)</span></label>
   <input type="text" id="codigo" name="codigo" required maxlength="30" autofocus
          value="{{ producto.codigo if producto else '' }}">

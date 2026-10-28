@@ -21,6 +21,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from db import close_db, get_db, SesionInvalida
+import seguridad
 from routes.auth import bp as auth_bp, login_required, tiene_permiso, es_administrador, ADMIN
 from routes.categorias import bp as categorias_bp
 from routes.productos import bp as productos_bp
@@ -48,6 +49,11 @@ def create_app():
     for bp in (auth_bp, categorias_bp, productos_bp, proveedores_bp, lotes_bp,
                movimientos_bp, examenes_bp, reportes_bp, usuarios_bp, informes_bp, respaldo_bp, bitacora_bp):
         app.register_blueprint(bp)
+
+    # CSRF, token de operación de un solo uso y campos para las plantillas
+    # (seguridad.py). Va antes de la verificación de Origin: el token no
+    # depende de que el navegador envíe ese encabezado.
+    seguridad.registrar(app)
 
     # Formularios solo desde esta misma app. La cookie de sesión ya es
     # SameSite=Lax (config.py), que no viaja en un POST desde otro sitio; esta

@@ -37,7 +37,7 @@
         <td class="actions">
           <form method="post"
                 action="{{ url_for('proveedores.quitar_producto', id_proveedor=proveedor.id_proveedor, id_producto=p.id_producto) }}"
-                onsubmit="return confirm('¿Quitar ' + {{ p.nombre|tojson }} + ' de este proveedor?');">
+                onsubmit="return confirm('¿Quitar ' + {{ p.nombre|tojson }} + ' de este proveedor?');">{{ campo_csrf() }}
             <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
           </form>
         </td>
@@ -51,7 +51,7 @@
 </div>
 
 {% if tiene_permiso('PROVEEDORES') %}
-<form class="card" method="post" action="{{ url_for('proveedores.guardar_producto', id_proveedor=proveedor.id_proveedor) }}">
+<form class="card" method="post" action="{{ url_for('proveedores.guardar_producto', id_proveedor=proveedor.id_proveedor) }}">{{ campo_csrf() }}
   <h2>Asignar producto o cambiar precio</h2>
   <label for="producto">Producto</label>
   <input list="lista-productos" id="producto" name="producto" required autocomplete="off" placeholder="Escriba el nombre o el código">

@@ -5,7 +5,7 @@
   <h1>{{ 'Editar proveedor' if proveedor and proveedor.id_proveedor else 'Nuevo proveedor' }}</h1>
 </div>
 
-<form class="card" method="post">
+<form class="card" method="post">{{ campo_csrf() }}
   <label for="nombre">Nombre <span class="hint">(obligatorio)</span></label>
   <input type="text" id="nombre" name="nombre" required maxlength="150" autofocus
          value="{{ proveedor.nombre if proveedor else '' }}">

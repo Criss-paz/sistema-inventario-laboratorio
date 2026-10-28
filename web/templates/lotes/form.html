@@ -5,7 +5,7 @@
   <h1>Corregir lote<span class="subtitle">{{ lote.producto }}</span></h1>
 </div>
 
-<form class="card" method="post">
+<form class="card" method="post">{{ campo_csrf() }}
   <p class="hint">La existencia no se edita aquí: solo cambia con entradas y salidas, para que siempre esté respaldada por el historial (RN-02, RN-09).</p>
 
   <label for="numero_lote">Número de lote</label>
