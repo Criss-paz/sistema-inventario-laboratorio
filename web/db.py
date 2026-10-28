@@ -92,6 +92,14 @@ def permisos_actuales():
     return g.acceso["permisos"]
 
 
+def rol_actual():
+    """Nombre del rol del usuario en sesión, leído de la base (None sin sesión)."""
+    if "id_usuario" not in session:
+        return None
+    get_db()
+    return g.acceso["rol"]
+
+
 def conexion_sin_rol():
     """Conexión nueva con el usuario dueño de las tablas, SIN `SET ROLE`.
 

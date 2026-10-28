@@ -21,7 +21,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 from db import close_db, get_db, SesionInvalida
-from routes.auth import bp as auth_bp, login_required, tiene_permiso, ADMIN
+from routes.auth import bp as auth_bp, login_required, tiene_permiso, es_administrador, ADMIN
 from routes.categorias import bp as categorias_bp
 from routes.productos import bp as productos_bp
 from routes.proveedores import bp as proveedores_bp
@@ -90,7 +90,8 @@ def create_app():
     # Las plantillas deciden qué botones mostrar con tiene_permiso('PRODUCTOS', ...).
     @app.context_processor
     def permisos():
-        return {"tiene_permiso": tiene_permiso, "ADMIN": ADMIN, "ahora": dt.datetime.now()}
+        return {"tiene_permiso": tiene_permiso, "es_administrador": es_administrador, "ADMIN": ADMIN,
+                "ahora": dt.datetime.now()}
 
     # Montos en quetzales con separador de miles: 12,345.60
     @app.template_filter("q")

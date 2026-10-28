@@ -35,3 +35,4 @@ Desde la Entrega 4 los roles de la aplicación ya no están alineados uno a uno 
 | `002_devolucion.sql` | `SECURITY DEFINER` y `EXECUTE` de la devolución | Dueño de las tablas |
 | `003_correccion_entrada.sql` | `sp_corregir_entrada` solo para `rol_administrador` | Dueño de las tablas |
 | `004_permisos_bitacora.sql` | Administrar roles y permisos; leer `vw_bitacora` (nivel administrador); registrar el cierre de sesión (todos). Nadie tiene `INSERT` sobre `bitacora` | Dueño de las tablas |
+| `005_eliminar_entrada.sql` | `sp_eliminar_entrada` solo para `rol_administrador` | Dueño de las tablas |

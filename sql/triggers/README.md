@@ -23,5 +23,6 @@ La justificación de negocio de cada uno está comentada en `001_triggers.sql` (
 | `004_numero_documento.sql` | `trg_movimiento_numero` | RN-27: número correlativo por tipo, sin huecos |
 | `005_rol_protegido.sql` | `trg_rol_protegido` | RN-29: el rol Administrador no se renombra ni se elimina |
 | `006_bitacora.sql` | `trg_bitacora_*` en 12 tablas y `trg_bitacora_inmutable` | RN-30: cada cambio queda en la bitácora, que no se modifica |
+| `007_eliminar_entrada.sql` | Excepción controlada en `fn_historial_inmutable` | RN-31: solo el borrado de una entrada por su procedimiento |
 
 Total: 22 triggers.

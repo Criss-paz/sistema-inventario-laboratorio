@@ -5,7 +5,9 @@ RF-26 a RF-28 (historial con responsable y fecha), RN-01, RN-04, RN-08.
 Devolución de una salida equivocada: RN-19 a RN-22 (vínculo con la salida
 corregida, motivo obligatorio, reposición de existencia y tope devolvible).
 Corrección de una entrada mal digitada: RN-25 y RN-26 (la entrada no se
-borra; cada campo corregido queda registrado con su motivo).
+borra; cada campo corregido queda registrado con su motivo). Eliminación de
+una entrada registrada por error: RN-31 (solo el Administrador, si ninguna
+de sus unidades salió; el lote se ajusta y queda en la bitácora).
 
 Las entradas y salidas NO se insertan desde aquí: se llama a los
 procedimientos sp_registrar_entrada / sp_registrar_salida, que validan las
@@ -23,7 +25,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 
 from db import query_all, query_one, query_page, call_procedure, mensaje_error
-from routes.auth import login_required, permiso_requerido
+from routes.auth import login_required, permiso_requerido, solo_administrador
 
 bp = Blueprint("movimientos", __name__, url_prefix="/movimientos")
 
@@ -438,6 +440,75 @@ def corregir(id_movimiento):
     flash(f"Entrada {entrada['numero_documento']} corregida: {n} {'dato' if n == 1 else 'datos'}. "
           "El registro original y la corrección quedan en el historial.", "success")
     return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
+
+
+@bp.route("/<int:id_movimiento>/eliminar", methods=["GET", "POST"])
+@solo_administrador
+def eliminar(id_movimiento):
+    """Elimina una entrada registrada por error (RN-31).
+
+    Solo muestra lo que pasará y pide el motivo: sp_eliminar_entrada vuelve
+    a validar todo (rol, tipo, correcciones, unidades ya consumidas), deja la
+    constancia en la bitácora y ajusta el lote en una sola transacción.
+    """
+    lineas = query_all(
+        """
+        SELECT h.id_movimiento, h.numero_documento, h.tipo_movimiento, h.fecha_hora, h.nombre_usuario,
+               h.codigo, h.producto, h.unidad_medida, h.cantidad, h.id_lote, h.numero_lote,
+               l.cantidad_disponible,
+               (SELECT count(*) FROM vw_historial_movimientos o WHERE o.id_lote = h.id_lote) AS movimientos_del_lote,
+               (SELECT count(*) FROM vw_correcciones_entrada c WHERE c.id_movimiento = h.id_movimiento) AS correcciones
+        FROM vw_historial_movimientos h
+        JOIN lote l ON l.id_lote = h.id_lote
+        WHERE h.id_movimiento = %s
+        ORDER BY h.id_detalle
+        """,
+        (id_movimiento,),
+    )
+    if not lineas:
+        flash("El movimiento solicitado no existe.", "warning")
+        return redirect(url_for("movimientos.historial"))
+    e = lineas[0]
+    if e["tipo_movimiento"] != "ENTRADA":
+        flash("Solo se eliminan entradas. Una salida equivocada se corrige con una devolución.", "warning")
+        return redirect(url_for("movimientos.detalle", id_movimiento=id_movimiento))
+
+    # Lo mismo que valida el procedimiento, para avisar antes de intentarlo.
+    bloqueos = []
+    if e["correcciones"]:
+        bloqueos.append("Tiene correcciones registradas. Si sobra cantidad, corríjala en lugar de eliminarla.")
+    for ln in lineas:
+        if ln["cantidad_disponible"] < ln["cantidad"]:
+            bloqueos.append(f"Del lote {ln['numero_lote']} ya salieron "
+                            f"{(ln['cantidad'] - ln['cantidad_disponible']).normalize():f} de las "
+                            f"{ln['cantidad'].normalize():f} que sumó esta entrada.")
+    contexto = {"e": e, "lineas": lineas, "bloqueos": bloqueos, "form": request.form}
+    if request.method == "GET":
+        return render_template("movimientos/eliminar.html", **contexto)
+
+    motivo = (request.form.get("motivo") or "").strip()[:255]
+    if len(motivo) < 10:
+        flash("Explique el motivo de la eliminación (al menos 10 caracteres).", "danger")
+        return render_template("movimientos/eliminar.html", **contexto), 400
+    if bloqueos:
+        for b in bloqueos:
+            flash(b, "danger")
+        return render_template("movimientos/eliminar.html", **contexto), 400
+
+    try:
+        fila = call_procedure("CALL sp_eliminar_entrada(%s, %s, %s, NULL)",
+                              (session["id_usuario"], id_movimiento, motivo))
+    except Exception as exc:
+        flash(mensaje_error(exc, "No se pudo eliminar la entrada. Intente más tarde."), "danger")
+        return render_template("movimientos/eliminar.html", **contexto), 400
+
+    ajustes = "; ".join(
+        f"el lote {ln['numero_lote']} " + ("se eliminó (no tenía otros movimientos)"
+                                           if ln["movimientos_del_lote"] == 1 else
+                                           f"bajó a {(ln['cantidad_disponible'] - ln['cantidad']).normalize():f}")
+        for ln in lineas)
+    flash(f"Entrada {e['numero_documento']} eliminada: {ajustes}. Queda registrada en la bitácora.", "success")
+    return redirect(url_for("movimientos.historial", tipo="ENTRADA"))
 
 
 @bp.route("/existencia")

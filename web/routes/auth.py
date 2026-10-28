@@ -23,7 +23,7 @@ from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, abort
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import query_one, execute, conexion_sin_rol, permisos_actuales
+from db import query_one, execute, conexion_sin_rol, permisos_actuales, rol_actual
 
 # El único rol con nombre fijo: tiene siempre todos los permisos (RN-29).
 ADMIN = "Administrador"
@@ -56,6 +56,23 @@ def permiso_requerido(codigo):
             return view(*args, **kwargs)
         return wrapped
     return decorador
+
+
+def solo_administrador(view):
+    """Decorador: exige el rol Administrador en sí, no un permiso que se
+    pueda conceder a otro rol. Lo usa la eliminación de entradas (RN-31)."""
+    @wraps(view)
+    @login_required
+    def wrapped(*args, **kwargs):
+        if rol_actual() != ADMIN:
+            abort(403)
+        return view(*args, **kwargs)
+    return wrapped
+
+
+def es_administrador():
+    """Para las plantillas: ¿el usuario tiene el rol Administrador?"""
+    return rol_actual() == ADMIN
 
 
 def tiene_permiso(*codigos):

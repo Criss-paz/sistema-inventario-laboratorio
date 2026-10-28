@@ -12,6 +12,9 @@
   {% if mov.tipo_movimiento == 'ENTRADA' and tiene_permiso('CORREGIR_ENTRADAS') %}
   <a class="btn btn-sm btn-primary" href="{{ url_for('movimientos.corregir', id_movimiento=mov.id_movimiento) }}">{{ i.icono('editar') }}Corregir entrada</a>
   {% endif %}
+  {% if mov.tipo_movimiento == 'ENTRADA' and es_administrador() %}
+  <a class="btn btn-sm btn-danger" href="{{ url_for('movimientos.eliminar', id_movimiento=mov.id_movimiento) }}">Eliminar entrada</a>
+  {% endif %}
   <a class="btn btn-sm" href="{{ url_for('movimientos.historial') }}">{{ i.icono('volver') }}Historial</a>
 </div>
 

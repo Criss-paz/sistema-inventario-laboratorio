@@ -27,3 +27,4 @@ CALL sp_registrar_salida(2, 1, 25, 'Consumo área química', NULL);
 | `002_devolucion.sql` | `sp_registrar_devolucion`, `fn_devolvible` | RN-19 a RN-22 |
 | `003_correccion_entrada.sql` | `sp_corregir_entrada` (solo Administrador) | RN-25, RN-26 |
 | `004_permisos.sql` | `fn_rol_bd`: el rol de PostgreSQL más bajo que cubre los permisos de un rol de la aplicación | RN-28 |
+| `005_eliminar_entrada.sql` | `sp_eliminar_entrada` (solo el rol Administrador) | RN-31 |

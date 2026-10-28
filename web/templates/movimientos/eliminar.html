@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% import "_iconos.html" as i %}
+{% import "_macros.html" as m %}
+{% block title %}Eliminar entrada {{ e.numero_documento }}{% endblock %}
+{% block content %}
+<div class="top-actions">
+  <h1>Eliminar entrada {{ e.numero_documento }}
+    <span class="subtitle"><code>{{ e.codigo }}</code> {{ e.producto }}, registrada el {{ e.fecha_hora.strftime('%d/%m/%Y a las %H:%M') }} por {{ e.nombre_usuario }}</span></h1>
+  <a class="btn btn-sm" href="{{ url_for('movimientos.detalle', id_movimiento=e.id_movimiento) }}">{{ i.icono('volver') }}Entrada</a>
+</div>
+
+<p class="nota">Solo para una entrada registrada por error (por ejemplo, duplicada). Si solo un dato estaba mal, use <a href="{{ url_for('movimientos.corregir', id_movimiento=e.id_movimiento) }}">Corregir entrada</a>. Al eliminarla, el inventario se ajusta solo y la eliminación queda en la bitácora con su motivo y su nombre (RN-31).</p>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Lote</th><th class="num">Esta entrada sumó</th><th class="num">Existencia hoy</th><th>Después de eliminar</th></tr></thead>
+    <tbody>
+      {% for ln in lineas %}
+      <tr>
+        <td><span class="lote">{{ ln.numero_lote }}</span></td>
+        <td class="num">{{ m.con_unidad(ln.cantidad, ln.unidad_medida) }}</td>
+        <td class="num">{{ m.cantidad(ln.cantidad_disponible) }}</td>
+        <td>
+          {% if ln.cantidad_disponible < ln.cantidad %}<span class="tag red">No se puede: ya salió parte</span>
+          {% elif ln.movimientos_del_lote == 1 %}El lote se elimina (no tiene otros movimientos)
+          {% else %}Queda en {{ m.cantidad(ln.cantidad_disponible - ln.cantidad) }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if bloqueos %}
+<div class="card">
+  <p><strong>Esta entrada no se puede eliminar</strong></p>
+  <ul>{% for b in bloqueos %}<li>{{ b }}</li>{% endfor %}</ul>
+  <a class="btn" href="{{ url_for('movimientos.corregir', id_movimiento=e.id_movimiento) }}">{{ i.icono('editar') }}Corregir entrada</a>
+</div>
+{% else %}
+<form class="card" method="post"
+      onsubmit="return confirm({{ ('¿Eliminar la entrada ' ~ e.numero_documento ~ '? No se puede deshacer.')|tojson }});">
+  <label for="motivo">Motivo de la eliminación <span class="hint">(obligatorio, mínimo 10 caracteres)</span></label>
+  <textarea id="motivo" name="motivo" rows="3" maxlength="255" required minlength="10"
+            placeholder="Ejemplo: entrada duplicada; la misma factura se registró dos veces.">{{ form.get('motivo', '') }}</textarea>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-danger">Eliminar entrada</button>
+    <a class="btn" href="{{ url_for('movimientos.detalle', id_movimiento=e.id_movimiento) }}">Cancelar</a>
+  </div>
+</form>
+{% endif %}
+{% endblock %}
