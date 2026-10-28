@@ -1,6 +1,6 @@
 # Guía de instalación — Sistema Web de Inventario
 
-Estado: actualizado en la Entrega 4 (15 tablas, 22 triggers, 4 procedimientos, 8 vistas y 3 roles de motor + app web Flask al 100%).
+Estado: actualizado en la Entrega 4 (15 tablas, 22 triggers, 5 procedimientos, 8 vistas y 3 roles de motor + app web Flask al 100%).
 
 ## Requisitos previos
 - PostgreSQL 14 o superior.
@@ -65,6 +65,10 @@ psql -U usuario_app -d inventario_laboratorio -f sql/ddl/007_bitacora.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/triggers/006_bitacora.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/views/007_bitacora.sql
 psql -U usuario_app -d inventario_laboratorio -f sql/security/004_permisos_bitacora.sql
+# Eliminación de entradas por el Administrador (RN-31):
+psql -U usuario_app -d inventario_laboratorio -f sql/triggers/007_eliminar_entrada.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/procedures/005_eliminar_entrada.sql
+psql -U usuario_app -d inventario_laboratorio -f sql/security/005_eliminar_entrada.sql
 ```
 Por qué este orden:
 1. `ddl/` — tablas y restricciones.
@@ -110,7 +114,7 @@ Base de datos (en `psql`, conectado como `usuario_app`):
 - [ ] `SELECT count(*) FROM producto;` → 814 y `SELECT count(*) FROM movimiento;` → 6560.
 - [ ] `SELECT tgname FROM pg_trigger WHERE NOT tgisinternal;` → 22 triggers (12 de ellos de la bitácora).
 - [ ] `SELECT min(numero_documento), max(numero_documento) FROM movimiento WHERE tipo_movimiento = 'ENTRADA';` → E000001 y E001790.
-- [ ] `\df sp_*` muestra `sp_registrar_entrada`, `sp_registrar_salida`, `sp_registrar_devolucion` y `sp_corregir_entrada`.
+- [ ] `\df sp_*` muestra `sp_registrar_entrada`, `sp_registrar_salida`, `sp_registrar_devolucion`, `sp_corregir_entrada` y `sp_eliminar_entrada`.
 - [ ] `\du rol_*` muestra `rol_administrador`, `rol_encargado` y `rol_consulta`.
 - [ ] `SET ROLE rol_consulta; UPDATE producto SET stock_minimo = 1 WHERE id_producto = 1;` → *permiso denegado*. Después, `RESET ROLE;`.
 - [ ] La consulta de coherencia de `sql/dml/README.md` devuelve 0.

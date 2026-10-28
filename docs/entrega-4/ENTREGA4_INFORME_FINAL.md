@@ -15,7 +15,7 @@ El Laboratorio Privado Quetzaltenango llevaba el control de su bodega en papel. 
 
 El sistema final tiene:
 - **15 tablas** en tercera forma normal;
-- **22 triggers**, **4 procedimientos almacenados** y **8 vistas** con las reglas de negocio;
+- **22 triggers**, **5 procedimientos almacenados** y **8 vistas** con las reglas de negocio;
 - **3 roles de base de datos** con privilegios diferenciados, sobre los que el administrador define los permisos de cada rol de la aplicación;
 - una **bitácora de auditoría** que registra quién hizo qué y cuándo;
 - una aplicación web con **12 módulos** y control de acceso en dos capas.
@@ -63,7 +63,7 @@ Diseñar, implementar y documentar un sistema de base de datos relacional que co
 | 2 | Relaciones N:M resueltas | 2 | **4**: proveedor–producto (`proveedor_producto`), examen–producto (`examen_producto`), movimiento–lote (`detalle_movimiento`) y rol–permiso (`rol_permiso`) | Modelo relacional |
 | 3 | Normalización hasta 3FN con ejemplo | Sí | Ejemplo completo de 0FN a 3FN | `docs/entrega-2/normalizacion-3fn.md` y `.xlsx` |
 | 4 | Restricciones explícitas | 15 | **38** en el esquema inicial (PK, FK, UNIQUE, CHECK, NOT NULL), más las de las migraciones: `fk_movimiento_origen`, `ck_movimiento_devolucion`, `NOT NULL` de `examen_laboratorio.estado` , en `correccion_entrada`, 2 FK y 3 CHECK, el número de documento (`NOT NULL`, `UNIQUE`, `CHECK`), `permiso`/`rol_permiso` (2 PK, 2 FK, `UNIQUE`, 2 CHECK) y `bitacora` (1 FK, 1 CHECK) | `docs/entrega-2/diccionario-datos.md`, `sql/ddl/` |
-| 5 | Triggers y procedimientos con justificación | 2 y 2 | **22 triggers** (12 de ellos de auditoría) y **4 procedimientos**, más 14 funciones, cada uno con su regla de negocio | `sql/triggers/`, `sql/procedures/` |
+| 5 | Triggers y procedimientos con justificación | 2 y 2 | **22 triggers** (12 de ellos de auditoría) y **5 procedimientos**, más 14 funciones, cada uno con su regla de negocio | `sql/triggers/`, `sql/procedures/` |
 | 6 | Roles con privilegios diferenciados | 3 | **3**: `rol_consulta ⊂ rol_encargado ⊂ rol_administrador`; además, permisos editables por rol de la aplicación (RN-28) | `sql/security/` |
 | 7 | Registros por tabla principal | 50 | producto 814, lote 1,296, movimiento 6,560, detalle_movimiento 6,646, proveedor_producto 425, examen_producto 114, proveedor 50, examen_laboratorio 50. Excepciones justificadas: `rol`, `categoria` y `usuario` son catálogos de configuración | `sql/dml/` |
 
@@ -116,8 +116,8 @@ El CRUD por tabla, con la justificación de las operaciones que no se ofrecen a 
 | Entrega 2: login y CRUD | 18 | 18 aprobados |
 | Entrega 3: triggers, FEFO, roles, valorización | 8 | 8 aprobados, sobre una instalación desde cero en un segundo equipo |
 | Entrega 3: devolución de salidas | 6 | 6 aprobados |
-| Entrega 4: flujos del manual de usuario, corrección de entradas, carga de SIGAL, número de documento, roles y permisos, bitácora, respaldo, instalación | 19 | 19 aprobados, con capturas |
-| Regresión de la aplicación (Entrega 4) | 239 verificaciones | 0 fallas |
+| Entrega 4: flujos del manual de usuario, corrección y eliminación de entradas, carga de SIGAL, número de documento, roles y permisos, bitácora, respaldo, instalación | 20 | 20 aprobados, con capturas |
+| Regresión de la aplicación (Entrega 4) | 256 verificaciones | 0 fallas |
 
 Las pruebas encontraron defectos reales, que se corrigieron antes de cada cierre:
 - en la Entrega 3, el generador de la carga de datos y el kardex, que restaba las devoluciones;

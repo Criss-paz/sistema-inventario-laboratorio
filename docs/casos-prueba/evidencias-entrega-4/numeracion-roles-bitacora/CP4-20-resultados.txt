@@ -1,0 +1,21 @@
+-- CP4-20: eliminar una entrada (RN-31), pruebas automáticas con Flask test_client contra la base de desarrollo
+-- Fecha: 27/10/2026 19:09 · ejecutadas con apoyo de Claude Code (ver bitácora IA)
+
+OK    encargado: 403
+OK    consulta: 403
+OK    encargado: 403 al enviar
+OK    encargado no ve el botón
+OK    administrador ve el botón
+OK    una salida no ofrece eliminar
+OK    eliminar una salida redirige con aviso
+OK    entrada consumida: avisa y no ofrece el formulario
+OK    entrada consumida: no se elimina
+OK    E001793: página de confirmación
+OK    motivo corto rechazado
+OK    eliminada con mensaje del ajuste
+OK    el movimiento ya no existe
+OK    el lote que creó se eliminó
+OK    bitácora: ELIMINAR a nombre del administrador
+OK    bitácora: "Eliminó entrada" con el motivo
+OK    inventario coherente: 0 lotes descuadrados
+FALLAS: []

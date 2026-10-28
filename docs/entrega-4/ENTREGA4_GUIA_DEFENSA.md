@@ -69,12 +69,12 @@ WHERE l.cantidad_disponible <> coalesce((
 | Dato | Valor |
 |---|---|
 | Tablas / entidades principales / relaciones N:M | 15 / 9 / 4 |
-| Triggers / procedimientos / funciones / vistas / roles de BD | 22 / 4 / 14 / 8 / 3 |
+| Triggers / procedimientos / funciones / vistas / roles de BD | 22 / 5 / 14 / 8 / 3 |
 | Permisos que se pueden conceder a un rol | 11 |
 | Productos / lotes / movimientos (papel + SIGAL, hasta el 21/10/2026) | 814 / 1,296 / 6,560 (E000001 a E001790) |
 | Valor del inventario con los datos iniciales | Q600,338.34 |
-| Requerimientos | 39 RF, 18 RNF y 30 RN, todos implementados |
-| Casos de prueba ejecutados (entregas 2 a 4) | 49, todos aprobados; regresión de 239 verificaciones |
+| Requerimientos | 39 RF, 18 RNF y 31 RN, todos implementados |
+| Casos de prueba ejecutados (entregas 2 a 4) | 50, todos aprobados; regresión de 256 verificaciones |
 
 ---
 
@@ -116,6 +116,9 @@ Con un movimiento inverso: la **devolución**. Queda enlazada a la salida que co
 
 **Si el historial es inmutable, ¿cómo se corrige una entrada mal digitada?**
 Con `sp_corregir_entrada`, solo el Administrador. La entrada no se borra: por cada dato que cambia (cantidad, precio, proveedor, número de lote o vencimiento) se inserta una fila en `correccion_entrada` con el valor anterior, el nuevo, el motivo y el usuario. Esa tabla tampoco se puede modificar. El trigger de inmutabilidad solo deja pasar el `UPDATE` de cantidad o precio de un detalle mientras corre el procedimiento, que lo indica con una variable de sesión local. Ningún rol tiene `UPDATE` sobre `detalle_movimiento`, así que la variable sola no sirve de nada. Si la cantidad baja, otro trigger ajusta el lote y no lo deja negativo.
+
+**Si el historial es inmutable, ¿por qué el Administrador puede eliminar una entrada?**
+Porque una entrada registrada por error (duplicada, en el producto equivocado) no corresponde a nada real. Solo la elimina el rol Administrador, con motivo, y solo si ninguna de sus unidades salió del lote: si ya salió algo, la existencia quedaría negativa y hay que corregir la cantidad. `sp_eliminar_entrada` resta lo que la entrada sumó, borra el lote si se quedó sin movimientos y, antes de borrar, guarda en la bitácora el movimiento completo y el motivo (RN-31). Las salidas nunca se eliminan: se devuelven.
 
 **¿Por qué no se puede corregir el producto de una entrada?**
 Porque movería existencia de un producto a otro y podría dejar sin respaldo salidas ya registradas. Se resuelve con una salida del producto equivocado y una entrada en el correcto, cada una con su observación.
@@ -161,7 +164,7 @@ Los catálogos usan baja lógica, para que el historial siempre muestre a qué p
 Administración → Respaldo descarga un `.sql` con los datos de las 15 tablas, bitácora incluida, leídos en una sola foto consistente (`REPEATABLE READ`). Se restaura con `psql` sobre el esquema instalado, en una sola transacción y con los triggers apagados solo durante la carga. Se probó restaurándolo: las 11 tablas quedaron idénticas a la original.
 
 **¿Cómo se instala desde cero?**
-Siguiendo `INSTALL.md`: crear la base, ejecutar los scripts en orden (estructura, triggers antes de los datos, seguridad al final), configurar `.env` y ejecutar la aplicación. Son 33 pasos y los scripts tardan unos 30 segundos.
+Siguiendo `INSTALL.md`: crear la base, ejecutar los scripts en orden (estructura, triggers antes de los datos, seguridad al final), configurar `.env` y ejecutar la aplicación. Son 36 pasos y los scripts tardan unos 30 segundos.
 
 **¿Cómo usaron la IA y cómo garantizan que entienden el resultado?**
 Claude Code generó borradores de SQL, código y documentos. Cada resultado se probó contra la base real antes del commit, y la bitácora registra qué se corrigió o rechazó. Las pruebas encontraron errores que la IA no había visto: en el generador de la carga, en el kardex de devoluciones y en las plantillas. Cada decisión de esta guía la podemos explicar sin la herramienta.

@@ -212,6 +212,21 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 
 ---
 
+### Registro de Bitácora IA — Eliminación de entradas por el Administrador
+
+| Campo | Detalle |
+|---|---|
+| **Fecha** | 27/10/2026 |
+| **Herramienta** | Claude Code (Opus) |
+| **Objetivo** | Que el Administrador pueda eliminar una entrada registrada por error desde la aplicación y que el inventario se ajuste solo. |
+| **Prompt utilizado** | Primero: "Como no se puede eliminar entradas únicamente desde la base de datos, dame el código para hacerlo desde el editor SQL en Neon". La IA entregó un bloque `DO` con protecciones y registro en la bitácora. Después: "¿Se puede agregar que el único que puede eliminar las entradas es el admin y que automáticamente, cuando elimine la entrada, ajuste el inventario?" |
+| **Resultado obtenido** | `triggers/007`: segunda excepción controlada en `fn_historial_inmutable` (solo `DELETE` de entradas y su detalle mientras corre el procedimiento). `procedures/005`: `sp_eliminar_entrada`, que exige el rol Administrador, motivo, que no haya correcciones y que ninguna unidad haya salido; registra en la bitácora antes de borrar, resta del lote y borra el lote vacío (RN-31). `security/005`: solo `rol_administrador`. En la web: `solo_administrador`, botón en la ficha y pantalla de confirmación que muestra cómo queda cada lote. |
+| **Validación del grupo** | Se decidió que fuera solo el rol Administrador y no un permiso concedible, como pidió el equipo, y se verifica también dentro del procedimiento. Se mantuvo la regla de no dejar existencias negativas: si ya salió algo, se rechaza y se ofrece Corregir entrada. Pruebas en `psql` con `BEGIN … ROLLBACK` y 17 verificaciones en la app. **Corrección:** la primera versión del procedimiento usaba `r` como variable y como alias de la tabla rol, y PostgreSQL lo rechazó; se renombró el alias. Instalación desde cero: 36 de 36 pasos. |
+| **Estándares aplicados** | S2, S3, S6, S8; A2, A3, A4, A6; R6. |
+| **Responsable** | José Eduardo Escobar |
+
+---
+
 # Parte 2 — Bitácora consolidada del proyecto
 
 | Entrega | Archivo original | Registros | Herramientas | Responsables |
@@ -219,7 +234,7 @@ Las bitácoras de cada entrega se conservan sin cambios en su ubicación origina
 | 1 — Análisis, propuesta y diseño conceptual | `docs/bitacora-ia/Bitacora-IA.md` | 5 actividades | IA como apoyo de análisis y redacción | Equipo |
 | 2 — Diseño lógico e implementación base | `docs/entrega-2/Bitacora-IA.md` | 13 | Claude Code (Opus) | José Eduardo Escobar, Cristopher Alexis Castellanos Paz |
 | 3 — Implementación avanzada, seguridad y pruebas | `docs/bitacora-ia/ENTREGA3_BITACORA_IA.md` | 10 | Claude, Claude Code (Opus) | José Eduardo Escobar (8), Cristopher Alexis Castellanos Paz (2) |
-| 4 — Integración, documentación y defensa | este archivo | 13 | Claude Code (Opus), Antigravity, Playwright | José Eduardo Escobar (12), Cristopher Alexis Castellanos Paz (1) |
+| 4 — Integración, documentación y defensa | este archivo | 14 | Claude Code (Opus), Antigravity, Playwright | José Eduardo Escobar (13), Cristopher Alexis Castellanos Paz (1) |
 
 ### Para qué se usó la IA en cada etapa
 

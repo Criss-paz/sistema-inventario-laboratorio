@@ -132,7 +132,8 @@ La aplicación está publicada en Render y la base de datos en Neon (PostgreSQL 
 | Datos al día | Movimientos de SIGAL del 24/09 al 21/10/2026 (`sql/dml/005_carga_sigal.sql`) |
 | Número de documento (26/10/2026) | Cada movimiento con su número E/S/D; los cargados conservan el del papel y los nuevos siguen el correlativo (RN-27) |
 | Permisos por rol (26/10/2026) | El administrador marca qué puede hacer cada rol y crea roles nuevos; la base sigue aplicando su capa (RN-28, RN-29) |
+| Eliminar entradas (27/10/2026) | Solo el Administrador elimina una entrada registrada por error, con motivo; el lote se ajusta solo y queda en la bitácora. No si ya salieron unidades (RN-31) |
 | Bitácora (26/10/2026) | Quién creó, modificó o eliminó qué, inicios de sesión y descargas de respaldo; inmutable (RN-30) |
 | Correcciones | La devolución se mostraba como salida en el kardex, la ficha del lote e Inicio; "Devolución" sin tilde |
 
-CRUD por tabla y su justificación: `docs/entrega-4/ENTREGA4_MATRIZ_TRAZABILIDAD.md`. Casos de prueba: `docs/casos-prueba/casos-prueba-entrega-4.md` (19 de 19 aprobados; regresión de 239 verificaciones). Manual de usuario: `docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md`.
+CRUD por tabla y su justificación: `docs/entrega-4/ENTREGA4_MATRIZ_TRAZABILIDAD.md`. Casos de prueba: `docs/casos-prueba/casos-prueba-entrega-4.md` (20 de 20 aprobados; regresión de 256 verificaciones). Manual de usuario: `docs/entrega-4/ENTREGA4_MANUAL_USUARIO.md`.

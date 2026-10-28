@@ -4,16 +4,16 @@
 **Entrega:** Entrega 4 — Integración, documentación y defensa oral
 **Estado:** firmada por ambos integrantes (26/10/2026)
 
-Revisión preparada del 20 al 26/10/2026 contra el repositorio, la base de datos con el inventario real al 21/10/2026 (814 productos, 1,296 lotes, 6,560 movimientos numerados de E000001 a E001790) y una instalación desde cero verificada en los dos equipos del grupo (33 scripts SQL y `seed_usuarios.py` de `INSTALL.md` sin errores, 0 lotes incoherentes, inventario valorizado en Q600,338.34).
+Revisión preparada del 20 al 26/10/2026 contra el repositorio, la base de datos con el inventario real al 21/10/2026 (814 productos, 1,296 lotes, 6,560 movimientos numerados de E000001 a E001790) y una instalación desde cero verificada en los dos equipos del grupo (36 scripts SQL y `seed_usuarios.py` de `INSTALL.md` sin errores, 0 lotes incoherentes, inventario valorizado en Q600,338.34).
 
 Por medio de la presente, los integrantes del equipo hacemos constar que la documentación y el código de la **Entrega 4** fueron revisados antes de su presentación. Puntos de la consigna (sección 8):
 
 - [x] **Cumplimos la estructura de carpetas obligatoria** (sección 7): `README.md`, `.gitignore`, `.env.example`, `INSTALL.md`, `docs/` (entrega-1 a entrega-4, diagramas, certificaciones, bitacora-ia, casos-prueba), `sql/` (ddl, dml, views, triggers, procedures, security) y `web/`.
-- [x] **Cumplimos los estándares SQL** (sección 6.2): 8 de 8. 33 de 33 scripts con encabezado, 17 de 17 FK con `ON DELETE` y `ON UPDATE`, migraciones aditivas probadas antes del commit. Detalle en `docs/entrega-4/ENTREGA4_ESTANDARES_CUMPLIMIENTO.md`.
+- [x] **Cumplimos los estándares SQL** (sección 6.2): 8 de 8. 36 de 36 scripts con encabezado, 17 de 17 FK con `ON DELETE` y `ON UPDATE`, migraciones aditivas probadas antes del commit. Detalle en `docs/entrega-4/ENTREGA4_ESTANDARES_CUMPLIMIENTO.md`.
 - [x] **Cumplimos los estándares de repositorio** (sección 6.1): R1, R2, R3, R4, R6, R7 y R8 se cumplen (con commits propios de ambos integrantes también en esta entrega). **R5:** el tag `entrega-4` se crea al cerrar esta firma.
 - [x] **Cumplimos los estándares de aplicación** (sección 6.3): 6 de 6. Separación de capas, errores sin SQL crudo, validación en el servidor, consultas parametrizadas, código legible y documentado.
-- [x] **La bitácora de IA está actualizada**, con 13 registros de esta entrega y la consolidada de todo el proyecto (`docs/bitacora-ia/ENTREGA4_BITACORA_IA.md`).
-- [x] **Los casos de prueba fueron ejecutados y documentados:** 19 de 19 aprobados (20 al 26/10/2026), con capturas (`docs/casos-prueba/casos-prueba-entrega-4.md`). Cubren los flujos U-01 a U-15 del manual de usuario, la corrección de entradas, la carga de los movimientos del 24/09 al 21/10, el número de documento, los roles con permisos editables, la bitácora, la restauración de un respaldo y la instalación desde cero. La regresión de la aplicación sumó 239 verificaciones sin fallas.
+- [x] **La bitácora de IA está actualizada**, con 14 registros de esta entrega y la consolidada de todo el proyecto (`docs/bitacora-ia/ENTREGA4_BITACORA_IA.md`).
+- [x] **Los casos de prueba fueron ejecutados y documentados:** 20 de 20 aprobados (20 al 27/10/2026), con capturas (`docs/casos-prueba/casos-prueba-entrega-4.md`). Cubren los flujos U-01 a U-16 del manual de usuario, la corrección y la eliminación de entradas, la carga de los movimientos del 24/09 al 21/10, el número de documento, los roles con permisos editables, la bitácora, la restauración de un respaldo y la instalación desde cero. La regresión de la aplicación sumó 256 verificaciones sin fallas. La eliminación de entradas por el Administrador (CP4-20) se agregó el 27/10/2026, después de las firmas.
 - [x] **No hay credenciales expuestas en el repositorio:** búsqueda con `git grep` de cadenas de conexión, contraseñas y claves de Neon sin resultados reales. Los respaldos descargados están excluidos por `.gitignore`.
 
 Productos de la Entrega 4 (consigna, sección 11):

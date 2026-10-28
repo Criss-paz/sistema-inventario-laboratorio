@@ -1,5 +1,5 @@
 -- CP4-14 (actualizado): instalación desde cero con todos los scripts de INSTALL.md, paso 3, en un esquema vacío
--- Fecha: 26/10/2026 09:52 · PostgreSQL 18.6 · Windows 11 · ejecutado con apoyo de Claude Code (ver bitácora IA)
+-- Fecha: 27/10/2026 19:06 · PostgreSQL 18.6 · Windows 11 · ejecutado con apoyo de Claude Code (ver bitácora IA)
 -- security/001_roles.sql no se incluye: crea roles (requiere superusuario) y los roles ya existen en el servidor.
 OK    sql/ddl/001_schema.sql
 OK    sql/triggers/001_triggers.sql
@@ -34,7 +34,10 @@ OK    sql/ddl/007_bitacora.sql
 OK    sql/triggers/006_bitacora.sql
 OK    sql/views/007_bitacora.sql
 OK    sql/security/004_permisos_bitacora.sql
--- 33 pasos en 27 s
+OK    sql/triggers/007_eliminar_entrada.sql
+OK    sql/procedures/005_eliminar_entrada.sql
+OK    sql/security/005_eliminar_entrada.sql
+-- 36 pasos en 13 s
  tablas 
 --------
      15

@@ -14,7 +14,7 @@ Cada procedimiento tiene un código (**U-01**, **U-02**…). El mismo código ap
 1. [Antes de empezar](#1-antes-de-empezar)
 2. [Entrar, salir y cambiar la contraseña](#2-entrar-salir-y-cambiar-la-contraseña) — U-01, U-02
 3. [El Panel y la búsqueda rápida](#3-el-panel-y-la-búsqueda-rápida)
-4. [Registrar y corregir una entrada](#4-registrar-una-entrada) — U-03, U-13
+4. [Registrar, corregir y eliminar una entrada](#4-registrar-una-entrada) — U-03, U-13, U-16
 5. [Registrar una salida (consumo)](#5-registrar-una-salida) — U-04
 6. [Corregir una salida mal registrada (devolución)](#6-corregir-una-salida-mal-registrada-devolución) — U-05
 7. [Consultar lotes, existencias y vencimientos](#7-consultar-lotes-existencias-y-vencimientos) — U-06
@@ -199,7 +199,19 @@ Qué hace el sistema por usted:
 - El **kardex y el valor del inventario** se recalculan con el precio corregido.
 - El **proveedor, el número de lote y el vencimiento** son datos del lote: si el lote recibió varias entradas, el formulario lo advierte, porque la corrección vale para todas.
 
-No se corrige el **producto** de una entrada. Si se registró en el producto equivocado, registre una salida de ese producto y una entrada en el correcto, cada una con su observación.
+No se corrige el **producto** de una entrada. Si se registró en el producto equivocado, el Administrador puede eliminarla (U-16) y registrarla de nuevo en el producto correcto.
+
+### U-16 Eliminar una entrada registrada por error
+
+*Solo el Administrador* (es el único rol que lo puede hacer; no es un permiso que se conceda a otros roles). Es para una entrada que **no debió registrarse**: duplicada, en el producto equivocado o de una compra que no llegó. Si solo un dato está mal, use U-13.
+
+1. Abra la entrada y presione **Eliminar entrada** (botón rojo).
+2. La pantalla muestra, para cada lote, cuánto sumó la entrada, la existencia de hoy y cómo quedará: *"Queda en 12"* o *"El lote se elimina"* si la entrada lo creó y no tiene otros movimientos.
+3. Escriba el **motivo** (mínimo 10 caracteres), presione **Eliminar entrada** y confirme. Aparece, por ejemplo, *"Entrada E001793 eliminada: el lote PRUEBA-ELIM-1 se eliminó (no tenía otros movimientos). Queda registrada en la bitácora."*
+
+**El inventario se ajusta solo:** el lote baja lo que la entrada había sumado, y el kardex y el valor del inventario se recalculan.
+
+El sistema **no la deja eliminar** si de ese lote ya salió parte de lo que la entrada sumó (la existencia quedaría negativa) o si la entrada ya tiene correcciones; en esos casos lo explica en la misma pantalla y ofrece **Corregir entrada**. Las salidas nunca se eliminan: se corrigen con una devolución (U-05). La eliminación queda en la **Bitácora** (U-15) con el motivo y su nombre.
 
 ---
 
@@ -441,7 +453,7 @@ El archivo contiene información del laboratorio y de sus proveedores: trátelo 
 ## 15. Preguntas frecuentes
 
 **Registré una entrada con un error. ¿Cómo la corrijo?**
-El administrador abre la entrada y usa **Corregir entrada** (U-13): cantidad, precio, proveedor, número de lote o vencimiento. La entrada no se borra y la corrección queda registrada con su motivo. Una **salida** equivocada se corrige con una **devolución** (U-05).
+El administrador abre la entrada y usa **Corregir entrada** (U-13): cantidad, precio, proveedor, número de lote o vencimiento. La entrada no se borra y la corrección queda registrada con su motivo. Si la entrada entera sobraba (por ejemplo, duplicada), el Administrador la puede **eliminar** (U-16) y el inventario se ajusta solo. Una **salida** equivocada se corrige con una **devolución** (U-05).
 
 **¿Por qué la salida tomó un lote distinto del que tengo en la mano?**
 Porque el sistema siempre descuenta primero del lote que vence antes (FEFO). Así se evita que un lote se venza en bodega mientras se usa uno más nuevo. Use físicamente ese lote.

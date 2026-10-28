@@ -60,11 +60,11 @@ Este manual es para quien instala, administra o modifica el sistema: el administ
 │   │                 005 número de documento · 006 permisos por rol · 007 bitácora
 │   ├── dml/          001–004 datos del papel (generar_carga.py) · 005 movimientos de SIGAL (generar_carga_sigal.py)
 │   ├── triggers/     001 existencia, inmutabilidad, vencimiento · 002 tope de devolución · 003 corrección
-│   │                 004 número de documento · 005 rol Administrador protegido · 006 bitácora
-│   ├── procedures/   001 entrada y salida (FEFO) · 002 devolución · 003 corrección de entradas · 004 fn_rol_bd
+│   │                 004 número de documento · 005 rol Administrador protegido · 006 bitácora · 007 eliminar entrada
+│   ├── procedures/   001 entrada y salida (FEFO) · 002 devolución · 003 corrección · 004 fn_rol_bd · 005 eliminar entrada
 │   ├── views/        001 consultas · 002 kardex y valorización · 003–004 devolución · 005 correcciones
 │   │                 006 número en el historial · 007 bitácora
-│   └── security/     001 roles · 002 devolución · 003 corrección · 004 permisos y bitácora
+│   └── security/     001 roles · 002 devolución · 003 corrección · 004 permisos y bitácora · 005 eliminar entrada
 └── web/
     ├── app.py          arma la app: blueprints, filtros, manejadores de error, encabezados
     ├── config.py       variables de entorno
@@ -119,7 +119,7 @@ Las 17 FK declaran `ON DELETE` y `ON UPDATE` con su justificación en el DDL (es
 |---|---|---|
 | `trg_detalle_movimiento_existencia` | `detalle_movimiento` | La entrada y la devolución suman a la existencia del lote; la salida resta, con bloqueo `FOR UPDATE`, y nunca la deja negativa (RN-01 a RN-04) |
 | `trg_z_devolucion_tope` | `detalle_movimiento` | Una devolución no puede devolver más de lo que salió de ese lote, descontando lo ya devuelto (RN-22). El prefijo `z` hace que corra después del de existencia |
-| `trg_movimiento_inmutable`, `trg_detalle_movimiento_inmutable` | `movimiento`, `detalle_movimiento` | Prohíben `UPDATE` y `DELETE`: el historial solo crece (RN-09). Única excepción: la cantidad y el precio de una entrada mientras corre `sp_corregir_entrada`, que deja la corrección registrada |
+| `trg_movimiento_inmutable`, `trg_detalle_movimiento_inmutable` | `movimiento`, `detalle_movimiento` | Prohíben `UPDATE` y `DELETE`: el historial solo crece (RN-09). Dos excepciones controladas: la cantidad y el precio de una entrada mientras corre `sp_corregir_entrada`, y el borrado de una entrada mientras corre `sp_eliminar_entrada`; ambas quedan registradas |
 | `trg_lote_vencimiento` | `lote` | Si el producto requiere vencimiento, el lote debe tener fecha (RN-07) |
 | `trg_z_correccion_existencia` | `detalle_movimiento` | Al corregir la cantidad de una entrada, ajusta el lote por la diferencia y no lo deja negativo (RN-01, RN-25) |
 | `trg_correccion_inmutable` | `correccion_entrada` | Las correcciones no se modifican ni se borran |
@@ -137,6 +137,7 @@ En total, 22 triggers.
 | `sp_registrar_entrada` | Procedimiento, `SECURITY DEFINER` | Crea el lote si no existe (o suma al existente) y registra la entrada en una sola transacción |
 | `sp_registrar_salida` | Procedimiento, `SECURITY DEFINER` | Reparte la cantidad entre los lotes no vencidos, primero el que vence antes (FEFO); falla completa si no alcanza |
 | `sp_registrar_devolucion` | Procedimiento, `SECURITY DEFINER` | Registra el movimiento inverso de una salida, con motivo obligatorio, enlazado a ella (RN-19 a RN-21) |
+| `sp_eliminar_entrada` | Procedimiento, `SECURITY DEFINER`, solo el rol Administrador | Elimina una entrada sin unidades consumidas ni correcciones, ajusta el lote y deja la eliminación en la bitácora (RN-31) |
 | `sp_corregir_entrada` | Procedimiento, `SECURITY DEFINER`, solo Administrador | Corrige cantidad, precio, proveedor, número de lote o vencimiento de una entrada y registra cada cambio en `correccion_entrada` (RN-25, RN-26) |
 | `fn_devolvible` | Función, `SECURITY DEFINER` | Saldo que aún se puede devolver de cada lote de una salida |
 | `fn_kardex_promedio` | Función | Kardex de un producto a costo promedio ponderado móvil |
@@ -197,7 +198,7 @@ Con los datos iniciales (papel y SIGAL, hasta el 21/10/2026), el inventario vale
 |---|---|---|
 | `auth.py` | Login, logout, cambiar mi contraseña; `login_required`, `permiso_requerido`, `tiene_permiso`; inicio, intento fallido y cierre de sesión en la bitácora | Todos |
 | `reportes.py` | Panel "Bodega hoy" (indicadores, calendario de vencimientos, reponer primero, actividad), inventario bajo, por vencer y `buscar` (JSON para la búsqueda `Ctrl K`: productos y movimientos por número) | Todos |
-| `movimientos.py` | Historial (todos/entradas/salidas/devoluciones, búsqueda por número), detalle, entrada, salida, devolución, corrección de entradas | Consultar: todos · Registrar y corregir: permisos `REGISTRAR_ENTRADAS`, `REGISTRAR_SALIDAS`, `DEVOLVER_SALIDAS`, `CORREGIR_ENTRADAS` |
+| `movimientos.py` | Historial (todos/entradas/salidas/devoluciones, búsqueda por número), detalle, entrada, salida, devolución, corrección y eliminación de entradas | Consultar: todos · Registrar y corregir: permisos `REGISTRAR_ENTRADAS`, `REGISTRAR_SALIDAS`, `DEVOLVER_SALIDAS`, `CORREGIR_ENTRADAS`; eliminar entradas: solo el rol Administrador (`solo_administrador`) |
 | `lotes.py` | Lista por estado, ficha, corrección de datos | Consultar: todos · Corregir: `EDITAR_LOTES` |
 | `productos.py`, `categorias.py` | CRUD con baja lógica | Consultar: todos · Editar: `PRODUCTOS` |
 | `proveedores.py` | CRUD con baja lógica y productos que suministra con su precio | Consultar: todos · Editar: `PROVEEDORES` |
@@ -283,7 +284,7 @@ Cualquier otro uso nuevo de esa función debe justificarse igual.
 
 En Windows, antes de `psql`: `$env:PGCLIENTENCODING = "UTF8"`. Sin esto, las tildes se guardan corruptas sin ningún error.
 
-La instalación completa desde cero toma unos 30 segundos de scripts. Se verificó el 26/10/2026 con los 33 pasos (CP4-14): 15 tablas, 814 productos, 6,560 movimientos numerados de E000001 a E001790, 0 lotes incoherentes y Q600,338.34.
+La instalación completa desde cero toma unos 30 segundos de scripts. Se verificó el 27/10/2026 con los 36 pasos (CP4-14): 15 tablas, 814 productos, 6,560 movimientos numerados de E000001 a E001790, 0 lotes incoherentes y Q600,338.34.
 
 ### 6.2 Producción (Render + Neon)
 
@@ -326,6 +327,10 @@ psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/ddl/007_bitacora.sql
 psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/triggers/006_bitacora.sql
 psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/views/007_bitacora.sql
 psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/security/004_permisos_bitacora.sql
+# Eliminación de entradas (RN-31):
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/triggers/007_eliminar_entrada.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/procedures/005_eliminar_entrada.sql
+psql "<cadena>" -v ON_ERROR_STOP=1 -f sql/security/005_eliminar_entrada.sql
 ```
 
 **Orden con el despliegue:** primero la base y después el código. La versión de la app del 26/10/2026 lee `permiso` y `rol_permiso` en cada petición: si se despliega antes de las migraciones, ninguna página abre.
@@ -427,16 +432,15 @@ Qué hace el archivo al restaurar, en **una sola transacción** (si algo falla, 
 | Revisar en la Bitácora los intentos fallidos de inicio de sesión y los cambios de permisos | Mensual |
 | Actualizar dependencias de `web/requirements.txt` y volver a correr las pruebas | Trimestral |
 
-### 8.4 Eliminar una entrada registrada por error (solo desde la base)
+### 8.4 Eliminación de entradas (RN-31)
 
-La aplicación no elimina movimientos (RN-09): una entrada se corrige (U-13) y una salida se devuelve (U-05). Si una entrada se registró por completo por error (por ejemplo, duplicada) y la corrección no basta, el responsable del servidor puede eliminarla **desde la base**, como mantenimiento excepcional, con el bloque `DO` que se entrega aparte al administrador (no se versiona como migración porque no debe correr en una instalación). El bloque:
+La única eliminación de movimientos que existe: el **Administrador** elimina una entrada registrada por error desde su ficha (U-16 del manual de usuario). La hace `sp_eliminar_entrada` (`procedures/005`), `SECURITY DEFINER` y ejecutable solo por `rol_administrador`; además exige que el usuario tenga el rol Administrador de la aplicación (un rol personalizado de nivel administrador no basta), y la ruta usa `solo_administrador`, no un permiso que se pueda conceder. El procedimiento:
 
-- se niega si el movimiento no es una entrada, si tiene correcciones registradas o si de su lote ya salió parte de lo que sumó (dejaría la existencia descuadrada), y exige un motivo de al menos 10 caracteres;
-- **antes de borrar**, escribe en la bitácora la acción `ELIMINAR` a nombre del administrador, con el movimiento, su detalle y el motivo; la pantalla Bitácora la muestra como "Eliminó entrada E…";
-- resta la cantidad del lote, borra el detalle y el movimiento con los triggers de inmutabilidad apagados **solo dentro de su transacción**, y borra el lote si quedó sin movimientos;
-- termina con la consulta de coherencia, que debe dar 0.
+- se niega si el movimiento no es una entrada, si tiene correcciones o si de su lote ya salió parte de lo que sumó, y exige un motivo de al menos 10 caracteres;
+- **antes de borrar** escribe en la bitácora `ELIMINAR` a nombre del administrador, con el movimiento, su detalle y el motivo ("Eliminó entrada E…" en la pantalla Bitácora);
+- resta la cantidad de cada lote, borra el detalle y la cabecera, y borra el lote si quedó sin movimientos; todo en una transacción.
 
-El número de documento eliminado no se reutiliza salvo que fuera el último de su tipo. Antes de usarlo, descargue un respaldo (sección 7).
+Para borrar pasa por `fn_historial_inmutable` (`triggers/007`), que solo deja pasar ese `DELETE` mientras el procedimiento tiene activa la variable local `inventario.eliminar_entrada`, y solo de entradas. Ningún rol tiene `DELETE` sobre `movimiento` ni `detalle_movimiento`, así que la variable sola no sirve. El número de documento eliminado no se reutiliza salvo que fuera el último de su tipo.
 
 ---
 
@@ -446,8 +450,8 @@ El número de documento eliminado no se reutiliza salvo que fuera el último de 
 |---|---|---|
 | Casos de la Entrega 2 | `docs/casos-prueba/casos-prueba-entrega-2.md` | Login, CRUD de categorías y productos (18) |
 | Casos de la Entrega 3 | `docs/casos-prueba/casos-prueba-entrega-3.md` | Triggers, FEFO, inmutabilidad, roles, valorización, devolución (14) |
-| Casos de la Entrega 4 | `docs/casos-prueba/casos-prueba-entrega-4.md` | Flujos del manual de usuario, corrección de entradas, carga de SIGAL, número de documento, roles y permisos, bitácora, respaldo y restauración, instalación desde cero (19) |
-| Regresión de la app | Descrita en los casos de la Entrega 4 | 43 pantallas × 3 roles y los módulos nuevos (239 verificaciones) |
+| Casos de la Entrega 4 | `docs/casos-prueba/casos-prueba-entrega-4.md` | Flujos del manual de usuario, corrección de entradas, carga de SIGAL, número de documento, roles y permisos, bitácora, respaldo y restauración, eliminación de entradas, instalación desde cero (20) |
+| Regresión de la app | Descrita en los casos de la Entrega 4 | 43 pantallas × 3 roles y los módulos nuevos (256 verificaciones) |
 
 Las pruebas de la app usan el cliente de pruebas de Flask (`app.test_client()`) contra una base real con los datos iniciales; cada una deshace lo que crea. Las del navegador usan Playwright con Edge.
 
