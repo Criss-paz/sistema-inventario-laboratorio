@@ -15,3 +15,10 @@
 | [`ENTREGA4_GUIA_DEFENSA.md`](ENTREGA4_GUIA_DEFENSA.md) | Guion de la demostración y preguntas probables | Defensa oral |
 
 Fuera de esta carpeta: casos de prueba (`docs/casos-prueba/casos-prueba-entrega-4.md`), bitácora consolidada (`docs/bitacora-ia/ENTREGA4_BITACORA_IA.md`), certificación (`docs/certificaciones/`), diagramas actualizados (`docs/diagramas/`) y `AVANCE_WEB.md`.
+
+## Añadido el 27/10/2026
+
+| Archivo | Contenido |
+|---|---|
+| [`ENTREGA4_SEGURIDAD_WEB.md`](ENTREGA4_SEGURIDAD_WEB.md) | Defensas contra peticiones falsificadas o repetidas, a raíz de la observación del catedrático. Incluye por qué OAuth 2.0 no aplica a esta arquitectura |
+| [`ENTREGA4_PRESENTACION.pptx`](ENTREGA4_PRESENTACION.pptx) | Presentación general del sistema: problema, arquitectura, tecnologías elegidas y por qué, capturas del sistema y despliegue (18 diapositivas) |
