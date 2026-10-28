@@ -135,6 +135,12 @@ def _describir(f, n):
         que = ref if f["accion"] == "SESION_FALLIDA" else ""
     elif entidad == "respaldo":
         que = ref
+    elif entidad == "movimiento" and f["accion"] == "ELIMINAR":
+        # Solo por mantenimiento desde la base (manual técnico, 8.4): guarda
+        # el movimiento, su detalle y el motivo.
+        que = f"{TIPOS.get((det.get('movimiento') or {}).get('tipo_movimiento'), 'movimiento')} {ref}"
+        if det.get("motivo"):
+            cambios.append(("motivo", None, det["motivo"]))
     elif entidad == "movimiento":
         accion = "Registró"
         que = f"{TIPOS.get(det.get('tipo_movimiento'), 'movimiento')} {ref}"

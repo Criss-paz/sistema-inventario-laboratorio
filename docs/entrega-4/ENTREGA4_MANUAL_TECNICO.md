@@ -427,6 +427,17 @@ Qué hace el archivo al restaurar, en **una sola transacción** (si algo falla, 
 | Revisar en la Bitácora los intentos fallidos de inicio de sesión y los cambios de permisos | Mensual |
 | Actualizar dependencias de `web/requirements.txt` y volver a correr las pruebas | Trimestral |
 
+### 8.4 Eliminar una entrada registrada por error (solo desde la base)
+
+La aplicación no elimina movimientos (RN-09): una entrada se corrige (U-13) y una salida se devuelve (U-05). Si una entrada se registró por completo por error (por ejemplo, duplicada) y la corrección no basta, el responsable del servidor puede eliminarla **desde la base**, como mantenimiento excepcional, con el bloque `DO` que se entrega aparte al administrador (no se versiona como migración porque no debe correr en una instalación). El bloque:
+
+- se niega si el movimiento no es una entrada, si tiene correcciones registradas o si de su lote ya salió parte de lo que sumó (dejaría la existencia descuadrada), y exige un motivo de al menos 10 caracteres;
+- **antes de borrar**, escribe en la bitácora la acción `ELIMINAR` a nombre del administrador, con el movimiento, su detalle y el motivo; la pantalla Bitácora la muestra como "Eliminó entrada E…";
+- resta la cantidad del lote, borra el detalle y el movimiento con los triggers de inmutabilidad apagados **solo dentro de su transacción**, y borra el lote si quedó sin movimientos;
+- termina con la consulta de coherencia, que debe dar 0.
+
+El número de documento eliminado no se reutiliza salvo que fuera el último de su tipo. Antes de usarlo, descargue un respaldo (sección 7).
+
 ---
 
 ## 9. Pruebas
